@@ -17,6 +17,6 @@ oracle:
   expected_regime: reverse_charge
   expected_imponibile: 3000.0
   expected_iva: 0.0
-  expected_totale: 3002.0
+  expected_totale: 3000.0   # niente bollo sul reverse charge
   expected_sdi_outcome: accettata
 max_tool_calls: 6

@@ -4,6 +4,17 @@ All notable changes to this project are documented here. Format based on
 [Keep a Changelog](https://keepachangelog.com/), versioning roughly
 [SemVer](https://semver.org/) with dated benchmark releases planned from v1.0.
 
+## [Unreleased]
+
+### Fixed
+- **Reverse charge non sconta l'imposta di bollo** (principio di alternatività IVA/bollo):
+  rimosso il bollo €2 erroneamente applicato (oracoli B-002, B-009 corretti).
+- Rimosso l'uso improprio del codice SDI `00400` per "PA senza split payment" (lo split
+  payment non è un controllo di scarto SDI).
+
+### Added
+- `docs/FISCAL-RULES.md`: ogni regola fiscale tracciata con fonte e stato di validazione.
+
 ## [0.1.0] — 2026-06-21
 
 ### Added

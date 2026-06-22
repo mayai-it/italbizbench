@@ -151,9 +151,10 @@ docs/blueprint.md      # design rationale & roadmap
   overconfident agents.
 - **Statistical honesty.** Pass-rate ships with bootstrap CIs; point estimates alone are
   not used to rank agents.
-- **The fiscal rules in the sandbox are a first approximation.** Stamp duty, split payment
-  and foreign reverse charge are internally consistent but pending review by an accountant
-  (roadmap v0.2) before any numbers are announced.
+- **The fiscal rules are sourced, not yet professionally certified.** Every rule (VAT, bollo,
+  reverse charge, split payment, SDI codes) is documented with its source and a validation
+  status in [docs/FISCAL-RULES.md](docs/FISCAL-RULES.md). Numbers should be labelled
+  "rules verified against sources, not yet certified by an accountant".
 
 ## Quality bar
 

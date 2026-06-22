@@ -88,9 +88,12 @@ class InvoicingSandbox:
                 sum(ln.quantita * ln.prezzo_unitario * ln.aliquota_iva / 100 for ln in lines), 2
             )
 
-        # Bollo 2 euro su fatture esenti/non imponibili/reverse > 77,47 euro
+        # Imposta di bollo 2 euro sulle operazioni ESENTI > 77,47 euro.
+        # NON sul reverse charge: per il principio di alternativita IVA/bollo le operazioni
+        # in inversione contabile restano soggette a IVA, quindi niente bollo (Fiscomania,
+        # RegimeMinimi). Vedi docs/FISCAL-RULES.md.
         bollo = 0.0
-        if regime in ("reverse_charge", "esente") and imponibile > 77.47:
+        if regime == "esente" and imponibile > 77.47:
             bollo = 2.0
 
         if regime == "split_payment":
@@ -116,11 +119,11 @@ class InvoicingSandbox:
         if c.get("estero"):
             return "accettata"  # estero: codice convenzionale (es. XXXXXXX)
         if c.get("pa"):
-            # PA: codice univoco ufficio a 6 caratteri; richiede split payment
+            # PA: codice univoco ufficio a 6 caratteri (IPA). Lo split payment e' una
+            # questione di contenuto fattura, non un controllo di scarto SDI: qui lo SDI
+            # verifica solo la validita del codice ufficio.
             if len(cd) != 6:
                 return "scarto:00312"
-            if regime != "split_payment":
-                return "scarto:00400"  # regime incoerente per la PA
             return "accettata"
         # Privati: codice destinatario a 7 caratteri
         if len(cd) != 7:
