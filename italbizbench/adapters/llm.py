@@ -118,9 +118,11 @@ class LLMAgent(AgentAdapter):
     def __init__(self, client: LLMClient, name: str = "llm"):
         self.client = client
         self.name = name
+        self.last_messages: list[dict[str, Any]] = []  # transcript dell'ultimo run
 
     def run(self, scenario: Scenario, sandbox: InvoicingSandbox) -> AgentAction:
         messages: list[dict[str, Any]] = [{"role": "user", "content": scenario.prompt}]
+        self.last_messages = messages  # riferimento: viene mutato in place durante il loop
         budget = scenario.max_tool_calls + 2
         for _ in range(budget):
             resp = self.client.complete(SYSTEM_PROMPT, messages, TOOLS)
@@ -149,17 +151,22 @@ class LLMAgent(AgentAdapter):
                            notes="Budget di step esaurito senza chiamare finish.")
 
     def _dispatch(self, call: ToolCall, sandbox: InvoicingSandbox) -> str:
-        a = call.arguments
-        if call.name == "lookup_client":
-            return json.dumps(sandbox.lookup_client(a["name"]), ensure_ascii=False)
-        if call.name == "validate_piva":
-            return json.dumps({"valid": sandbox.validate_piva(str(a["piva"]))})
-        if call.name == "emit_invoice":
-            lines = [InvoiceLine(**ln) for ln in a["lines"]]
-            inv = sandbox.emit_invoice(client=a["client"], lines=lines,
-                                       regime=a.get("regime", "ordinario"))
-            return json.dumps(inv.__dict__, ensure_ascii=False)
-        return json.dumps({"error": f"strumento sconosciuto: {call.name}"})
+        try:
+            a = call.arguments
+            if call.name == "lookup_client":
+                return json.dumps(sandbox.lookup_client(a["name"]), ensure_ascii=False)
+            if call.name == "validate_piva":
+                return json.dumps({"valid": sandbox.validate_piva(str(a["piva"]))})
+            if call.name == "emit_invoice":
+                lines = [InvoiceLine(**ln) for ln in a["lines"]]
+                inv = sandbox.emit_invoice(client=a["client"], lines=lines,
+                                           regime=a.get("regime", "ordinario"))
+                return json.dumps(inv.__dict__, ensure_ascii=False)
+            return json.dumps({"error": f"strumento sconosciuto: {call.name}"})
+        except (KeyError, TypeError, ValueError) as e:
+            # Argomenti malformati dal modello: restituisci l'errore invece di crashare,
+            # cosi l'agente puo correggersi al turno successivo.
+            return json.dumps({"error": f"tool {call.name} fallito: {e}"})
 
 
 class ScriptedLLMClient:

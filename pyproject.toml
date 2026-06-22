@@ -29,6 +29,7 @@ dev = [
     "types-PyYAML>=6.0",
 ]
 anthropic = ["anthropic>=0.40"]
+openai = ["openai>=1.40"]
 
 [project.urls]
 Homepage = "https://mayai.it"

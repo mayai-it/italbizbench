@@ -107,15 +107,28 @@ the loop runs them against the sandbox and feeds back the result until it calls 
 This is the same shape the agent would use to talk to `fatture-cli` / `pec-cli` over MCP.
 
 ```bash
+# Claude (Anthropic)
 pip install anthropic
 export ANTHROPIC_API_KEY=sk-...
-python -m italbizbench.runner tasks --agent llm --model claude-sonnet-4-6
-# or: python examples/run_llm.py
+python -m italbizbench.runner tasks --agent anthropic --model claude-sonnet-4-6
+
+# GPT (OpenAI)
+pip install openai
+export OPENAI_API_KEY=sk-...
+python -m italbizbench.runner tasks --agent openai --model gpt-4o
+
+# Local model (Ollama / llama.cpp / vLLM — any OpenAI-compatible endpoint)
+python -m italbizbench.runner tasks --agent local --model qwen2.5 \
+    --base-url http://localhost:11434/v1
+
+# Save per-task transcripts for reproducibility / debugging
+python -m italbizbench.runner tasks --agent anthropic --save runs/claude
 ```
 
-To plug in another vendor, implement the `LLMClient` protocol (a single
-`complete(system, messages, tools)` method). The loop, verifiers and scoring stay identical.
-For deterministic offline tests there's `ScriptedLLMClient`.
+All three LLM agents share one tool-use loop; only the client differs. To plug in another
+vendor, implement the `LLMClient` protocol (a single `complete(system, messages, tools)`
+method). The loop, verifiers and scoring stay identical. For deterministic offline tests
+there's `ScriptedLLMClient`.
 
 > **Swapping the sandbox for the real backend (in TEST):** in `LLMAgent._dispatch`, route
 > the tool calls to `fatture-cli` pointed at the **test** environment of Fatture in Cloud
@@ -135,6 +148,7 @@ italbizbench/
     reference.py       # rule-based baseline (NOT an LLM): proves the harness runs
     llm.py             # tool-use loop for a real LLM agent
     anthropic_client.py# Anthropic API client (lazy import)
+    openai_client.py   # OpenAI-compatible client — GPT and local models (lazy import)
 tasks/
   A-anagrafiche/       # 7 tasks
   B-emissione/         # 13 tasks

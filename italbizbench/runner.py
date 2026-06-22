@@ -29,35 +29,65 @@ def load_scenarios(path: Path) -> list[Scenario]:
     return scenarios
 
 
-def run(path: Path, agent: AgentAdapter) -> tuple[list[Verdict], dict[str, Any]]:
+def run(path: Path, agent: AgentAdapter,
+        save_dir: Path | None = None) -> tuple[list[Verdict], dict[str, Any]]:
     verdicts: list[Verdict] = []
+    if save_dir is not None:
+        save_dir.mkdir(parents=True, exist_ok=True)
     for sc in load_scenarios(path):
         sandbox = InvoicingSandbox(clients=dict(InvoicingSandbox().clients))
         for name, info in sc.initial_state.get("extra_clients", {}).items():
             sandbox.clients[name] = info
         action = agent.run(sc, sandbox)
         verdicts.append(score_task(sc, sandbox, action))
+        # Salva il transcript dell'agente (per riproducibilita / debug dei run reali).
+        transcript = getattr(agent, "last_messages", None)
+        if save_dir is not None and transcript is not None:
+            (save_dir / f"{sc.id}.json").write_text(
+                json.dumps(transcript, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
     return verdicts, aggregate(verdicts)
+
+
+def _build_agent(args: argparse.Namespace) -> AgentAdapter:
+    """Costruisce l'agente scelto. Import pigri: i client SDK servono solo se usati."""
+    if args.agent == "reference":
+        return ReferenceAgent()
+
+    from .adapters.llm import LLMAgent
+    if args.agent == "anthropic":
+        from .adapters.anthropic_client import AnthropicLLMClient
+        model = args.model or "claude-sonnet-4-6"
+        return LLMAgent(AnthropicLLMClient(model=model), name=f"anthropic:{model}")
+    if args.agent == "openai":
+        from .adapters.openai_client import OpenAIClient
+        model = args.model or "gpt-4o"
+        return LLMAgent(OpenAIClient(model=model), name=f"openai:{model}")
+    # local: API OpenAI-compatibile (default Ollama)
+    from .adapters.openai_client import OpenAIClient
+    model = args.model or "qwen2.5"
+    base_url = args.base_url or "http://localhost:11434/v1"
+    return LLMAgent(OpenAIClient(model=model, base_url=base_url, api_key="local"),
+                    name=f"local:{model}")
 
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="ItalBizBench runner")
     p.add_argument("tasks", type=Path, help="cartella o file di task YAML")
-    p.add_argument("--agent", choices=["reference", "llm"], default="reference",
-                   help="agente da valutare (default: reference rule-based)")
-    p.add_argument("--model", default="claude-sonnet-4-6",
-                   help="modello LLM se --agent llm (richiede ANTHROPIC_API_KEY)")
+    p.add_argument("--agent", choices=["reference", "anthropic", "openai", "local"],
+                   default="reference", help="agente da valutare (default: reference rule-based)")
+    p.add_argument("--model", default=None,
+                   help="modello LLM (default per vendor se omesso)")
+    p.add_argument("--base-url", default=None,
+                   help="endpoint OpenAI-compatibile (per --agent local, es. Ollama)")
+    p.add_argument("--save", type=Path, default=None,
+                   help="cartella dove salvare i transcript degli agenti LLM")
     p.add_argument("--json", action="store_true", help="output JSON")
     args = p.parse_args(argv)
 
-    agent: AgentAdapter
-    if args.agent == "llm":
-        from .adapters.anthropic_client import AnthropicLLMClient
-        from .adapters.llm import LLMAgent
-        agent = LLMAgent(AnthropicLLMClient(model=args.model), name=f"anthropic:{args.model}")
-    else:
-        agent = ReferenceAgent()
-    verdicts, scorecard = run(args.tasks, agent)
+    agent: AgentAdapter = _build_agent(args)
+    verdicts, scorecard = run(args.tasks, agent, save_dir=args.save)
 
     if args.json:
         print(json.dumps({

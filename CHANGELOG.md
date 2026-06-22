@@ -14,6 +14,11 @@ All notable changes to this project are documented here. Format based on
 
 ### Added
 - `docs/FISCAL-RULES.md`: ogni regola fiscale tracciata con fonte e stato di validazione.
+- Adapter **OpenAI-compatibile** (`openai_client.py`): un solo client per GPT e per modelli
+  locali (Ollama / llama.cpp / vLLM) cambiando `--base-url`.
+- Runner: opzioni `--agent {reference,anthropic,openai,local}`, `--base-url`, `--save`
+  (salvataggio transcript per riproducibilita).
+- Hardening: gestione errori sulle tool-call (argomenti malformati non interrompono il run).
 
 ## [0.1.0] — 2026-06-21
 
