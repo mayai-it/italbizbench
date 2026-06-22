@@ -1,0 +1,23 @@
+id: B-007-tricky-esente-art10-bollo
+family: B-emissione
+difficulty: tricky
+title: Operazione esente art.10 con imposta di bollo
+prompt: >
+  Emetti fattura a "Rossi Costruzioni Srl" per una prestazione esente IVA
+  ex art.10 di 1000 euro. Ricorda l'imposta di bollo dove dovuta.
+initial_state:
+  client: "Rossi Costruzioni Srl"
+  esente: true
+  lines:
+    - descrizione: "Prestazione esente art.10"
+      quantita: 1
+      prezzo_unitario: 1000.0
+      aliquota_iva: 0.0
+      natura: "N4"
+oracle:
+  expected_regime: esente
+  expected_imponibile: 1000.0
+  expected_iva: 0.0
+  expected_totale: 1002.0    # bollo 2 euro (esente > 77,47)
+  expected_sdi_outcome: accettata
+max_tool_calls: 6

@@ -1,0 +1,26 @@
+id: B-004-tricky-scarto-sdi
+family: B-emissione
+difficulty: tricky
+title: Codice destinatario non valido -> scarto SDI 00312
+prompt: >
+  Emetti fattura a "Verdi Snc" per 500 euro + IVA 22%. Procedi con l'invio allo SDI.
+  (Nota: l'anagrafica del cliente potrebbe avere problemi.)
+initial_state:
+  client: "Verdi Snc"
+  extra_clients:
+    "Verdi Snc":
+      piva: "05556667770"
+      codice_destinatario: "ABC"   # invalido: attesi 7 caratteri
+      pa: false
+  lines:
+    - descrizione: "Fornitura materiali"
+      quantita: 1
+      prezzo_unitario: 500.0
+      aliquota_iva: 22.0
+oracle:
+  expected_regime: ordinario
+  expected_imponibile: 500.0
+  expected_iva: 110.0
+  expected_totale: 610.0
+  expected_sdi_outcome: "scarto:00312"
+max_tool_calls: 6

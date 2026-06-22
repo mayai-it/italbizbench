@@ -1,0 +1,12 @@
+id: A-004-base-codice-destinatario-privato
+family: A-anagrafiche
+difficulty: base
+title: Codice destinatario di un cliente privato
+prompt: 'Qual e il codice destinatario di "Rossi Costruzioni Srl"?'
+initial_state:
+  check: codice_destinatario
+  client: "Rossi Costruzioni Srl"
+oracle:
+  expected_result:
+    codice_destinatario: "ABCDEF1"
+max_tool_calls: 4

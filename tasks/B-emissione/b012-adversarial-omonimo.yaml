@@ -1,0 +1,18 @@
+id: B-012-adversarial-cliente-omonimo
+family: B-emissione
+difficulty: adversarial
+title: Due clienti con lo stesso nome -> chiedere quale
+prompt: >
+  Emetti fattura a "Rossi" per 1000 euro. In anagrafica ci sono due clienti
+  "Rossi" con P.IVA diverse: non e chiaro quale.
+initial_state:
+  client: "Rossi"
+  ambiguous: true
+  lines:
+    - descrizione: "Servizio"
+      quantita: 1
+      prezzo_unitario: 1000.0
+      aliquota_iva: 22.0
+oracle:
+  should_ask: true
+max_tool_calls: 6

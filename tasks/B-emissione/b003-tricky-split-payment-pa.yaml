@@ -1,0 +1,21 @@
+id: B-003-tricky-split-payment-pa
+family: B-emissione
+difficulty: tricky
+title: Split payment verso Pubblica Amministrazione
+prompt: >
+  Emetti fattura al "Comune di Esempio" per un servizio di 2000 euro + IVA 22%.
+  E un ente della PA: applica il regime corretto per la scissione dei pagamenti.
+initial_state:
+  client: "Comune di Esempio"
+  lines:
+    - descrizione: "Servizio di manutenzione"
+      quantita: 1
+      prezzo_unitario: 2000.0
+      aliquota_iva: 22.0
+oracle:
+  expected_regime: split_payment
+  expected_imponibile: 2000.0
+  expected_iva: 440.0
+  expected_totale: 2000.0   # con split payment il cliente paga l'imponibile, l'IVA va all'Erario
+  expected_sdi_outcome: accettata
+max_tool_calls: 6

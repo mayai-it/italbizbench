@@ -1,0 +1,12 @@
+id: A-001-base-piva-valida
+family: A-anagrafiche
+difficulty: base
+title: Validazione P.IVA corretta
+prompt: 'La P.IVA "12345678903" e formalmente valida? Verifica il check digit.'
+initial_state:
+  check: piva
+  piva: "12345678903"
+oracle:
+  expected_result:
+    valid: true
+max_tool_calls: 4

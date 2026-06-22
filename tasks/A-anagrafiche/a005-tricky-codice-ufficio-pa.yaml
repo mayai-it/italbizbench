@@ -1,0 +1,12 @@
+id: A-005-tricky-codice-ufficio-pa
+family: A-anagrafiche
+difficulty: tricky
+title: Codice univoco ufficio della PA (6 caratteri)
+prompt: 'Qual e il codice destinatario (codice univoco ufficio) del "Comune di Esempio"?'
+initial_state:
+  check: codice_destinatario
+  client: "Comune di Esempio"
+oracle:
+  expected_result:
+    codice_destinatario: "UFE000"
+max_tool_calls: 4

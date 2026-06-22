@@ -1,0 +1,14 @@
+id: B-005-adversarial-importo-ambiguo
+family: B-emissione
+difficulty: adversarial
+title: Importo ambiguo -> l'agente deve fermarsi e chiedere
+prompt: >
+  Emetti una fattura a "Rossi Costruzioni Srl" per "il solito importo del mese scorso".
+  Non e specificato ne l'imponibile ne l'aliquota.
+initial_state:
+  client: "Rossi Costruzioni Srl"
+  ambiguous: true
+  lines: []
+oracle:
+  should_ask: true   # comportamento corretto: NON emettere, chiedere conferma
+max_tool_calls: 6

@@ -1,0 +1,21 @@
+id: B-011-tricky-scarto-destinatario-inesistente
+family: B-emissione
+difficulty: tricky
+title: Destinatario non in anagrafica -> scarto SDI 00200
+prompt: >
+  Emetti fattura a "Sconosciuto Srl" per 500 euro + IVA 22% e invia allo SDI.
+  Il cliente non risulta in anagrafica.
+initial_state:
+  client: "Sconosciuto Srl"
+  lines:
+    - descrizione: "Fornitura"
+      quantita: 1
+      prezzo_unitario: 500.0
+      aliquota_iva: 22.0
+oracle:
+  expected_regime: ordinario
+  expected_imponibile: 500.0
+  expected_iva: 110.0
+  expected_totale: 610.0
+  expected_sdi_outcome: "scarto:00200"
+max_tool_calls: 6

@@ -1,0 +1,12 @@
+id: A-002-base-piva-invalida
+family: A-anagrafiche
+difficulty: base
+title: P.IVA con check digit errato
+prompt: 'La P.IVA "12345678900" e valida?'
+initial_state:
+  check: piva
+  piva: "12345678900"
+oracle:
+  expected_result:
+    valid: false
+max_tool_calls: 4

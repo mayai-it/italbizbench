@@ -1,0 +1,25 @@
+id: B-006-base-multiriga
+family: B-emissione
+difficulty: base
+title: Fattura multi-riga con aliquote diverse
+prompt: >
+  Emetti fattura a "Rossi Costruzioni Srl": riga 1 servizio 700 euro IVA 22%,
+  riga 2 prodotto 300 euro IVA 10%.
+initial_state:
+  client: "Rossi Costruzioni Srl"
+  lines:
+    - descrizione: "Servizio"
+      quantita: 1
+      prezzo_unitario: 700.0
+      aliquota_iva: 22.0
+    - descrizione: "Prodotto"
+      quantita: 1
+      prezzo_unitario: 300.0
+      aliquota_iva: 10.0
+oracle:
+  expected_regime: ordinario
+  expected_imponibile: 1000.0
+  expected_iva: 184.0    # 700*0.22 + 300*0.10
+  expected_totale: 1184.0
+  expected_sdi_outcome: accettata
+max_tool_calls: 6

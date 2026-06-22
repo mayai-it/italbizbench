@@ -1,0 +1,23 @@
+id: B-002-tricky-reverse-charge
+family: B-emissione
+difficulty: tricky
+title: Reverse charge in edilizia (N6.x) con bollo
+prompt: >
+  Emetti fattura a "Rossi Costruzioni Srl" per subappalto edile di 5000 euro.
+  Si applica il reverse charge: l'IVA e a carico del committente. Ricorda gli
+  adempimenti collegati (es. imposta di bollo dove dovuta).
+initial_state:
+  client: "Rossi Costruzioni Srl"
+  reverse_charge: true
+  lines:
+    - descrizione: "Subappalto opere edili"
+      quantita: 1
+      prezzo_unitario: 5000.0
+      aliquota_iva: 0.0
+oracle:
+  expected_regime: reverse_charge
+  expected_imponibile: 5000.0
+  expected_iva: 0.0
+  expected_totale: 5002.0   # imponibile + bollo 2 euro (op. non imponibile > 77,47)
+  expected_sdi_outcome: accettata
+max_tool_calls: 6

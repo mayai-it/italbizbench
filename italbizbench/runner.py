@@ -1,0 +1,87 @@
+"""Runner: carica i task YAML, esegue un adapter, produce la scorecard.
+
+Uso:
+    python -m italbizbench.runner tasks/B-emissione
+    python -m italbizbench.runner tasks/B-emissione --json
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+from .adapters import AgentAdapter, ReferenceAgent
+from .models import Scenario, Verdict
+from .sandbox import InvoicingSandbox
+from .scoring import aggregate, score_task
+
+
+def load_scenarios(path: Path) -> list[Scenario]:
+    files = sorted(path.rglob("*.yaml")) if path.is_dir() else [path]
+    scenarios = []
+    for f in files:
+        data = yaml.safe_load(f.read_text(encoding="utf-8"))
+        scenarios.append(Scenario(**data))
+    return scenarios
+
+
+def run(path: Path, agent: AgentAdapter) -> tuple[list[Verdict], dict[str, Any]]:
+    verdicts: list[Verdict] = []
+    for sc in load_scenarios(path):
+        sandbox = InvoicingSandbox(clients=dict(InvoicingSandbox().clients))
+        for name, info in sc.initial_state.get("extra_clients", {}).items():
+            sandbox.clients[name] = info
+        action = agent.run(sc, sandbox)
+        verdicts.append(score_task(sc, sandbox, action))
+    return verdicts, aggregate(verdicts)
+
+
+def main(argv: list[str] | None = None) -> int:
+    p = argparse.ArgumentParser(description="ItalBizBench runner")
+    p.add_argument("tasks", type=Path, help="cartella o file di task YAML")
+    p.add_argument("--agent", choices=["reference", "llm"], default="reference",
+                   help="agente da valutare (default: reference rule-based)")
+    p.add_argument("--model", default="claude-sonnet-4-6",
+                   help="modello LLM se --agent llm (richiede ANTHROPIC_API_KEY)")
+    p.add_argument("--json", action="store_true", help="output JSON")
+    args = p.parse_args(argv)
+
+    agent: AgentAdapter
+    if args.agent == "llm":
+        from .adapters.anthropic_client import AnthropicLLMClient
+        from .adapters.llm import LLMAgent
+        agent = LLMAgent(AnthropicLLMClient(model=args.model), name=f"anthropic:{args.model}")
+    else:
+        agent = ReferenceAgent()
+    verdicts, scorecard = run(args.tasks, agent)
+
+    if args.json:
+        print(json.dumps({
+            "agent": agent.name,
+            "scorecard": scorecard,
+            "verdicts": [v.model_dump(mode="json") for v in verdicts],
+        }, indent=2, ensure_ascii=False))
+        return 0
+
+    print(f"\n=== ItalBizBench — agente: {agent.name} ===")
+    for v in verdicts:
+        mark = "PASS" if v.passed else "FAIL"
+        print(f"[{mark}] {v.scenario_id:24} ({v.difficulty.value:11}) "
+              f"corr={v.scores.correctness} eff={v.scores.efficiency} "
+              f"saf={v.scores.safety} calE={v.scores.calibration_error}  {v.detail}")
+    print("\n--- Scorecard ---")
+    print(f"Task: {scorecard['n_tasks']}  Pass-rate: {scorecard['pass_rate']} "
+          f"(IC95% {scorecard['correctness_ci95']})")
+    print(f"Efficienza media: {scorecard['efficiency_mean']}  "
+          f"Sicurezza media: {scorecard['safety_mean']}  "
+          f"Errore calibrazione: {scorecard['calibration_error_mean']}")
+    print(f"Per difficolta: {scorecard['by_difficulty']}\n")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

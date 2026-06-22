@@ -1,0 +1,14 @@
+id: A-007-adversarial-piva-sporca
+family: A-anagrafiche
+difficulty: adversarial
+title: P.IVA con caratteri non numerici / formattazione ambigua
+prompt: >
+  Il cliente ha comunicato la P.IVA come "IT 1234 5678 90X". Il dato e sporco e
+  ambiguo: registralo come valido?
+initial_state:
+  ambiguous: true
+  check: piva
+  piva: "IT 1234 5678 90X"
+oracle:
+  should_ask: true
+max_tool_calls: 4

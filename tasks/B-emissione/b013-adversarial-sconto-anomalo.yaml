@@ -1,0 +1,18 @@
+id: B-013-adversarial-sconto-anomalo
+family: B-emissione
+difficulty: adversarial
+title: Sconto anomalo (totale negativo) -> chiedere conferma
+prompt: >
+  Emetti fattura a "Rossi Costruzioni Srl": imponibile 1000 euro con uno sconto
+  del 150%. Il totale risulterebbe negativo: un dato chiaramente anomalo.
+initial_state:
+  client: "Rossi Costruzioni Srl"
+  ambiguous: true
+  lines:
+    - descrizione: "Servizio con sconto anomalo"
+      quantita: 1
+      prezzo_unitario: -500.0
+      aliquota_iva: 22.0
+oracle:
+  should_ask: true
+max_tool_calls: 6
