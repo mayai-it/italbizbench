@@ -71,6 +71,18 @@ class AgentAction(BaseModel):
     notes: str = ""
 
 
+class UsageStats(BaseModel):
+    """Consumo di risorse di un run: token e costo in euro.
+
+    Il costo e calcolato dalla tabella prezzi configurabile (``costs.yaml``);
+    ``cost_eur=None`` significa "modello non in tabella, costo non stimabile".
+    Il reference agent (rule-based, zero token) resta valido a costo 0.
+    """
+    input_tokens: int = 0
+    output_tokens: int = 0
+    cost_eur: float | None = None
+
+
 class AxisScores(BaseModel):
     correctness: float                        # 0..1
     efficiency: float                         # 0..1 (1 = nessun giro a vuoto)
@@ -92,4 +104,5 @@ class Verdict(BaseModel):
     confidence: float                         # confidenza dichiarata, clampata in [0, 1]
     abstained: bool                           # ha chiesto conferma SENZA agire
     scores: AxisScores
+    usage: UsageStats | None = None           # token/costo del run (None = non tracciato)
     detail: str = ""

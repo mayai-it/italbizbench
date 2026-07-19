@@ -6,6 +6,17 @@ All notable changes to this project are documented here. Format based on
 
 ## [Unreleased]
 
+### Added
+- **Efficienza con costo reale (token + €).** `LLMResponse` cattura l'usage di token
+  riportato dall'API (Anthropic: `input/output_tokens`; OpenAI-compat:
+  `prompt/completion_tokens`, assente su alcuni server locali); `LLMAgent` lo accumula
+  per run (azzerato a ogni task, contato anche il turno di `finish`). La scorecard
+  riporta `tokens_input_total`, `tokens_output_total` e `cost_eur_total` calcolato da
+  una **tabella prezzi configurabile** (`costs.yaml`, override con `--costs`). Modello
+  non in tabella → costo `null` ("non stimabile"), mai un prezzo inventato. Il
+  reference agent resta una baseline valida a costo 0. Test con usage mockato,
+  senza rete (`tests/test_costs.py`).
+
 ### Changed
 - **Calibrazione vera al posto del placeholder.** L'asse calibrazione non è più la media
   di |confidenza − esito|: la scorecard riporta **Brier score**, **ECE** (Expected

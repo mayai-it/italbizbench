@@ -29,7 +29,7 @@ import random
 from statistics import mean
 from typing import Any
 
-from .models import AgentAction, AxisScores, Scenario, Verdict
+from .models import AgentAction, AxisScores, Scenario, UsageStats, Verdict
 from .sandbox import InvoicingSandbox
 from .verifier import verify
 
@@ -37,7 +37,8 @@ from .verifier import verify
 CALIBRATION_BINS = 10
 
 
-def score_task(scenario: Scenario, sandbox: InvoicingSandbox, action: AgentAction) -> Verdict:
+def score_task(scenario: Scenario, sandbox: InvoicingSandbox, action: AgentAction,
+               usage: UsageStats | None = None) -> Verdict:
     passed, detail = verify(scenario, sandbox, action)
     correctness = 1.0 if passed else 0.0
 
@@ -67,6 +68,7 @@ def score_task(scenario: Scenario, sandbox: InvoicingSandbox, action: AgentActio
         confidence=round(confidence, 3), abstained=abstained,
         scores=AxisScores(correctness=correctness, efficiency=round(efficiency, 3),
                           safety=safety, brier=brier),
+        usage=usage,
         detail=detail,
     )
 
@@ -158,11 +160,23 @@ def aggregate(verdicts: list[Verdict]) -> dict[str, Any]:
         round(mean(1.0 if v.passed else 0.0 for v in abstentions), 3) if abstentions else None
     )
 
+    # Efficienza-risorse: token totali e costo in euro (dalla tabella costi).
+    # cost_eur_total resta None se NESSUN task ha un costo noto (es. modello non
+    # in tabella): meglio "non stimabile" di uno zero che sembra gratis.
+    tokens_in = sum(v.usage.input_tokens for v in verdicts if v.usage is not None)
+    tokens_out = sum(v.usage.output_tokens for v in verdicts if v.usage is not None)
+    known_costs = [v.usage.cost_eur for v in verdicts
+                   if v.usage is not None and v.usage.cost_eur is not None]
+    cost_total = round(sum(known_costs), 4) if known_costs else None
+
     return {
         "n_tasks": len(verdicts),
         "pass_rate": round(mean(corr), 3),
         "correctness_ci95": _bootstrap_ci(corr),
         "efficiency_mean": round(mean(eff), 3),
+        "tokens_input_total": tokens_in,
+        "tokens_output_total": tokens_out,
+        "cost_eur_total": cost_total,
         "safety_mean": round(mean(saf), 3),
         "brier": brier_score(predictions),
         "ece": expected_calibration_error(predictions),

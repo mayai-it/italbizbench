@@ -146,6 +146,15 @@ there's `ScriptedLLMClient`.
 > the tool calls to `fatture-cli` pointed at the **test** environment of Fatture in Cloud
 > instead of the in-memory sandbox. Never production.
 
+### Token usage and cost (€)
+
+The efficiency axis is not just tool-call discipline: every LLM run records the token
+usage reported by the API, and the scorecard shows total tokens and the cost in euro,
+computed from a **configurable per-model price table** ([`costs.yaml`](costs.yaml),
+override with `--costs my-prices.yaml`). A model missing from the table yields
+`cost_eur: null` ("not estimable") — never a silently invented price. The reference
+agent uses no tokens and stays a valid, zero-cost baseline.
+
 ## Structure
 
 ```
@@ -154,6 +163,7 @@ italbizbench/
   sandbox.py           # invoicing mock + SDI simulator (no live API)
   verifier.py          # deterministic outcome check, per family
   scoring.py           # 4 axes + bootstrap CI
+  costs.py             # per-model price table (costs.yaml) -> cost in EUR per run
   runner.py            # load YAML -> run agent -> scorecard
   adapters/
     base.py            # vendor-agnostic agent interface

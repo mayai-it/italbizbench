@@ -12,6 +12,7 @@ from __future__ import annotations
 import os
 from typing import Any, cast
 
+from ..models import UsageStats
 from .llm import LLMResponse, ToolCall
 
 
@@ -35,6 +36,20 @@ def _to_anthropic(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 for r in m["content"]
             ]})
     return out
+
+
+def usage_from_response(resp: Any) -> UsageStats | None:
+    """Estrae l'usage di token da una risposta dell'API Anthropic (None se assente).
+
+    Funzione pura e difensiva: testabile con un mock, senza SDK ne rete.
+    """
+    u = getattr(resp, "usage", None)
+    if u is None:
+        return None
+    return UsageStats(
+        input_tokens=int(getattr(u, "input_tokens", 0) or 0),
+        output_tokens=int(getattr(u, "output_tokens", 0) or 0),
+    )
 
 
 class AnthropicLLMClient:
@@ -65,4 +80,4 @@ class AnthropicLLMClient:
                 calls.append(ToolCall(id=block.id, name=block.name, arguments=args))
             elif block.type == "text":
                 text += block.text
-        return LLMResponse(tool_calls=calls, text=text)
+        return LLMResponse(tool_calls=calls, text=text, usage=usage_from_response(resp))

@@ -14,7 +14,7 @@ import json
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
-from ..models import AgentAction, InvoiceLine, Scenario
+from ..models import AgentAction, InvoiceLine, Scenario, UsageStats
 from ..sandbox import InvoicingSandbox
 from .base import AgentAdapter
 
@@ -106,6 +106,9 @@ class ToolCall:
 class LLMResponse:
     tool_calls: list[ToolCall] = field(default_factory=list)
     text: str = ""
+    # Usage di token riportato dall'API per QUESTA risposta (None se il client
+    # non lo espone, es. ScriptedLLMClient). L'accumulo per run lo fa LLMAgent.
+    usage: UsageStats | None = None
 
 
 class LLMClient(Protocol):
@@ -118,14 +121,23 @@ class LLMAgent(AgentAdapter):
     def __init__(self, client: LLMClient, name: str = "llm"):
         self.client = client
         self.name = name
+        # Modello dichiarato dal client (serve per la tabella costi); None se assente.
+        self.model: str | None = getattr(client, "model", None)
         self.last_messages: list[dict[str, Any]] = []  # transcript dell'ultimo run
+        self.last_usage: UsageStats = UsageStats()     # token accumulati nell'ultimo run
 
     def run(self, scenario: Scenario, sandbox: InvoicingSandbox) -> AgentAction:
         messages: list[dict[str, Any]] = [{"role": "user", "content": scenario.prompt}]
         self.last_messages = messages  # riferimento: viene mutato in place durante il loop
+        self.last_usage = UsageStats()
         budget = scenario.max_tool_calls + 2
         for _ in range(budget):
             resp = self.client.complete(SYSTEM_PROMPT, messages, TOOLS)
+            # Accumula l'usage PRIMA di processare la risposta: cosi anche il turno
+            # che chiude con `finish` viene contato nel costo del run.
+            if resp.usage is not None:
+                self.last_usage.input_tokens += resp.usage.input_tokens
+                self.last_usage.output_tokens += resp.usage.output_tokens
             if not resp.tool_calls:
                 messages.append({"role": "assistant", "content": resp.text})
                 continue

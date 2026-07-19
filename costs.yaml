@@ -1,0 +1,19 @@
+# Tabella costi per modello — prezzi per 1 MILIONE di token, in EURO.
+#
+# Valori INDICATIVI ricavati dai listini pubblici dei vendor e convertiti in euro
+# (assunzione: 1 USD ~= 0.93 EUR, luglio 2026). I listini cambiano spesso:
+# aggiorna liberamente questo file, oppure passane un altro al runner con
+# `--costs percorso/mio-listino.yaml`. Un modello assente da questa tabella
+# produce cost_eur=null nella scorecard ("costo non stimabile"), mai un prezzo
+# inventato.
+currency: EUR
+models:
+  # Anthropic
+  claude-sonnet-4-6: {input_per_mtok: 2.80, output_per_mtok: 14.00}
+  claude-haiku-4-5: {input_per_mtok: 0.93, output_per_mtok: 4.65}
+  claude-opus-4-6: {input_per_mtok: 14.00, output_per_mtok: 70.00}
+  # OpenAI
+  gpt-4o: {input_per_mtok: 2.33, output_per_mtok: 9.30}
+  gpt-4o-mini: {input_per_mtok: 0.14, output_per_mtok: 0.56}
+  # Modelli locali (Ollama / vLLM): costo marginale ~0 per definizione.
+  qwen2.5: {input_per_mtok: 0.0, output_per_mtok: 0.0}

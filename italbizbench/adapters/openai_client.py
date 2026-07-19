@@ -14,6 +14,7 @@ import json
 import os
 from typing import Any
 
+from ..models import UsageStats
 from .llm import LLMResponse, ToolCall
 
 
@@ -62,6 +63,22 @@ def to_openai_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return out
 
 
+def usage_from_response(resp: Any) -> UsageStats | None:
+    """Estrae l'usage di token da una risposta chat-completions (None se assente).
+
+    L'API OpenAI usa `prompt_tokens` / `completion_tokens`; alcuni server locali
+    compatibili omettono del tutto il campo `usage`. Funzione pura e difensiva:
+    testabile con un mock, senza SDK ne rete.
+    """
+    u = getattr(resp, "usage", None)
+    if u is None:
+        return None
+    return UsageStats(
+        input_tokens=int(getattr(u, "prompt_tokens", 0) or 0),
+        output_tokens=int(getattr(u, "completion_tokens", 0) or 0),
+    )
+
+
 class OpenAIClient:
     def __init__(self, model: str = "gpt-4o", base_url: str | None = None,
                  api_key: str | None = None, max_tokens: int = 1024):
@@ -91,4 +108,5 @@ class OpenAIClient:
         for tc in (msg.tool_calls or []):
             args = json.loads(tc.function.arguments or "{}")
             calls.append(ToolCall(id=tc.id, name=tc.function.name, arguments=args))
-        return LLMResponse(tool_calls=calls, text=msg.content or "")
+        return LLMResponse(tool_calls=calls, text=msg.content or "",
+                           usage=usage_from_response(resp))
