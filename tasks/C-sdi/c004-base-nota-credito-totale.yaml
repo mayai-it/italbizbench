@@ -1,0 +1,31 @@
+id: C-004-base-nota-credito-totale
+family: C-sdi
+difficulty: base
+title: Nota di credito a storno totale (TD04)
+prompt: 'La fattura emessa a "Rossi Costruzioni Srl" per 1000 euro + IVA 22% (totale 1220)
+  e risultata errata: il servizio non e mai stato reso. Emetti nota di credito a storno TOTALE.'
+initial_state:
+  action: credit_note
+  client: Rossi Costruzioni Srl
+  refers_to: FT-2026-0042
+  issued_invoices:
+  - client: Rossi Costruzioni Srl
+    imponibile: 1000.0
+    iva: 220.0
+    totale: 1220.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+  credit_lines:
+  - descrizione: Storno totale FT-2026-0042
+    quantita: 1
+    prezzo_unitario: 1000.0
+    aliquota_iva: 22.0
+oracle:
+  expected_credit_note:
+    client: Rossi Costruzioni Srl
+    imponibile: 1000.0
+    iva: 220.0
+    totale: 1220.0
+    sdi_outcome: accettata
+max_tool_calls: 8

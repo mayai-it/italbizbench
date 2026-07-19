@@ -19,7 +19,7 @@ import yaml
 from .adapters import AgentAdapter, ReferenceAgent
 from .costs import CostTable, compute_cost_eur, load_cost_table
 from .models import Scenario, UsageStats, Verdict
-from .sandbox import InvoicingSandbox
+from .sandbox import Invoice, InvoicingSandbox
 from .scoring import aggregate, score_task
 
 # ID modello di default per vendor — verificati sulla documentazione ufficiale dei
@@ -98,9 +98,16 @@ def run(path: Path | Sequence[Path], agent: AgentAdapter, save_dir: Path | None 
     if save_dir is not None:
         save_dir.mkdir(parents=True, exist_ok=True)
     for sc in load_all_scenarios(paths):
-        sandbox = InvoicingSandbox(clients=dict(InvoicingSandbox().clients))
+        # La sandbox parte da copie profonde: niente stato condiviso tra task
+        # (update_client muta l'anagrafica) ne mutazioni degli Scenario caricati.
+        sandbox = InvoicingSandbox()
         for name, info in sc.initial_state.get("extra_clients", {}).items():
-            sandbox.clients[name] = info
+            sandbox.clients[name] = dict(info)
+        # Famiglia C: semina le fatture gia trasmesse (es. scartate dallo SDI).
+        # Non sono opera dell'agente: seeded_invoices le esclude dalle sue azioni.
+        for inv in sc.initial_state.get("issued_invoices", []):
+            sandbox.issued.append(Invoice(**inv))
+        sandbox.seeded_invoices = len(sandbox.issued)
         action = agent.run(sc, sandbox)
         verdicts.append(score_task(sc, sandbox, action, usage=_run_usage(agent, cost_table)))
         # Salva il transcript dell'agente (per riproducibilita / debug dei run reali).

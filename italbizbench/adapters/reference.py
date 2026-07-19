@@ -31,23 +31,57 @@ class ReferenceAgent(AgentAdapter):
         if scenario.family == Family.A_anagrafiche:
             return self._run_anagrafiche(state, sandbox)
 
+        # Famiglia C: ciclo scarto -> correzione -> rinvio, note di credito.
+        if scenario.family == Family.C_sdi:
+            return self._run_sdi(state, sandbox)
+
         client = str(state.get("client", ""))
         lines = [InvoiceLine(**ln) for ln in state.get("lines", [])]
-
-        # Determina il regime corretto dalle caratteristiche del cliente/operazione.
-        info = sandbox.lookup_client(client) or {}
-        if state.get("reverse_charge"):
-            regime = "reverse_charge"
-        elif info.get("pa"):
-            regime = "split_payment"
-        elif state.get("esente"):
-            regime = "esente"
-        else:
-            regime = "ordinario"
-
+        regime = self._regime(state, sandbox, client)
         sandbox.emit_invoice(client=client, lines=lines, regime=regime)
         return AgentAction(asked_for_confirmation=False, confidence=0.9,
                            notes=f"Emessa fattura regime={regime}.")
+
+    def _regime(self, state: dict[str, Any], sandbox: InvoicingSandbox, client: str) -> str:
+        """Regime corretto dalle caratteristiche del cliente/operazione."""
+        info = sandbox.lookup_client(client) or {}
+        if state.get("reverse_charge"):
+            return "reverse_charge"
+        if info.get("pa"):
+            return "split_payment"
+        if state.get("esente"):
+            return "esente"
+        return "ordinario"
+
+    def _run_sdi(self, state: dict[str, Any], sandbox: InvoicingSandbox) -> AgentAction:
+        client = str(state.get("client", ""))
+        action = state.get("action")
+
+        if action == "fix_and_resend":
+            # 1) corregge (o censisce, se `new`) l'anagrafica; 2) ritrasmette la fattura.
+            fix = dict(state.get("fix", {}))
+            is_new = bool(fix.pop("new", False))
+            if fix and (is_new or sandbox.update_client(client, **fix) is None):
+                sandbox.add_client(client, piva=str(fix.get("piva", "")),
+                                   codice_destinatario=str(fix.get("codice_destinatario", "")),
+                                   pa=bool(fix.get("pa", False)),
+                                   estero=bool(fix.get("estero", False)))
+            lines = [InvoiceLine(**ln) for ln in state.get("lines", [])]
+            regime = self._regime(state, sandbox, client)
+            sandbox.emit_invoice(client=client, lines=lines, regime=regime)
+            return AgentAction(asked_for_confirmation=False, confidence=0.9,
+                               notes=f"Anagrafica corretta e fattura ritrasmessa ({regime}).")
+
+        if action == "credit_note":
+            lines = [InvoiceLine(**ln) for ln in state.get("credit_lines", [])]
+            regime = self._regime(state, sandbox, client)
+            sandbox.emit_credit_note(client=client, lines=lines, regime=regime,
+                                     refers_to=str(state.get("refers_to", "")))
+            return AgentAction(asked_for_confirmation=False, confidence=0.9,
+                               notes="Nota di credito emessa a storno.")
+
+        return AgentAction(asked_for_confirmation=True, confidence=0.2,
+                           notes="Azione SDI non riconosciuta: chiedo conferma.")
 
     def _run_anagrafiche(self, state: dict[str, Any], sandbox: InvoicingSandbox) -> AgentAction:
         check = state.get("check")

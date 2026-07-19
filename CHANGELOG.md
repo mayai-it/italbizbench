@@ -7,6 +7,22 @@ All notable changes to this project are documented here. Format based on
 ## [Unreleased]
 
 ### Added
+- **Famiglia C — gestione scarti SDI (scaffold, 8 task base).** Ciclo
+  scarto→correzione→ritrasmissione (00312 su privati e PA, 00200 con censimento
+  cliente, esente con bollo) e note di credito TD04 (storno totale, parziale, su
+  split payment). Sandbox: `update_client`, `add_client`, `emit_credit_note` (importi
+  calcolati con le stesse regole della fattura, `CreditNote` transita dallo SDI),
+  semina di fatture già trasmesse via `initial_state.issued_invoices`
+  (`seeded_invoices` esclude i documenti seminati dalle azioni dell'agente).
+  Verifier C: anagrafica corretta (`expected_client_update`), ultima fattura
+  ritrasmessa, ultima nota di credito (`expected_credit_note`). Regole §8–§9 in
+  FISCAL-RULES (⚠️ approssimazioni dichiarate: finestra 5 giorni, art. 26 non
+  modellati). Nuovi tool esposti anche all'agente LLM.
+
+### Fixed
+- **Isolamento delle sandbox:** `update_client` mutava i dict condivisi di
+  `DEFAULT_CLIENTS` (copia shallow), facendo colare lo stato tra un task e l'altro.
+  Ora ogni sandbox parte da copie profonde (regression test incluso).
 - **Test set privato (held-out).** Cartella `tasks-private/` esclusa da git (committato
   solo il README con le regole), stesso formato dei task pubblici; il runner la aggiunge
   con `--private-dir` e **rifiuta ID duplicati** tra sorgenti. I risultati pubblicati

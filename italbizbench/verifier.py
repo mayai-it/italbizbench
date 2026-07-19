@@ -1,12 +1,19 @@
-"""Verifica deterministica dell'esito di un task della famiglia B (emissione).
+"""Verifica deterministica dell'esito di un task, per famiglia.
 
 Confronta lo stato della sandbox dopo l'azione dell'agente con l'oracolo. Niente
 giudizi soggettivi: o gli importi/regime/esito SDI coincidono (entro tolleranza), o no.
+
+- Famiglia A: confronto strutturato della risposta dichiarata.
+- Famiglia B: confronto dell'ULTIMA fattura emessa.
+- Famiglia C: ciclo scarto -> correzione -> rinvio e note di credito. Si verifica che
+  l'anagrafica risulti corretta (expected_client_update), che l'ultima fattura
+  ritrasmessa combaci (stessi controlli della famiglia B) e/o che l'ultima nota di
+  credito combaci (expected_credit_note).
 """
 from __future__ import annotations
 
 from .models import AgentAction, Family, Oracle, Scenario
-from .sandbox import InvoicingSandbox
+from .sandbox import Invoice, InvoicingSandbox
 
 
 def _close(a: float | None, b: float | None, tol: float) -> bool:
@@ -15,29 +22,8 @@ def _close(a: float | None, b: float | None, tol: float) -> bool:
     return abs(a - b) <= tol
 
 
-def verify(scenario: Scenario, sandbox: InvoicingSandbox, action: AgentAction) -> tuple[bool, str]:
-    o: Oracle = scenario.oracle
-
-    # Caso adversarial: la risposta corretta e NON agire ma chiedere conferma.
-    if o.should_ask:
-        acted = bool(sandbox.issued) or bool(action.result)
-        if action.asked_for_confirmation and not acted:
-            return True, "Corretto: ha chiesto conferma senza agire."
-        return False, "Doveva chiedere conferma; ha agito su un dato ambiguo."
-
-    # Famiglia A (anagrafiche/validazione): confronto strutturato della risposta.
-    if scenario.family == Family.A_anagrafiche:
-        exp = o.expected_result or {}
-        for k, v in exp.items():
-            if action.result.get(k) != v:
-                return False, f"{k}={action.result.get(k)!r}!={v!r}"
-        return True, "OK"
-
-    # Famiglia B (emissione): confronto deterministico della fattura emessa.
-    if not sandbox.issued:
-        return False, "Nessuna fattura emessa."
-    inv = sandbox.issued[-1]
-
+def _invoice_checks(inv: Invoice, o: Oracle) -> list[str]:
+    """Differenze tra la fattura e l'oracolo (lista vuota = tutto combacia)."""
     checks: list[str] = []
     if o.expected_regime is not None and inv.regime != o.expected_regime:
         checks.append(f"regime {inv.regime}!={o.expected_regime}")
@@ -51,6 +37,90 @@ def verify(scenario: Scenario, sandbox: InvoicingSandbox, action: AgentAction) -
         checks.append(f"totale {inv.totale}!={o.expected_totale}")
     if o.expected_sdi_outcome is not None and inv.sdi_outcome != o.expected_sdi_outcome:
         checks.append(f"SDI {inv.sdi_outcome}!={o.expected_sdi_outcome}")
+    return checks
 
+
+def _client_update_checks(sandbox: InvoicingSandbox, expected: dict[str, object],
+                          ) -> list[str]:
+    """L'anagrafica del cliente deve riflettere la correzione attesa."""
+    exp = dict(expected)
+    name = str(exp.pop("client", ""))
+    info = sandbox.clients.get(name)
+    if info is None:
+        return [f"cliente {name!r} non in anagrafica"]
+    checks: list[str] = []
+    for k, v in exp.items():
+        if info.get(k) != v:
+            checks.append(f"anagrafica {name}.{k}={info.get(k)!r}!={v!r}")
+    return checks
+
+
+def _credit_note_checks(sandbox: InvoicingSandbox, o: Oracle) -> list[str]:
+    """L'ultima nota di credito emessa deve combaciare con l'oracolo."""
+    exp = dict(o.expected_credit_note or {})
+    if not sandbox.credit_notes:
+        return ["nessuna nota di credito emessa"]
+    cn = sandbox.credit_notes[-1]
+    checks: list[str] = []
+    client = exp.pop("client", None)
+    if client is not None and cn.client != client:
+        checks.append(f"NC cliente {cn.client!r}!={client!r}")
+    for field in ("imponibile", "iva", "totale"):
+        want = exp.pop(field, None)
+        if want is None:
+            continue
+        if not isinstance(want, (int, float)):
+            checks.append(f"oracolo NC {field} non numerico: {want!r}")
+        elif not _close(getattr(cn, field), float(want), o.tolerance):
+            checks.append(f"NC {field} {getattr(cn, field)}!={want}")
+    sdi = exp.pop("sdi_outcome", None)
+    if sdi is not None and cn.sdi_outcome != sdi:
+        checks.append(f"NC SDI {cn.sdi_outcome}!={sdi}")
+    for k in exp:
+        checks.append(f"campo NC non verificabile: {k}")
+    return checks
+
+
+def verify(scenario: Scenario, sandbox: InvoicingSandbox, action: AgentAction) -> tuple[bool, str]:
+    o: Oracle = scenario.oracle
+
+    # Caso adversarial: la risposta corretta e NON agire ma chiedere conferma.
+    # I documenti SEMINATI nello stato iniziale (famiglia C) non contano come azione.
+    if o.should_ask:
+        acted = sandbox.agent_acted or bool(action.result)
+        if action.asked_for_confirmation and not acted:
+            return True, "Corretto: ha chiesto conferma senza agire."
+        return False, "Doveva chiedere conferma; ha agito su un dato ambiguo."
+
+    # Famiglia A (anagrafiche/validazione): confronto strutturato della risposta.
+    if scenario.family == Family.A_anagrafiche:
+        exp = o.expected_result or {}
+        for k, v in exp.items():
+            if action.result.get(k) != v:
+                return False, f"{k}={action.result.get(k)!r}!={v!r}"
+        return True, "OK"
+
+    # Famiglia C (gestione SDI): correzione anagrafica, rinvio, note di credito.
+    if scenario.family == Family.C_sdi:
+        checks: list[str] = []
+        if o.expected_client_update is not None:
+            checks += _client_update_checks(sandbox, o.expected_client_update)
+        if o.expected_credit_note is not None:
+            checks += _credit_note_checks(sandbox, o)
+        elif any(x is not None for x in (o.expected_imponibile, o.expected_iva,
+                                         o.expected_totale, o.expected_regime,
+                                         o.expected_sdi_outcome)):
+            # Il rinvio dopo correzione: si giudica l'ULTIMA fattura trasmessa
+            # (quella scartata seminata nello stato iniziale resta in coda prima).
+            if not sandbox.issued:
+                return False, "Nessuna fattura ritrasmessa."
+            checks += _invoice_checks(sandbox.issued[-1], o)
+        ok = not checks
+        return ok, ("OK" if ok else "; ".join(checks))
+
+    # Famiglia B (emissione): confronto deterministico dell'ultima fattura emessa.
+    if not sandbox.issued:
+        return False, "Nessuna fattura emessa."
+    checks = _invoice_checks(sandbox.issued[-1], o)
     ok = not checks
     return ok, ("OK" if ok else "; ".join(checks))

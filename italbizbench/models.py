@@ -49,6 +49,13 @@ class Oracle(BaseModel):
     expected_regime: str | None = None       # es. "reverse_charge", "split_payment", "ordinario"
     expected_sdi_outcome: str | None = None   # "accettata" | "scarto:<codice>"
     expected_result: dict[str, Any] | None = None  # famiglia A: risposta strutturata attesa
+    # Famiglia C (gestione scarti SDI):
+    # - expected_client_update: {"client": nome, campo: valore, ...} — l'anagrafica deve
+    #   risultare corretta cosi a fine task (es. codice destinatario sistemato).
+    # - expected_credit_note: {"client": ..., "imponibile": ..., "iva": ..., "totale": ...,
+    #   ["sdi_outcome": ...]} — l'ultima nota di credito emessa deve combaciare.
+    expected_client_update: dict[str, Any] | None = None
+    expected_credit_note: dict[str, Any] | None = None
     tolerance: float = 0.01                   # tolleranza sugli importi (arrotondamenti)
 
 

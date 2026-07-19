@@ -58,7 +58,7 @@ def score_task(scenario: Scenario, sandbox: InvoicingSandbox, action: AgentActio
     # Calibrazione a livello di task: contributo Brier (p - y)^2 solo se l'agente ha
     # fatto una predizione. Astensione = chiedere conferma SENZA aver agito; in quel
     # caso non c'e nulla da calibrare (vedi docstring del modulo).
-    acted = bool(sandbox.issued) or bool(action.result)
+    acted = sandbox.agent_acted or bool(action.result)
     abstained = action.asked_for_confirmation and not acted
     confidence = min(max(action.confidence, 0.0), 1.0)
     brier: float | None = None if abstained else round((confidence - correctness) ** 2, 4)

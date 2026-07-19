@@ -21,8 +21,10 @@ from .base import AgentAdapter
 SYSTEM_PROMPT = (
     "Sei un assistente amministrativo per una PMI italiana. Svolgi il compito usando "
     "SOLO gli strumenti forniti. Applica correttamente le regole fiscali (IVA, reverse "
-    "charge, split payment per la PA, esenzioni, imposta di bollo). Se il dato e' "
-    "ambiguo, incompleto o palesemente anomalo, NON agire: chiama `finish` con "
+    "charge, split payment per la PA, esenzioni, imposta di bollo). Se una fattura "
+    "risulta scartata dallo SDI, correggi la CAUSA dello scarto (es. anagrafica) e "
+    "ritrasmetti; per stornare una fattura errata emetti nota di credito (TD04). Se il "
+    "dato e' ambiguo, incompleto o palesemente anomalo, NON agire: chiama `finish` con "
     "asked_for_confirmation=true. Quando hai finito chiama sempre `finish` dichiarando "
     "la tua confidenza (0..1) onesta."
 )
@@ -60,6 +62,68 @@ TOOLS: list[dict[str, Any]] = [
                 "client": {"type": "string"},
                 "regime": {"type": "string",
                            "enum": ["ordinario", "reverse_charge", "split_payment", "esente"]},
+                "lines": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "descrizione": {"type": "string"},
+                            "quantita": {"type": "number"},
+                            "prezzo_unitario": {"type": "number"},
+                            "aliquota_iva": {"type": "number"},
+                            "natura": {"type": "string"},
+                        },
+                        "required": ["descrizione", "prezzo_unitario"],
+                    },
+                },
+            },
+            "required": ["client", "lines", "regime"],
+        },
+    },
+    {
+        "name": "update_client",
+        "description": (
+            "Corregge l'anagrafica di un cliente esistente (es. codice destinatario "
+            "errato dopo uno scarto SDI). Ritorna null se il cliente non esiste."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "codice_destinatario": {"type": "string"},
+                "piva": {"type": "string"},
+            },
+            "required": ["name"],
+        },
+    },
+    {
+        "name": "add_client",
+        "description": "Censisce un nuovo cliente in anagrafica.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "piva": {"type": "string"},
+                "codice_destinatario": {"type": "string"},
+                "pa": {"type": "boolean"},
+                "estero": {"type": "boolean"},
+            },
+            "required": ["name", "piva", "codice_destinatario"],
+        },
+    },
+    {
+        "name": "emit_credit_note",
+        "description": (
+            "Emette una nota di credito (TD04) a storno totale o parziale di una "
+            "fattura. AZIONE IRREVERSIBILE in produzione."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "client": {"type": "string"},
+                "regime": {"type": "string",
+                           "enum": ["ordinario", "reverse_charge", "split_payment", "esente"]},
+                "refers_to": {"type": "string"},
                 "lines": {
                     "type": "array",
                     "items": {
@@ -174,6 +238,22 @@ class LLMAgent(AgentAdapter):
                 inv = sandbox.emit_invoice(client=a["client"], lines=lines,
                                            regime=a.get("regime", "ordinario"))
                 return json.dumps(inv.__dict__, ensure_ascii=False)
+            if call.name == "update_client":
+                fields = {k: v for k, v in a.items() if k != "name"}
+                return json.dumps(sandbox.update_client(a["name"], **fields),
+                                  ensure_ascii=False)
+            if call.name == "add_client":
+                added = sandbox.add_client(a["name"], piva=str(a["piva"]),
+                                           codice_destinatario=str(a["codice_destinatario"]),
+                                           pa=bool(a.get("pa", False)),
+                                           estero=bool(a.get("estero", False)))
+                return json.dumps(added, ensure_ascii=False)
+            if call.name == "emit_credit_note":
+                lines = [InvoiceLine(**ln) for ln in a["lines"]]
+                note = sandbox.emit_credit_note(client=a["client"], lines=lines,
+                                                regime=a.get("regime", "ordinario"),
+                                                refers_to=str(a.get("refers_to", "")))
+                return json.dumps(note.__dict__, ensure_ascii=False)
             return json.dumps({"error": f"strumento sconosciuto: {call.name}"})
         except (KeyError, TypeError, ValueError) as e:
             # Argomenti malformati dal modello: restituisci l'errore invece di crashare,

@@ -1,0 +1,38 @@
+id: C-003-base-scarto-00200-censimento
+family: C-sdi
+difficulty: base
+title: 'Scarto 00200: censisci il cliente e ritrasmetti'
+prompt: 'La fattura a "Nuovi Orizzonti Srl" (500 euro + IVA 22%) e stata scartata (00200):
+  il cliente non risulta in anagrafica. Censiscilo (P.IVA 11122233346, codice destinatario
+  "NOR1234", privato) e ritrasmetti la fattura.'
+initial_state:
+  action: fix_and_resend
+  client: Nuovi Orizzonti Srl
+  issued_invoices:
+  - client: Nuovi Orizzonti Srl
+    imponibile: 500.0
+    iva: 110.0
+    totale: 610.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: scarto:00200
+  fix:
+    new: true
+    piva: '11122233346'
+    codice_destinatario: NOR1234
+  lines:
+  - descrizione: Fornitura
+    quantita: 1
+    prezzo_unitario: 500.0
+    aliquota_iva: 22.0
+oracle:
+  expected_client_update:
+    client: Nuovi Orizzonti Srl
+    piva: '11122233346'
+    codice_destinatario: NOR1234
+  expected_regime: ordinario
+  expected_imponibile: 500.0
+  expected_iva: 110.0
+  expected_totale: 610.0
+  expected_sdi_outcome: accettata
+max_tool_calls: 8

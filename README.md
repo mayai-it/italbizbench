@@ -128,7 +128,7 @@ where the agent *should* stop and ask for confirmation).
 |---|---|---|
 | **A — Anagrafiche / validation** | ✅ 40 tasks | P.IVA check digit (valid/invalid/transposed/foreign), recipient code (private 7-char / PA 6-char / foreign), dirty data |
 | **B — Invoice issuance** | ✅ 40 tasks | Ordinary (all VAT rates), reverse charge, split payment (PA), exempt art.10, stamp-duty threshold edge cases, SDI rejections |
-| C — SDI handling | roadmap | Rejection codes, credit notes, correct-and-resend |
+| **C — SDI handling** | ✅ 8 tasks (scaffold) | Rejection 00312/00200 → fix registry → resend; total & partial credit notes (TD04), split-payment credit note |
 | D — Inbound / PEC | roadmap | Read PEC, extract invoice, register supplier doc |
 | E — Reconciliation | roadmap | Match payments↔invoices, VAT period, deadlines |
 | F — Orchestration | roadmap | Multi-step "close the month" |
@@ -231,6 +231,7 @@ italbizbench/
 tasks/
   A-anagrafiche/       # 40 tasks
   B-emissione/         # 40 tasks
+  C-sdi/               # 8 tasks (scaffold): rejected-invoice recovery, credit notes
 examples/run_llm.py    # run the suite with an Anthropic agent
 docs/blueprint.md      # design rationale & roadmap
 ```

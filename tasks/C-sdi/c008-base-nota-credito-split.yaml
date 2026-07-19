@@ -1,0 +1,31 @@
+id: C-008-base-nota-credito-split
+family: C-sdi
+difficulty: base
+title: Nota di credito su fattura in split payment (PA)
+prompt: 'La fattura al "Comune di Esempio" (PA, split payment) da 2000 euro + IVA 22% va stornata
+  integralmente: il servizio e stato annullato. Emetti la nota di credito con il regime corretto.'
+initial_state:
+  action: credit_note
+  client: Comune di Esempio
+  refers_to: FT-2026-0060
+  issued_invoices:
+  - client: Comune di Esempio
+    imponibile: 2000.0
+    iva: 440.0
+    totale: 2000.0
+    regime: split_payment
+    bollo: 0.0
+    sdi_outcome: accettata
+  credit_lines:
+  - descrizione: Storno totale FT-2026-0060
+    quantita: 1
+    prezzo_unitario: 2000.0
+    aliquota_iva: 22.0
+oracle:
+  expected_credit_note:
+    client: Comune di Esempio
+    imponibile: 2000.0
+    iva: 440.0
+    totale: 2000.0
+    sdi_outcome: accettata
+max_tool_calls: 8

@@ -1,0 +1,40 @@
+id: C-006-base-scarto-00312-cd-lungo
+family: C-sdi
+difficulty: base
+title: 'Scarto 00312: codice destinatario di 8 caratteri'
+prompt: 'La fattura a "Verdi Due Snc" (750 euro + IVA 22%) e stata scartata (00312): in anagrafica
+  il codice destinatario "ABCDEFGH" ha 8 caratteri. Quello corretto e "VRDDUE7". Correggi
+  e ritrasmetti.'
+initial_state:
+  action: fix_and_resend
+  client: Verdi Due Snc
+  extra_clients:
+    Verdi Due Snc:
+      piva: '99900022239'
+      codice_destinatario: ABCDEFGH
+      pa: false
+  issued_invoices:
+  - client: Verdi Due Snc
+    imponibile: 750.0
+    iva: 165.0
+    totale: 915.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: scarto:00312
+  fix:
+    codice_destinatario: VRDDUE7
+  lines:
+  - descrizione: Fornitura
+    quantita: 1
+    prezzo_unitario: 750.0
+    aliquota_iva: 22.0
+oracle:
+  expected_client_update:
+    client: Verdi Due Snc
+    codice_destinatario: VRDDUE7
+  expected_regime: ordinario
+  expected_imponibile: 750.0
+  expected_iva: 165.0
+  expected_totale: 915.0
+  expected_sdi_outcome: accettata
+max_tool_calls: 8

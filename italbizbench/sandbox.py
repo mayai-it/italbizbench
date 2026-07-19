@@ -9,6 +9,7 @@ Ogni chiamata a `emit_invoice` viene contata come un tool-call (per la metrica e
 """
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -39,16 +40,67 @@ class Invoice:
 
 
 @dataclass
+class CreditNote:
+    """Nota di credito (TD04): storna in tutto o in parte una fattura.
+
+    Modellazione semplificata (vedi docs/FISCAL-RULES.md §9): importi calcolati con le
+    stesse regole della fattura che storna; transita dallo SDI come un documento normale.
+    """
+    client: str
+    imponibile: float
+    iva: float
+    totale: float
+    regime: str
+    refers_to: str = ""       # riferimento libero alla fattura stornata
+    sdi_outcome: str = "in_attesa"
+
+
+@dataclass
 class InvoicingSandbox:
-    clients: dict[str, Client] = field(default_factory=lambda: dict(DEFAULT_CLIENTS))
+    # deepcopy: ogni sandbox ha copie PROPRIE delle anagrafiche. Con una copia
+    # shallow, update_client muterebbe i dict condivisi di DEFAULT_CLIENTS e lo
+    # stato colerebbe tra un task e l'altro.
+    clients: dict[str, Client] = field(default_factory=lambda: deepcopy(DEFAULT_CLIENTS))
     issued: list[Invoice] = field(default_factory=list)
+    credit_notes: list[CreditNote] = field(default_factory=list)
     tool_calls: int = 0
+    # Numero di fatture SEMINATE dallo stato iniziale (famiglia C): non sono opera
+    # dell'agente e non contano come sua azione.
+    seeded_invoices: int = 0
+
+    @property
+    def agent_acted(self) -> bool:
+        """True se l'agente ha prodotto side effect oltre lo stato seminato."""
+        return len(self.issued) > self.seeded_invoices or bool(self.credit_notes)
 
     # --- strumenti esposti all'agente ---------------------------------------
 
     def lookup_client(self, name: str) -> Client | None:
         self.tool_calls += 1
         return self.clients.get(name)
+
+    def update_client(self, name: str, **fields: Any) -> Client | None:
+        """Corregge l'anagrafica di un cliente esistente (es. codice destinatario).
+
+        Ritorna l'anagrafica aggiornata, o None se il cliente non esiste (l'agente
+        deve allora censirlo con `add_client`).
+        """
+        self.tool_calls += 1
+        c = self.clients.get(name)
+        if c is None:
+            return None
+        c.update(fields)
+        return c
+
+    def add_client(self, name: str, piva: str, codice_destinatario: str,
+                   pa: bool = False, estero: bool = False) -> Client:
+        """Censisce un nuovo cliente in anagrafica (dati sintetici, mai reali)."""
+        self.tool_calls += 1
+        c: Client = {"piva": piva, "codice_destinatario": codice_destinatario, "pa": pa}
+        if estero:
+            c["estero"] = True
+        self.clients[name] = c
+        return c
 
     def validate_piva(self, piva: str) -> bool:
         """Validazione P.IVA italiana: 11 cifre + check digit (variante Luhn).
@@ -61,6 +113,30 @@ class InvoicingSandbox:
         self.tool_calls += 1
         return is_valid_piva(piva)
 
+    @staticmethod
+    def _amounts(lines: list[InvoiceLine], regime: str) -> tuple[float, float, float, float]:
+        """Imponibile, IVA, bollo e totale di un documento, secondo il regime.
+
+        Regole condivise da fatture e note di credito (vedi docs/FISCAL-RULES.md):
+        - reverse charge / esente: IVA non esposta (0.0);
+        - bollo 2 euro solo sulle operazioni ESENTI > 77,47 euro; NON sul reverse
+          charge (principio di alternativita IVA/bollo — Fiscomania, RegimeMinimi);
+        - split payment: il cliente PA paga il solo imponibile, l'IVA va all'Erario.
+        """
+        imponibile = round(sum(ln.quantita * ln.prezzo_unitario for ln in lines), 2)
+        if regime in ("reverse_charge", "esente"):
+            iva = 0.0
+        else:  # ordinario e split_payment hanno la stessa IVA in fattura
+            iva = round(
+                sum(ln.quantita * ln.prezzo_unitario * ln.aliquota_iva / 100 for ln in lines), 2
+            )
+        bollo = 2.0 if (regime == "esente" and imponibile > 77.47) else 0.0
+        if regime == "split_payment":
+            totale = round(imponibile + bollo, 2)
+        else:
+            totale = round(imponibile + iva + bollo, 2)
+        return imponibile, iva, bollo, totale
+
     def emit_invoice(
         self, client: str, lines: list[InvoiceLine], regime: str = "ordinario"
     ) -> Invoice:
@@ -69,40 +145,33 @@ class InvoicingSandbox:
         regime: ordinario | reverse_charge | split_payment | esente
         """
         self.tool_calls += 1
-        imponibile = round(sum(ln.quantita * ln.prezzo_unitario for ln in lines), 2)
-
-        if regime == "reverse_charge":
-            iva = 0.0  # l'IVA e a carico del committente (es. edilizia, N6.x)
-        elif regime == "esente":
-            iva = 0.0
-        else:  # ordinario e split_payment hanno la stessa IVA in fattura
-            iva = round(
-                sum(ln.quantita * ln.prezzo_unitario * ln.aliquota_iva / 100 for ln in lines), 2
-            )
-
-        # Imposta di bollo 2 euro sulle operazioni ESENTI > 77,47 euro.
-        # NON sul reverse charge: per il principio di alternativita IVA/bollo le operazioni
-        # in inversione contabile restano soggette a IVA, quindi niente bollo (Fiscomania,
-        # RegimeMinimi). Vedi docs/FISCAL-RULES.md.
-        bollo = 0.0
-        if regime == "esente" and imponibile > 77.47:
-            bollo = 2.0
-
-        if regime == "split_payment":
-            # con split payment il cliente PA paga solo l'imponibile; l'IVA va all'Erario
-            totale = round(imponibile + bollo, 2)
-        else:
-            totale = round(imponibile + iva + bollo, 2)
-
+        imponibile, iva, bollo, totale = self._amounts(lines, regime)
         inv = Invoice(client=client, imponibile=imponibile, iva=iva,
                       totale=totale, regime=regime, bollo=bollo)
         inv.sdi_outcome = self._simulate_sdi(client, inv, regime)
         self.issued.append(inv)
         return inv
 
+    def emit_credit_note(
+        self, client: str, lines: list[InvoiceLine], regime: str = "ordinario",
+        refers_to: str = "",
+    ) -> CreditNote:
+        """Emette una nota di credito (TD04) a storno totale o parziale.
+
+        Gli importi sono calcolati con le stesse regole della fattura stornata;
+        il documento transita dallo SDI (stessi controlli sul destinatario).
+        """
+        self.tool_calls += 1
+        imponibile, iva, _bollo, totale = self._amounts(lines, regime)
+        note = CreditNote(client=client, imponibile=imponibile, iva=iva,
+                          totale=totale, regime=regime, refers_to=refers_to)
+        note.sdi_outcome = self._simulate_sdi(client, None, regime)
+        self.credit_notes.append(note)
+        return note
+
     # --- simulatore SDI -------------------------------------------------------
 
-    def _simulate_sdi(self, client_name: str, inv: Invoice, regime: str) -> str:
+    def _simulate_sdi(self, client_name: str, inv: Invoice | None, regime: str) -> str:
         """Applica i controlli di scarto SDI piu comuni (sottoinsieme didattico)."""
         c = self.clients.get(client_name)
         if c is None:

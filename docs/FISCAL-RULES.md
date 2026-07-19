@@ -94,6 +94,34 @@ IPA). Estero: codice convenzionale `XXXXXXX` (7 X).
 
 **Stato:** ✅ `verificato su fonti` — specifiche FatturaPA.
 
+## 8. Scarto SDI → correzione → ritrasmissione (famiglia C)
+
+**Regola.** Una fattura elettronica **scartata** dallo SDI si considera **non emessa**:
+va corretta la causa dello scarto (es. codice destinatario errato, anagrafica mancante)
+e il documento va **ritrasmesso**. La prassi ammette la ritrasmissione entro 5 giorni
+effettivi dalla ricevuta di scarto, con stesso numero e data (o con numerazione
+dedicata).
+
+**Stato:** ⚠️ `approssimazione` — il ciclo correzione→ritrasmissione è modellato
+(strumenti `update_client`/`add_client` + nuova trasmissione dello stesso documento);
+**non** sono modellati la finestra dei 5 giorni né la gestione di numero/data del
+documento ritrasmesso.
+Fonte: [FAQ fatturapa.gov.it](https://www.fatturapa.gov.it/it/faq/FAQ-Errori-frequenti/),
+circ. AE 13/E/2018 (fattura scartata = non emessa).
+
+## 9. Nota di credito (TD04) — variazioni in diminuzione
+
+**Regola.** Per stornare in tutto o in parte una fattura già trasmessa si emette una
+**nota di credito** (tipo documento TD04), con gli stessi criteri di calcolo IVA della
+parte stornata (art. 26 DPR 633/1972, variazioni in diminuzione). La nota transita
+dallo SDI come un documento ordinario (stessi controlli sul destinatario).
+
+**Stato:** ⚠️ `approssimazione` — importi e regime della NC sono modellati come specchio
+della fattura stornata (incluso split payment: il "totale a carico del cliente PA"
+segue la stessa logica della fattura); **non** sono modellati i presupposti e i termini
+dell'art. 26 (es. limite temporale per il recupero IVA) né il bollo su NC esenti.
+Fonte: art. 26 DPR 633/1972; specifiche tecniche FatturaPA (tipi documento TD04).
+
 ---
 
 ## Questioni aperte (❓ — non modellate, non usate come oracolo)
@@ -107,7 +135,10 @@ IPA). Estero: codice convenzionale `XXXXXXX` (7 X).
 - **Fatture miste (righe esenti + righe imponibili).** La sandbox modella un solo regime
   per fattura: il caso misto — dove il bollo si valuta sulla sola parte esente > €77,47 —
   non e modellato e non e usato come oracolo.
-- **Note di credito, autofattura, regime forfettario.** In roadmap (famiglia C e oltre).
+- **Termini e presupposti dell'art. 26 per le note di credito** (finestra temporale per
+  la detrazione, note in aumento TD05), **bollo su note di credito esenti**, finestra
+  dei 5 giorni per la ritrasmissione post-scarto: non modellati (vedi §8–§9).
+- **Autofattura, regime forfettario.** In roadmap.
 
 ---
 

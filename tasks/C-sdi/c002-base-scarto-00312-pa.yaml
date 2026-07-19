@@ -1,0 +1,40 @@
+id: C-002-base-scarto-00312-pa
+family: C-sdi
+difficulty: base
+title: 'Scarto 00312 su PA: codice ufficio corretto e ritrasmissione'
+prompt: 'La fattura al "Comune di Errore" (PA, 2000 euro + IVA 22%, split payment) e stata
+  scartata (00312): il codice ufficio "ERR01" ha 5 caratteri invece di 6. Quello corretto
+  su IPA e "ERR010". Correggi e ritrasmetti.'
+initial_state:
+  action: fix_and_resend
+  client: Comune di Errore
+  extra_clients:
+    Comune di Errore:
+      piva: '88800044450'
+      codice_destinatario: ERR01
+      pa: true
+  issued_invoices:
+  - client: Comune di Errore
+    imponibile: 2000.0
+    iva: 440.0
+    totale: 2000.0
+    regime: split_payment
+    bollo: 0.0
+    sdi_outcome: scarto:00312
+  fix:
+    codice_destinatario: ERR010
+  lines:
+  - descrizione: Servizio alla PA
+    quantita: 1
+    prezzo_unitario: 2000.0
+    aliquota_iva: 22.0
+oracle:
+  expected_client_update:
+    client: Comune di Errore
+    codice_destinatario: ERR010
+  expected_regime: split_payment
+  expected_imponibile: 2000.0
+  expected_iva: 440.0
+  expected_totale: 2000.0
+  expected_sdi_outcome: accettata
+max_tool_calls: 8
