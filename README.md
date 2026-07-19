@@ -7,86 +7,62 @@
 
 > 🇮🇹 [Documentazione in italiano](README.it.md) — versione ridotta.
 
-# italbizbench
+# ItalBizBench
 
 **A benchmark that measures how well an AI agent actually does the fiscal and
 administrative work of an Italian SME.**
 
-Everyone says AI agents "automate the Italian business". Nobody measures whether it's
-true. ItalBizBench puts an agent in front of invoices, SDI rejections, reverse charge
-and split payment — using the same tools an admin clerk would — and gives it an honest
-score: **does it complete the task correctly? And when it isn't sure, does it stop or
-does it guess?**
+Everyone claims AI agents "automate the Italian business". Nobody measures whether
+it's true. ItalBizBench puts an agent in front of invoices, SDI rejections, reverse
+charge and split payment — through the same tool calls an admin clerk's software would
+expose — and gives it an honest score: **does it complete the task correctly? And when
+it isn't sure, does it stop and ask, or does it guess?**
 
 Part of [MayAI](https://mayai.it).
 
+## At a glance
+
+| | |
+|---|---|
+| **Tasks** | **88** — family A (40), family B (40), family C (8, scaffold) |
+| **Difficulty tiers** | `base` (clean), `tricky` (fiscal edge case), `adversarial` (dirty/ambiguous — the agent *should* stop and ask) |
+| **Scoring axes** | correctness · efficiency (tool calls + tokens + €) · safety · calibration (Brier, ECE, reliability curve) |
+| **Statistics** | pass-rate with **bootstrap and Wilson 95% CIs**, per-difficulty breakdown |
+| **Oracles** | 100% deterministic — no LLM-as-judge anywhere in the scoring path |
+| **Execution** | fully offline, in-memory sandbox + SDI simulator — **no live API is ever touched** |
+| **Output** | console scorecard, JSON report, static HTML leaderboard (GitHub Pages ready) |
+
 ## Why this exists
 
-Generic agent benchmarks exist (MCP Atlas, Tool-Decathlon, VoiceBench) but nothing is
-vertical to the Italian context: VAT, reverse charge, split payment, recipient code (codice
-destinatario), SDI rejection codes, deadlines. ItalBizBench fills that gap and positions
-itself as a **neutral yardstick**, not yet another automation agent.
+Generic agent benchmarks exist (MCP Atlas, Tool-Decathlon, VoiceBench), but nothing is
+vertical to the Italian back office: VAT regimes, reverse charge, split payment,
+recipient codes (codice destinatario), SDI rejection codes, stamp duty thresholds.
+ItalBizBench fills that gap and positions itself as a **neutral yardstick**, not yet
+another automation agent.
 
-- **Italian-native**: tasks built around real VAT regimes, FatturaPA/SDI behaviour and
-  Italian administrative workflows.
-- **Agent-first**: the agent acts through tool calls (function calling) exactly as it would
+- **Italian-native** — tasks built on real VAT regimes, FatturaPA/SDI behaviour and
+  Italian administrative workflows, with every rule sourced in
+  [docs/FISCAL-RULES.md](docs/FISCAL-RULES.md).
+- **Agent-first** — the agent acts through function calling, exactly as it would
   against `fatture-cli` / `pec-cli` over MCP in production.
-- **Deterministic**: every task has a programmatic oracle — no subjective grading.
-
-## What makes it different (the statistics)
-
-The leaderboard does not report a single average. It reports:
-
-- **4 axes**: correctness, efficiency (tool-calls / cost), safety (irreversible actions
-  avoided), and **calibration** (does the agent know when it doesn't know?).
-- **Calibration done properly**: Brier score, ECE (Expected Calibration Error) over
-  confidence bins, and the full reliability curve (mean confidence vs observed accuracy
-  per bin) — not a naive |confidence − outcome| average.
-- **Abstentions are not confidence-0 predictions.** When the agent stops and asks for
-  confirmation instead of acting, that is a *refusal to predict*, not a prediction:
-  it is excluded from Brier/ECE and scored separately as `abstention_accuracy`
-  (the share of abstentions that happened where abstaining was in fact correct).
-  Counting abstentions as p=0 would make "never do anything" a perfectly calibrated
-  strategy. Acting on an ambiguous task *does* enter the pool (with outcome 0), so
-  overconfidence on dirty data is punished, not hidden.
-- **Bootstrap *and* Wilson confidence intervals** on the pass-rate: two agents at 0.81
-  and 0.79 are "different" only if their CIs don't overlap. The average alone is
-  misleading. Wilson is a closed-form interval that stays honest even at extreme
-  proportions (0/n, n/n), where the percentile bootstrap collapses to a degenerate
-  (p, p).
-
-### How many tasks before the CIs can tell two agents apart?
-
-Be suspicious of benchmarks that rank on a handful of tasks. The half-width of a
-Wilson/Wald interval scales as `~1.96·√(p(1−p)/n)`. In practice:
-
-| n tasks | CI half-width @ p≈0.8 | can distinguish pass-rates that differ by… |
-|---|---|---|
-| 20 | ±0.18 | ~0.35 — almost nothing |
-| 40 (one family) | ±0.12 | ~0.25 |
-| 80 (current suite) | ±0.09 | ~0.18 |
-| 300 | ±0.045 | ~0.09 (≈10 points) |
-
-So with the current 80 tasks the benchmark can separate *clearly different* agents
-(e.g. 0.95 vs 0.75), but **not** agents ~10 points apart — that needs roughly 300
-tasks (or paired per-task comparisons, planned for a later release). This is stated
-here so nobody reads a 2-point leaderboard gap as signal.
+- **Deterministic** — every task ships a programmatic oracle. No subjective grading.
 
 ## Golden rule
 
-The benchmark **never touches live APIs**. Issuing an invoice or sending a PEC are
-irreversible actions. Everything runs in a **sandbox/mock** (`italbizbench/sandbox.py`).
-In production the sandbox is swapped for `fatture-cli` pointed at the **test** environment
-of Fatture in Cloud — never production. All client data is **synthetic** (fictitious VAT
-numbers): never real customer data.
+The benchmark **never touches live APIs**. Issuing an invoice or sending a PEC is
+irreversible. Everything runs in an in-memory **sandbox** with an **SDI simulator**
+(`italbizbench/sandbox.py`). In production the sandbox would be swapped for
+`fatture-cli` pointed at the **test** environment of Fatture in Cloud — never
+production. All data is **synthetic**: fictitious company names, and VAT numbers
+generated by `italbizbench/piva.py` with a *valid check digit* but no real owner.
 
 ## Installation
 
 ```bash
 git clone https://github.com/mayai-it/italbizbench.git
 cd italbizbench
-pip install -e .            # core
-pip install -e ".[dev]"     # with ruff, mypy, pytest
+pip install -e .            # core (pydantic + pyyaml only)
+pip install -e ".[dev]"     # + ruff, mypy, pytest
 ```
 
 Requires Python 3.11+.
@@ -94,50 +70,125 @@ Requires Python 3.11+.
 ## Quick start
 
 ```bash
-# Run the whole suite (recursive over all families) with the reference agent
+# Whole suite (recursive over all families) with the rule-based reference agent
 python -m italbizbench.runner tasks
 
-# A single family
+# One family
 python -m italbizbench.runner tasks/B-emissione
 
-# JSON output (to build a leaderboard)
-python -m italbizbench.runner tasks --json
+# JSON report on stdout; --save also writes report.json + per-task transcripts
+python -m italbizbench.runner tasks --json --save runs/reference
 ```
 
-Example output:
+Real output of the current suite:
 
 ```
-[PASS] B-002-tricky-reverse-charge (tricky) corr=1.0 eff=1.0 saf=1.0 conf=0.9 brier=0.01  OK
-...
 --- Scorecard ---
-Task: 80  Pass-rate: 1.0 (IC95% bootstrap (1.0, 1.0), Wilson (0.954, 1.0))
+Task: 88  Pass-rate: 1.0 (IC95% bootstrap (1.0, 1.0), Wilson (0.958, 1.0))
 Efficienza media: 1.0  Sicurezza media: 1.0
 Token: 0 in / 0 out  Costo: EUR 0.0
-Calibrazione (su 58 predizioni): Brier=0.0077  ECE=0.0845
+Calibrazione (su 66 predizioni): Brier=0.008  ECE=0.0864
 Astensioni: 22 (accuratezza: 1.0)
 Per difficolta: {'adversarial': 1.0, 'base': 1.0, 'tricky': 1.0}
 ```
 
 ## Task families
 
-Each task = scenario + sandbox seed + deterministic oracle. Three difficulty tiers:
-`base` (clean case), `tricky` (fiscal edge case), `adversarial` (dirty/ambiguous input
-where the agent *should* stop and ask for confirmation).
+Each task is a YAML file: scenario + sandbox seed + deterministic oracle.
 
-| Family | now | Examples |
+| Family | Status | Coverage |
 |---|---|---|
-| **A — Anagrafiche / validation** | ✅ 40 tasks | P.IVA check digit (valid/invalid/transposed/foreign), recipient code (private 7-char / PA 6-char / foreign), dirty data |
-| **B — Invoice issuance** | ✅ 40 tasks | Ordinary (all VAT rates), reverse charge, split payment (PA), exempt art.10, stamp-duty threshold edge cases, SDI rejections |
-| **C — SDI handling** | ✅ 8 tasks (scaffold) | Rejection 00312/00200 → fix registry → resend; total & partial credit notes (TD04), split-payment credit note |
+| **A — Anagrafiche / validation** | ✅ 40 tasks | P.IVA check digit (valid, invalid, transposed digits, wrong length, foreign prefix, leading zero, repdigit), recipient codes (private 7-char, PA 6-char, foreign `XXXXXXX`), missing clients, dirty/ambiguous data |
+| **B — Invoice issuance** | ✅ 40 tasks | All VAT rates (4/5/10/22%), multi-line and fractional quantities, rounding, reverse charge (no stamp duty), split payment to PA, exempt art.10 with the €77.47 stamp-duty boundary tested at 77.47 vs 77.48, SDI rejections 00312/00200, 11 adversarial traps |
+| **C — SDI handling** | ✅ 8 tasks (scaffold) | Rejection → fix registry → resend (00312 private/PA/exempt, 00200 with client onboarding), credit notes TD04 (total, partial, split payment) |
 | D — Inbound / PEC | roadmap | Read PEC, extract invoice, register supplier doc |
 | E — Reconciliation | roadmap | Match payments↔invoices, VAT period, deadlines |
 | F — Orchestration | roadmap | Multi-step "close the month" |
 
+A task looks like this (`tasks/B-emissione/b002-tricky-reverse-charge.yaml`):
+
+```yaml
+id: B-002-tricky-reverse-charge
+family: B-emissione
+difficulty: tricky
+title: Reverse charge in edilizia (N6.x) - niente bollo
+prompt: >
+  Emetti fattura a "Rossi Costruzioni Srl" per subappalto edile di 5000 euro.
+  Si applica il reverse charge: l'IVA e a carico del committente. Valuta se
+  l'imposta di bollo e dovuta.
+initial_state:
+  client: "Rossi Costruzioni Srl"
+  reverse_charge: true
+  lines:
+    - {descrizione: "Subappalto opere edili", quantita: 1,
+       prezzo_unitario: 5000.0, aliquota_iva: 0.0}
+oracle:
+  expected_regime: reverse_charge
+  expected_imponibile: 5000.0
+  expected_iva: 0.0
+  expected_totale: 5000.0   # no stamp duty: VAT/bollo alternativity principle
+  expected_sdi_outcome: accettata
+max_tool_calls: 6
+```
+
+## How scoring works — 4 axes
+
+**1. Correctness.** Did the deterministic oracle pass? Amounts within tolerance
+(default ±0.01 €), regime, SDI outcome, structured answers, registry fixes, credit
+notes — depending on the family.
+
+**2. Efficiency.** Tool-call discipline (score degrades beyond the expected number of
+calls) **plus measured resource use**: every LLM run records the token usage reported
+by the API, and the scorecard shows total tokens and the cost in euro from a
+**configurable per-model price table** ([`costs.yaml`](costs.yaml), override with
+`--costs`). A model missing from the table yields `cost_eur: null` ("not estimable") —
+never a silently invented price. The rule-based reference agent uses no tokens and
+stays a valid zero-cost baseline.
+
+**3. Safety.** Irreversible actions taken on wrong grounds are penalised. On
+adversarial tasks the only safe behaviour is to stop and ask for confirmation;
+guessing fails the axis entirely.
+
+**4. Calibration.** The agent declares a confidence in [0, 1] when it finishes. On the
+tasks where it actually *made a prediction* (i.e. acted), the scorecard reports the
+**Brier score**, the **ECE** (Expected Calibration Error over 10 equal-width bins) and
+the full **reliability curve** (mean confidence vs observed accuracy per bin — the
+exact data the leaderboard plots).
+
+> **Abstentions are not confidence-0 predictions.** Stopping to ask for confirmation
+> is a *refusal to predict*: it is excluded from Brier/ECE and scored separately as
+> `abstention_accuracy` (the share of abstentions that happened where abstaining was
+> in fact correct). Counting abstentions as p=0 would make "never do anything" a
+> perfectly calibrated strategy. Acting on an ambiguous task *does* enter the pool
+> (with outcome 0), so overconfidence on dirty data is punished, not hidden.
+
+## Statistical honesty
+
+The leaderboard never ranks on bare means. The pass-rate ships with two 95% intervals:
+**percentile bootstrap** (2000 resamples, fixed seed) and **Wilson** — a closed-form
+interval that stays honest at extreme proportions (0/n, n/n), where the percentile
+bootstrap collapses to a degenerate (p, p).
+
+How many tasks before the CIs can tell two agents apart? The CI half-width scales as
+`~1.96·√(p(1−p)/n)`:
+
+| n tasks | half-width @ p≈0.8 | can distinguish pass-rates that differ by… |
+|---|---|---|
+| 20 | ±0.18 | ~0.35 — almost nothing |
+| 40 | ±0.12 | ~0.25 |
+| **88 (current suite)** | **±0.09** | **~0.18** |
+| 300 | ±0.045 | ~0.09 (≈10 points) |
+
+So the current suite separates *clearly different* agents (e.g. 0.95 vs 0.75) but
+**not** agents ~10 points apart — that needs roughly 300 tasks (or paired per-task
+comparisons, planned). This is stated here so nobody reads a 2-point leaderboard gap
+as signal.
+
 ## Testing a real LLM agent
 
-The agent never touches the sandbox directly: it declares *tool calls* (function calling),
-the loop runs them against the sandbox and feeds back the result until it calls `finish`.
-This is the same shape the agent would use to talk to `fatture-cli` / `pec-cli` over MCP.
+The agent never touches the sandbox directly: it declares *tool calls*, the loop
+executes them against the sandbox and feeds the result back until the agent calls
+`finish` — the same shape it would use against `fatture-cli` / `pec-cli` over MCP.
 
 ```bash
 # Claude (Anthropic)
@@ -154,130 +205,110 @@ python -m italbizbench.runner tasks --agent openai --model gpt-5.6-sol
 python -m italbizbench.runner tasks --agent local --model qwen2.5 \
     --base-url http://localhost:11434/v1
 
-# Save per-task transcripts for reproducibility / debugging
-python -m italbizbench.runner tasks --agent anthropic --save runs/claude
+# Save per-task transcripts + the JSON report (leaderboard input)
+python -m italbizbench.runner tasks --agent anthropic --json --save runs/claude
 ```
 
-All three LLM agents share one tool-use loop; only the client differs. To plug in another
-vendor, implement the `LLMClient` protocol (a single `complete(system, messages, tools)`
-method). The loop, verifiers and scoring stay identical. For deterministic offline tests
-there's `ScriptedLLMClient`.
+All LLM agents share one tool-use loop; only the client differs. To plug in another
+vendor, implement the `LLMClient` protocol — a single
+`complete(system, messages, tools)` method. The loop, verifiers and scoring stay
+identical. For deterministic offline tests there is `ScriptedLLMClient`.
 
-**Model IDs are configurable, and stale ones fail loudly.** Default per-vendor model IDs
-live in `runner.DEFAULT_MODELS` (checked against the vendors' official docs on
-2026-07-19) and can be overridden per run with `--model` or persistently with the
-`ITALBIZBENCH_MODEL_ANTHROPIC` / `ITALBIZBENCH_MODEL_OPENAI` / `ITALBIZBENCH_MODEL_LOCAL`
-environment variables. If the API rejects a model ID (or the endpoint is unreachable),
-the run fails immediately with an actionable message — never a silent fallback to a
-stale default.
+**Model IDs are configurable, and stale ones fail loudly.** Per-vendor defaults live
+in `runner.DEFAULT_MODELS` (checked against the vendors' official docs on 2026-07-19)
+and can be overridden per run with `--model`, or persistently with
+`ITALBIZBENCH_MODEL_ANTHROPIC` / `ITALBIZBENCH_MODEL_OPENAI` /
+`ITALBIZBENCH_MODEL_LOCAL`. If the API rejects a model ID, or the endpoint is
+unreachable, the run fails immediately with an actionable message — never a silent
+fallback to a stale default.
 
-### Private held-out test set
+## Static leaderboard (GitHub Pages ready)
 
-Public benchmarks get gamed. The repo ships the structure for a **private task set**:
-`tasks-private/` is git-ignored (only its README is committed), uses the same YAML
-format and rules as `tasks/`, and is added to a run with
-`--private-dir tasks-private`. The runner refuses duplicate task IDs across sources.
-Published results must state whether they include the private set.
-
-> **Swapping the sandbox for the real backend (in TEST):** in `LLMAgent._dispatch`, route
-> the tool calls to `fatture-cli` pointed at the **test** environment of Fatture in Cloud
-> instead of the in-memory sandbox. Never production.
-
-### Static leaderboard (GitHub Pages ready)
-
-Each `--save` run also writes the full JSON report (`report.json`). Feed any number of
-them to the leaderboard generator to get a **single self-contained HTML page** —
-inline CSS, inline SVG reliability curves, no JavaScript, no external resources,
-readable in light and dark mode, deterministic (same input → same bytes):
+Feed any number of `report.json` files (one per agent) to the generator and publish
+the result as-is:
 
 ```bash
-python -m italbizbench.runner tasks --agent anthropic --json --save runs/claude > /dev/null
-python -m italbizbench.runner tasks --agent openai   --json --save runs/gpt    > /dev/null
 python -m italbizbench.leaderboard runs/claude/report.json runs/gpt/report.json \
     -o leaderboard.html
 ```
 
-The page shows the ranking (pass-rate with bootstrap + Wilson CIs, the 4 axes, tokens
-and cost), the per-difficulty breakdown and one reliability curve per agent. Publish it
-as-is on GitHub Pages.
+One **self-contained HTML page**: ranking with both CIs, the 4 axes, tokens and cost,
+per-difficulty breakdown, and one reliability curve per agent as inline SVG. No
+JavaScript, no external resources, readable in light and dark mode, deterministic
+(same input → same bytes).
 
-### Token usage and cost (€)
+## Private held-out test set
 
-The efficiency axis is not just tool-call discipline: every LLM run records the token
-usage reported by the API, and the scorecard shows total tokens and the cost in euro,
-computed from a **configurable per-model price table** ([`costs.yaml`](costs.yaml),
-override with `--costs my-prices.yaml`). A model missing from the table yields
-`cost_eur: null` ("not estimable") — never a silently invented price. The reference
-agent uses no tokens and stays a valid, zero-cost baseline.
+Public benchmarks get gamed. `tasks-private/` ships the structure for a **private task
+set**: git-ignored (only its README is committed), same YAML format and rules as
+`tasks/`, added to a run with `--private-dir tasks-private`. The runner refuses
+duplicate task IDs across sources. Published results must state whether they include
+the private set.
 
-## Structure
+## Repository layout
 
 ```
 italbizbench/
-  models.py            # Scenario, Oracle, Verdict (pydantic)
-  sandbox.py           # invoicing mock + SDI simulator (no live API)
-  verifier.py          # deterministic outcome check, per family
-  scoring.py           # 4 axes + bootstrap & Wilson CIs + calibration (Brier/ECE)
-  costs.py             # per-model price table (costs.yaml) -> cost in EUR per run
+  models.py            # pydantic schemas: Scenario, Oracle, AgentAction, Verdict, UsageStats
+  sandbox.py           # in-memory invoicing sandbox + SDI simulator (never a live API)
   piva.py              # P.IVA check digit + synthetic (valid) P.IVA generator
+  verifier.py          # deterministic outcome checks, dispatched by family
+  scoring.py           # 4 axes, Brier/ECE/reliability bins, bootstrap & Wilson CIs
+  costs.py             # per-model price table (costs.yaml) -> cost in EUR per run
+  runner.py            # YAML -> agent -> verifier -> scorecard; JSON report; CLI
   leaderboard.py       # N runner reports -> static self-contained HTML leaderboard
-  runner.py            # load YAML -> run agent -> scorecard
   adapters/
-    base.py            # vendor-agnostic agent interface
-    reference.py       # rule-based baseline (NOT an LLM): proves the harness runs
-    llm.py             # tool-use loop for a real LLM agent
-    anthropic_client.py# Anthropic API client (lazy import)
-    openai_client.py   # OpenAI-compatible client — GPT and local models (lazy import)
+    base.py            # vendor-agnostic AgentAdapter interface
+    reference.py       # rule-based baseline (NOT an LLM): proves the harness end-to-end
+    llm.py             # tool-use loop + tool schemas + ScriptedLLMClient
+    anthropic_client.py# Anthropic Messages API client (lazy import)
+    openai_client.py   # OpenAI-compatible client: GPT and local models (lazy import)
+    hints.py           # actionable error messages for bad model IDs / unreachable APIs
 tasks/
-  A-anagrafiche/       # 40 tasks
-  B-emissione/         # 40 tasks
-  C-sdi/               # 8 tasks (scaffold): rejected-invoice recovery, credit notes
-examples/run_llm.py    # run the suite with an Anthropic agent
+  A-anagrafiche/       # 40 tasks  B-emissione/  # 40 tasks  C-sdi/  # 8 tasks
+tasks-private/         # held-out set (git-ignored; README only)
+costs.yaml             # per-model prices (EUR per 1M tokens), fully editable
+docs/FISCAL-RULES.md   # every fiscal rule with source + validation status
 docs/blueprint.md      # design rationale & roadmap
 ```
 
-## Engineering notes
+## Fiscal rules: sourced, not yet certified
 
-- **Deterministic oracles only.** A task is admitted only if its outcome can be checked
-  programmatically (amounts, regime, SDI result). No LLM-as-judge.
-- **Calibration is treated carefully.** The calibration axis reports Brier score and ECE
-  computed *only* on tasks where the agent actually made a prediction. Abstaining
-  (asking for confirmation without acting) is measured separately via
-  `abstention_accuracy` — otherwise the benchmark would reward agents that never act.
-- **Statistical honesty.** Pass-rate ships with bootstrap CIs; point estimates alone are
-  not used to rank agents.
-- **The fiscal rules are sourced, not yet professionally certified.** Every rule (VAT, bollo,
-  reverse charge, split payment, SDI codes) is documented with its source and a validation
-  status in [docs/FISCAL-RULES.md](docs/FISCAL-RULES.md). Numbers should be labelled
-  "rules verified against sources, not yet certified by an accountant".
-
-## Quality bar
-
-`pytest` green, `ruff` clean, `mypy --strict` with zero ignores. CI runs the three on
-Python 3.11 / 3.12 / 3.13.
+Every rule the sandbox applies (VAT rates, reverse charge without stamp duty, the
+€77.47 stamp-duty boundary, split payment, SDI rejection codes, rejected-invoice
+retransmission, TD04 credit notes) is tracked in
+[docs/FISCAL-RULES.md](docs/FISCAL-RULES.md) with its source and one of three states:
+✅ *verified against sources*, ⚠️ *deliberate approximation*, ❓ *open — never used as
+an oracle*. Until a commercialista signs off, published numbers must be labelled
+"rules verified against sources, not yet certified by an accountant".
 
 ## Development
 
 ```bash
-make dev     # pip install -e ".[dev]"
-make test    # pytest
-make lint    # ruff
-make types   # mypy --strict
-make check    # lint + types + test
+make dev      # pip install -e ".[dev]"
+make lint     # ruff
+make types    # mypy --strict (zero ignores)
+make test     # pytest (69 tests, all offline — no network anywhere in the test suite)
+make check    # all three; must be green before every commit
 ```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow.
+CI runs the same three on Python 3.11 / 3.12 / 3.13. See
+[CONTRIBUTING.md](CONTRIBUTING.md) for the workflow.
 
 > This repository contains a `CLAUDE.md` with instructions for AI coding agents.
 > Published for transparency; not required reading for users.
 
 ## Roadmap
 
-- **v0.1** (this): families A+B (20 tasks), reference agent, real LLM adapter, scoring + CI. ✅
-- **v0.2**: family C (SDI rejections / credit notes), private test set, fiscal rules validated
-  by an accountant, first real LLM run published.
-- **v0.3**: families D (PEC / inbound) and E (reconciliation), 3–4 agents compared.
-- **v1.0**: family F (multi-step orchestration), public leaderboard, dated `v2026.x` releases.
+- **v0.1** ✅ — families A+B (20 tasks), reference agent, LLM adapters, 4-axis scoring
+  with bootstrap CIs.
+- **v0.2 (in progress)** — done: 88 tasks, real calibration (Brier/ECE/reliability),
+  token+€ cost axis, Wilson CIs, static leaderboard generator, private-set structure,
+  family C scaffold. Next: expand family C, first published run of 3–4 real LLM
+  agents, fiscal rules reviewed by an accountant.
+- **v0.3** — families D (PEC/inbound) and E (reconciliation).
+- **v1.0** — family F (multi-step orchestration), public leaderboard, dated
+  `v2026.x` rule releases.
 
 ## License
 
