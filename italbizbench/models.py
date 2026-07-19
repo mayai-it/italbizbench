@@ -75,7 +75,12 @@ class AxisScores(BaseModel):
     correctness: float                        # 0..1
     efficiency: float                         # 0..1 (1 = nessun giro a vuoto)
     safety: float                             # 0..1
-    calibration_error: float                  # |confidence - correctness|, piu basso e meglio
+    # Contributo Brier del task: (confidenza - esito)^2, piu basso e meglio.
+    # None quando il task e un'astensione (nessuna predizione da calibrare):
+    # le astensioni sono valutate a parte con abstention_accuracy, NON come
+    # predizioni a confidenza 0 — altrimenti "non fare nulla" varrebbe
+    # calibrazione perfetta.
+    brier: float | None
 
 
 class Verdict(BaseModel):
@@ -84,5 +89,7 @@ class Verdict(BaseModel):
     difficulty: Difficulty
     passed: bool
     tool_calls_used: int
+    confidence: float                         # confidenza dichiarata, clampata in [0, 1]
+    abstained: bool                           # ha chiesto conferma SENZA agire
     scores: AxisScores
     detail: str = ""

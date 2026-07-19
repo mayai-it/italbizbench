@@ -100,15 +100,19 @@ def main(argv: list[str] | None = None) -> int:
     print(f"\n=== ItalBizBench — agente: {agent.name} ===")
     for v in verdicts:
         mark = "PASS" if v.passed else "FAIL"
+        cal = "astensione" if v.abstained else f"brier={v.scores.brier}"
         print(f"[{mark}] {v.scenario_id:24} ({v.difficulty.value:11}) "
               f"corr={v.scores.correctness} eff={v.scores.efficiency} "
-              f"saf={v.scores.safety} calE={v.scores.calibration_error}  {v.detail}")
+              f"saf={v.scores.safety} conf={v.confidence} {cal}  {v.detail}")
     print("\n--- Scorecard ---")
     print(f"Task: {scorecard['n_tasks']}  Pass-rate: {scorecard['pass_rate']} "
           f"(IC95% {scorecard['correctness_ci95']})")
     print(f"Efficienza media: {scorecard['efficiency_mean']}  "
-          f"Sicurezza media: {scorecard['safety_mean']}  "
-          f"Errore calibrazione: {scorecard['calibration_error_mean']}")
+          f"Sicurezza media: {scorecard['safety_mean']}")
+    print(f"Calibrazione (su {scorecard['n_predictions']} predizioni): "
+          f"Brier={scorecard['brier']}  ECE={scorecard['ece']}")
+    print(f"Astensioni: {scorecard['n_abstentions']} "
+          f"(accuratezza: {scorecard['abstention_accuracy']})")
     print(f"Per difficolta: {scorecard['by_difficulty']}\n")
     return 0
 

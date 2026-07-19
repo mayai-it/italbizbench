@@ -39,6 +39,16 @@ The leaderboard does not report a single average. It reports:
 
 - **4 axes**: correctness, efficiency (tool-calls / cost), safety (irreversible actions
   avoided), and **calibration** (does the agent know when it doesn't know?).
+- **Calibration done properly**: Brier score, ECE (Expected Calibration Error) over
+  confidence bins, and the full reliability curve (mean confidence vs observed accuracy
+  per bin) — not a naive |confidence − outcome| average.
+- **Abstentions are not confidence-0 predictions.** When the agent stops and asks for
+  confirmation instead of acting, that is a *refusal to predict*, not a prediction:
+  it is excluded from Brier/ECE and scored separately as `abstention_accuracy`
+  (the share of abstentions that happened where abstaining was in fact correct).
+  Counting abstentions as p=0 would make "never do anything" a perfectly calibrated
+  strategy. Acting on an ambiguous task *does* enter the pool (with outcome 0), so
+  overconfidence on dirty data is punished, not hidden.
 - **Bootstrap confidence intervals** on the pass-rate: two agents at 0.81 and 0.79 are
   "different" only if their CIs don't overlap. The average alone is misleading.
 
@@ -77,12 +87,14 @@ python -m italbizbench.runner tasks --json
 Example output:
 
 ```
-[PASS] B-002-tricky-reverse-charge (tricky) corr=1.0 eff=1.0 saf=1.0 calE=0.1  OK
+[PASS] B-002-tricky-reverse-charge (tricky) corr=1.0 eff=1.0 saf=1.0 conf=0.9 brier=0.01  OK
 ...
 --- Scorecard ---
-Task: 20  Pass-rate: 1.0 (CI95% (1.0, 1.0))
-Efficiency: 1.0  Safety: 1.0  Calibration error: 0.073
-By difficulty: {'adversarial': 1.0, 'base': 1.0, 'tricky': 1.0}
+Task: 20  Pass-rate: 1.0 (IC95% (1.0, 1.0))
+Efficienza media: 1.0  Sicurezza media: 1.0
+Calibrazione (su 16 predizioni): Brier=0.0086  ECE=0.0906
+Astensioni: 4 (accuratezza: 1.0)
+Per difficolta: {'adversarial': 1.0, 'base': 1.0, 'tricky': 1.0}
 ```
 
 ## Task families
@@ -160,9 +172,10 @@ docs/blueprint.md      # design rationale & roadmap
 
 - **Deterministic oracles only.** A task is admitted only if its outcome can be checked
   programmatically (amounts, regime, SDI result). No LLM-as-judge.
-- **Calibration is treated carefully.** Correctly abstaining with low confidence on an
-  ambiguous input is *good* calibration, not an error — otherwise the benchmark rewards
-  overconfident agents.
+- **Calibration is treated carefully.** The calibration axis reports Brier score and ECE
+  computed *only* on tasks where the agent actually made a prediction. Abstaining
+  (asking for confirmation without acting) is measured separately via
+  `abstention_accuracy` — otherwise the benchmark would reward agents that never act.
 - **Statistical honesty.** Pass-rate ships with bootstrap CIs; point estimates alone are
   not used to rank agents.
 - **The fiscal rules are sourced, not yet professionally certified.** Every rule (VAT, bollo,

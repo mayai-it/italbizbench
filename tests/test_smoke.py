@@ -13,8 +13,11 @@ def test_reference_agent_passes_all():
     assert scorecard["n_tasks"] == 20
     # La baseline rule-based e progettata per essere corretta su tutti i task v0.1.
     assert scorecard["pass_rate"] == 1.0
-    # Ben calibrata: confidenza coerente con l'esito, astensione corretta sugli ambigui.
-    assert scorecard["calibration_error_mean"] < 0.15
+    # Ben calibrata: predice con confidenza alta e passa (Brier basso), e si astiene
+    # esattamente sui task adversarial (accuratezza di astensione 1.0).
+    assert scorecard["brier"] is not None and scorecard["brier"] < 0.05
+    assert scorecard["abstention_accuracy"] == 1.0
+    assert scorecard["n_predictions"] + scorecard["n_abstentions"] == 20
 
 
 def test_piva_checksum():

@@ -6,6 +6,22 @@ All notable changes to this project are documented here. Format based on
 
 ## [Unreleased]
 
+### Changed
+- **Calibrazione vera al posto del placeholder.** L'asse calibrazione non è più la media
+  di |confidenza − esito|: la scorecard riporta **Brier score**, **ECE** (Expected
+  Calibration Error su 10 bin di uguale ampiezza) e i dati completi della **reliability
+  curve** (confidenza media vs accuratezza per bin). Per task, `AxisScores.brier` è il
+  contributo (p − y)².
+- **Le astensioni non sono predizioni a confidenza 0.** Chiedere conferma senza agire è
+  un rifiuto di predire: escluso da Brier/ECE e misurato a parte con
+  `abstention_accuracy` (quota di astensioni avvenute dove astenersi era corretto).
+  Chiude il buco per cui un agente che non faceva nulla con confidenza 0 otteneva
+  calibrazione "perfetta". Chi invece agisce su un task ambiguo entra nel pool con
+  esito 0: la sovraconfidenza resta punita.
+- `Verdict` espone `confidence` (clampata in [0, 1]) e `abstained`; `aggregate()` riporta
+  `brier`, `ece`, `reliability_bins`, `n_predictions`, `n_abstentions`,
+  `abstention_accuracy`.
+
 ### Fixed
 - **Reverse charge non sconta l'imposta di bollo** (principio di alternatività IVA/bollo):
   rimosso il bollo €2 erroneamente applicato (oracoli B-002, B-009 corretti).
