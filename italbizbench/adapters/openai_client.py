@@ -15,6 +15,7 @@ import os
 from typing import Any
 
 from ..models import UsageStats
+from .hints import endpoint_unreachable_hint, model_not_accepted_hint
 from .llm import LLMResponse, ToolCall
 
 
@@ -80,7 +81,7 @@ def usage_from_response(resp: Any) -> UsageStats | None:
 
 
 class OpenAIClient:
-    def __init__(self, model: str = "gpt-4o", base_url: str | None = None,
+    def __init__(self, model: str = "gpt-5.6-sol", base_url: str | None = None,
                  api_key: str | None = None, max_tokens: int = 1024):
         try:
             import openai  # noqa: F401
@@ -92,17 +93,29 @@ class OpenAIClient:
         # installato sia in CI dove non lo e' (ignore_missing_imports).
         self._client: Any = openai.OpenAI(api_key=key, base_url=base_url)
         self.model = model
+        self.base_url = base_url
         self.max_tokens = max_tokens
 
     def complete(self, system: str, messages: list[dict[str, Any]],
                  tools: list[dict[str, Any]]) -> LLMResponse:
+        import openai
+
         full = [{"role": "system", "content": system}, *to_openai_messages(messages)]
-        resp = self._client.chat.completions.create(
-            model=self.model,
-            max_tokens=self.max_tokens,
-            messages=full,
-            tools=to_openai_tools(tools),
-        )
+        try:
+            resp = self._client.chat.completions.create(
+                model=self.model,
+                max_tokens=self.max_tokens,
+                messages=full,
+                tools=to_openai_tools(tools),
+            )
+        except openai.NotFoundError as e:
+            # Fallimento CHIARO su ID modello sbagliato/ritirato: niente default
+            # silenziosi e stantii (vedi adapters/hints.py).
+            raise RuntimeError(model_not_accepted_hint(
+                "OpenAI-compatibile", self.model, "ITALBIZBENCH_MODEL_OPENAI", e)) from e
+        except openai.APIConnectionError as e:
+            raise RuntimeError(endpoint_unreachable_hint(
+                "OpenAI-compatibile", self.base_url, e)) from e
         msg = resp.choices[0].message
         calls: list[ToolCall] = []
         for tc in (msg.tool_calls or []):

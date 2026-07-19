@@ -143,12 +143,12 @@ This is the same shape the agent would use to talk to `fatture-cli` / `pec-cli` 
 # Claude (Anthropic)
 pip install anthropic
 export ANTHROPIC_API_KEY=sk-...
-python -m italbizbench.runner tasks --agent anthropic --model claude-sonnet-4-6
+python -m italbizbench.runner tasks --agent anthropic --model claude-sonnet-5
 
 # GPT (OpenAI)
 pip install openai
 export OPENAI_API_KEY=sk-...
-python -m italbizbench.runner tasks --agent openai --model gpt-4o
+python -m italbizbench.runner tasks --agent openai --model gpt-5.6-sol
 
 # Local model (Ollama / llama.cpp / vLLM — any OpenAI-compatible endpoint)
 python -m italbizbench.runner tasks --agent local --model qwen2.5 \
@@ -162,6 +162,22 @@ All three LLM agents share one tool-use loop; only the client differs. To plug i
 vendor, implement the `LLMClient` protocol (a single `complete(system, messages, tools)`
 method). The loop, verifiers and scoring stay identical. For deterministic offline tests
 there's `ScriptedLLMClient`.
+
+**Model IDs are configurable, and stale ones fail loudly.** Default per-vendor model IDs
+live in `runner.DEFAULT_MODELS` (checked against the vendors' official docs on
+2026-07-19) and can be overridden per run with `--model` or persistently with the
+`ITALBIZBENCH_MODEL_ANTHROPIC` / `ITALBIZBENCH_MODEL_OPENAI` / `ITALBIZBENCH_MODEL_LOCAL`
+environment variables. If the API rejects a model ID (or the endpoint is unreachable),
+the run fails immediately with an actionable message — never a silent fallback to a
+stale default.
+
+### Private held-out test set
+
+Public benchmarks get gamed. The repo ships the structure for a **private task set**:
+`tasks-private/` is git-ignored (only its README is committed), uses the same YAML
+format and rules as `tasks/`, and is added to a run with
+`--private-dir tasks-private`. The runner refuses duplicate task IDs across sources.
+Published results must state whether they include the private set.
 
 > **Swapping the sandbox for the real backend (in TEST):** in `LLMAgent._dispatch`, route
 > the tool calls to `fatture-cli` pointed at the **test** environment of Fatture in Cloud

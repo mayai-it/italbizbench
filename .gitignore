@@ -10,3 +10,7 @@ build/
 .ruff_cache/
 results/*.json
 .DS_Store
+
+# Test set privato (held-out, anti-gaming): i task NON vanno mai committati.
+tasks-private/*
+!tasks-private/README.md

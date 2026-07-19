@@ -5,7 +5,7 @@ dell'API Messages di Anthropic, e ritorna le tool-call del modello.
 
 Uso:
     from italbizbench.adapters.anthropic_client import AnthropicLLMClient
-    client = AnthropicLLMClient(model="claude-sonnet-4-6")  # legge ANTHROPIC_API_KEY
+    client = AnthropicLLMClient(model="claude-sonnet-5")  # legge ANTHROPIC_API_KEY
 """
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ import os
 from typing import Any, cast
 
 from ..models import UsageStats
+from .hints import endpoint_unreachable_hint, model_not_accepted_hint
 from .llm import LLMResponse, ToolCall
 
 
@@ -53,7 +54,7 @@ def usage_from_response(resp: Any) -> UsageStats | None:
 
 
 class AnthropicLLMClient:
-    def __init__(self, model: str = "claude-sonnet-4-6", max_tokens: int = 1024,
+    def __init__(self, model: str = "claude-sonnet-5", max_tokens: int = 1024,
                  api_key: str | None = None):
         try:
             import anthropic  # noqa: F401
@@ -66,12 +67,22 @@ class AnthropicLLMClient:
 
     def complete(self, system: str, messages: list[dict[str, Any]],
                  tools: list[dict[str, Any]]) -> LLMResponse:
+        import anthropic
+
         # I dizionari generici dell'harness sono compatibili a runtime con i TypedDict
         # dell'SDK Anthropic; il cast esplicito tiene mypy --strict felice al confine.
-        resp = self._client.messages.create(
-            model=self.model, max_tokens=self.max_tokens, system=system,
-            tools=cast(Any, tools), messages=cast(Any, _to_anthropic(messages)),
-        )
+        try:
+            resp = self._client.messages.create(
+                model=self.model, max_tokens=self.max_tokens, system=system,
+                tools=cast(Any, tools), messages=cast(Any, _to_anthropic(messages)),
+            )
+        except anthropic.NotFoundError as e:
+            # Fallimento CHIARO su ID modello sbagliato/ritirato: niente default
+            # silenziosi e stantii (vedi adapters/hints.py).
+            raise RuntimeError(model_not_accepted_hint(
+                "Anthropic", self.model, "ITALBIZBENCH_MODEL_ANTHROPIC", e)) from e
+        except anthropic.APIConnectionError as e:
+            raise RuntimeError(endpoint_unreachable_hint("Anthropic", None, e)) from e
         calls: list[ToolCall] = []
         text = ""
         for block in resp.content:

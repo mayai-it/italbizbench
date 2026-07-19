@@ -8,7 +8,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +22,28 @@ from .models import Scenario, UsageStats, Verdict
 from .sandbox import InvoicingSandbox
 from .scoring import aggregate, score_task
 
+# ID modello di default per vendor — verificati sulla documentazione ufficiale dei
+# vendor il 2026-07-19. Override per run con --model, oppure stabilmente con le
+# variabili d'ambiente qui sotto. Se un ID diventa stantio l'API lo rifiuta e i
+# client falliscono con un messaggio chiaro (adapters/hints.py), mai in silenzio.
+DEFAULT_MODELS: dict[str, str] = {
+    "anthropic": "claude-sonnet-5",
+    "openai": "gpt-5.6-sol",
+    "local": "qwen2.5",
+}
+MODEL_ENV_VARS: dict[str, str] = {
+    "anthropic": "ITALBIZBENCH_MODEL_ANTHROPIC",
+    "openai": "ITALBIZBENCH_MODEL_OPENAI",
+    "local": "ITALBIZBENCH_MODEL_LOCAL",
+}
+
+
+def resolve_model(vendor: str, cli_value: str | None,
+                  env: Mapping[str, str] | None = None) -> str:
+    """ID modello effettivo: --model > variabile d'ambiente > default del vendor."""
+    e: Mapping[str, str] = os.environ if env is None else env
+    return cli_value or e.get(MODEL_ENV_VARS[vendor], "") or DEFAULT_MODELS[vendor]
+
 
 def load_scenarios(path: Path) -> list[Scenario]:
     files = sorted(path.rglob("*.yaml")) if path.is_dir() else [path]
@@ -27,6 +51,24 @@ def load_scenarios(path: Path) -> list[Scenario]:
     for f in files:
         data = yaml.safe_load(f.read_text(encoding="utf-8"))
         scenarios.append(Scenario(**data))
+    return scenarios
+
+
+def load_all_scenarios(paths: Sequence[Path]) -> list[Scenario]:
+    """Carica piu sorgenti di task (es. pubblici + held-out privati) con ID unici.
+
+    Un ID duplicato tra pubblico e privato corromperebbe il confronto: meglio
+    fallire subito con un messaggio esplicito.
+    """
+    scenarios = [sc for p in paths for sc in load_scenarios(p)]
+    seen: set[str] = set()
+    dups: list[str] = []
+    for sc in scenarios:
+        if sc.id in seen:
+            dups.append(sc.id)
+        seen.add(sc.id)
+    if dups:
+        raise ValueError(f"ID di task duplicati tra le sorgenti: {sorted(set(dups))}")
     return scenarios
 
 
@@ -47,14 +89,15 @@ def _run_usage(agent: AgentAdapter, cost_table: CostTable) -> UsageStats:
                       cost_eur=cost)
 
 
-def run(path: Path, agent: AgentAdapter, save_dir: Path | None = None,
+def run(path: Path | Sequence[Path], agent: AgentAdapter, save_dir: Path | None = None,
         cost_table: CostTable | None = None) -> tuple[list[Verdict], dict[str, Any]]:
+    paths: list[Path] = [path] if isinstance(path, Path) else list(path)
     if cost_table is None:
         cost_table = load_cost_table()
     verdicts: list[Verdict] = []
     if save_dir is not None:
         save_dir.mkdir(parents=True, exist_ok=True)
-    for sc in load_scenarios(path):
+    for sc in load_all_scenarios(paths):
         sandbox = InvoicingSandbox(clients=dict(InvoicingSandbox().clients))
         for name, info in sc.initial_state.get("extra_clients", {}).items():
             sandbox.clients[name] = info
@@ -76,17 +119,15 @@ def _build_agent(args: argparse.Namespace) -> AgentAdapter:
         return ReferenceAgent()
 
     from .adapters.llm import LLMAgent
+    model = resolve_model(args.agent, args.model)
     if args.agent == "anthropic":
         from .adapters.anthropic_client import AnthropicLLMClient
-        model = args.model or "claude-sonnet-4-6"
         return LLMAgent(AnthropicLLMClient(model=model), name=f"anthropic:{model}")
     if args.agent == "openai":
         from .adapters.openai_client import OpenAIClient
-        model = args.model or "gpt-4o"
         return LLMAgent(OpenAIClient(model=model), name=f"openai:{model}")
     # local: API OpenAI-compatibile (default Ollama)
     from .adapters.openai_client import OpenAIClient
-    model = args.model or "qwen2.5"
     base_url = args.base_url or "http://localhost:11434/v1"
     return LLMAgent(OpenAIClient(model=model, base_url=base_url, api_key="local"),
                     name=f"local:{model}")
@@ -98,18 +139,29 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--agent", choices=["reference", "anthropic", "openai", "local"],
                    default="reference", help="agente da valutare (default: reference rule-based)")
     p.add_argument("--model", default=None,
-                   help="modello LLM (default per vendor se omesso)")
+                   help="ID modello LLM; se omesso vale la variabile d'ambiente "
+                        "ITALBIZBENCH_MODEL_<VENDOR> o il default del vendor "
+                        f"({DEFAULT_MODELS})")
     p.add_argument("--base-url", default=None,
                    help="endpoint OpenAI-compatibile (per --agent local, es. Ollama)")
     p.add_argument("--save", type=Path, default=None,
                    help="cartella dove salvare i transcript degli agenti LLM")
     p.add_argument("--costs", type=Path, default=None,
                    help="tabella costi YAML (default: costs.yaml alla radice del repo)")
+    p.add_argument("--private-dir", type=Path, default=None,
+                   help="cartella di task held-out privati da AGGIUNGERE ai task "
+                        "pubblici (es. tasks-private/; mai committata)")
     p.add_argument("--json", action="store_true", help="output JSON")
     args = p.parse_args(argv)
 
+    paths: list[Path] = [args.tasks]
+    if args.private_dir is not None:
+        if not args.private_dir.exists():
+            p.error(f"--private-dir: la cartella {args.private_dir} non esiste")
+        paths.append(args.private_dir)
+
     agent: AgentAdapter = _build_agent(args)
-    verdicts, scorecard = run(args.tasks, agent, save_dir=args.save,
+    verdicts, scorecard = run(paths, agent, save_dir=args.save,
                               cost_table=load_cost_table(args.costs))
 
     report = {

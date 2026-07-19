@@ -6,7 +6,7 @@ Prerequisiti:
 
 Uso:
     python examples/run_llm.py                 # tutta la suite
-    python examples/run_llm.py tasks/A-anagrafiche --model claude-sonnet-4-6
+    python examples/run_llm.py tasks/A-anagrafiche --model claude-sonnet-5
 """
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parent.parent
 def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("tasks", nargs="?", default=str(ROOT / "tasks"))
-    p.add_argument("--model", default="claude-sonnet-4-6")
+    p.add_argument("--model", default="claude-sonnet-5")
     args = p.parse_args()
 
     agent = LLMAgent(AnthropicLLMClient(model=args.model), name=f"anthropic:{args.model}")

@@ -7,6 +7,17 @@ All notable changes to this project are documented here. Format based on
 ## [Unreleased]
 
 ### Added
+- **Test set privato (held-out).** Cartella `tasks-private/` esclusa da git (committato
+  solo il README con le regole), stesso formato dei task pubblici; il runner la aggiunge
+  con `--private-dir` e **rifiuta ID duplicati** tra sorgenti. I risultati pubblicati
+  devono dichiarare se includono il set privato.
+- **ID modello configurabili e robusti.** Default per vendor in `runner.DEFAULT_MODELS`
+  — aggiornati e verificati sulla documentazione ufficiale dei vendor il 2026-07-19
+  (`claude-sonnet-5`, `gpt-5.6-sol`, `qwen2.5`) — con override via `--model` o variabili
+  d'ambiente `ITALBIZBENCH_MODEL_*`. Se l'API rifiuta l'ID modello o l'endpoint non è
+  raggiungibile, i client falliscono subito con un messaggio operativo
+  (`adapters/hints.py`), mai default silenziosi e stantii. `costs.yaml` aggiornato ai
+  listini correnti (conversione 1 USD ≈ 0,876 EUR al 2026-07-19).
 - **Generatore di leaderboard statica** (`italbizbench/leaderboard.py`, entry point
   `italbizbench-leaderboard`): legge N `report.json` del runner (uno per agente) e
   produce una pagina HTML self-contained pronta per GitHub Pages — tabella pass-rate

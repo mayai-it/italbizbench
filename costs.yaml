@@ -1,19 +1,25 @@
 # Tabella costi per modello — prezzi per 1 MILIONE di token, in EURO.
 #
-# Valori INDICATIVI ricavati dai listini pubblici dei vendor e convertiti in euro
-# (assunzione: 1 USD ~= 0.93 EUR, luglio 2026). I listini cambiano spesso:
-# aggiorna liberamente questo file, oppure passane un altro al runner con
-# `--costs percorso/mio-listino.yaml`. Un modello assente da questa tabella
-# produce cost_eur=null nella scorecard ("costo non stimabile"), mai un prezzo
-# inventato.
+# Valori INDICATIVI ricavati dai listini ufficiali dei vendor il 2026-07-19
+# (docs.claude.com / developers.openai.com) e convertiti in euro con
+# 1 USD ~= 0,876 EUR. I listini cambiano spesso: aggiorna liberamente questo
+# file, oppure passane un altro al runner con `--costs percorso/listino.yaml`.
+# Un modello assente da questa tabella produce cost_eur=null nella scorecard
+# ("costo non stimabile"), mai un prezzo inventato.
 currency: EUR
 models:
-  # Anthropic
-  claude-sonnet-4-6: {input_per_mtok: 2.80, output_per_mtok: 14.00}
-  claude-haiku-4-5: {input_per_mtok: 0.93, output_per_mtok: 4.65}
-  claude-opus-4-6: {input_per_mtok: 14.00, output_per_mtok: 70.00}
+  # Anthropic (listino standard; Sonnet 5 ha un prezzo lancio piu basso fino al 2026-08-31)
+  claude-sonnet-5: {input_per_mtok: 2.63, output_per_mtok: 13.14}
+  claude-haiku-4-5: {input_per_mtok: 0.88, output_per_mtok: 4.38}
+  claude-opus-4-8: {input_per_mtok: 4.38, output_per_mtok: 21.90}
+  claude-fable-5: {input_per_mtok: 8.76, output_per_mtok: 43.80}
   # OpenAI
-  gpt-4o: {input_per_mtok: 2.33, output_per_mtok: 9.30}
-  gpt-4o-mini: {input_per_mtok: 0.14, output_per_mtok: 0.56}
+  gpt-5.6-sol: {input_per_mtok: 2.19, output_per_mtok: 13.14}
+  gpt-5.6-terra: {input_per_mtok: 1.10, output_per_mtok: 6.57}
+  gpt-5.6-luna: {input_per_mtok: 0.44, output_per_mtok: 2.63}
+  gpt-5.4-mini: {input_per_mtok: 0.33, output_per_mtok: 1.97}
+  # OpenAI legacy (ancora disponibili)
+  gpt-4o: {input_per_mtok: 2.19, output_per_mtok: 8.76}
+  gpt-4o-mini: {input_per_mtok: 0.13, output_per_mtok: 0.53}
   # Modelli locali (Ollama / vLLM): costo marginale ~0 per definizione.
   qwen2.5: {input_per_mtok: 0.0, output_per_mtok: 0.0}
