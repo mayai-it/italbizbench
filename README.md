@@ -167,6 +167,24 @@ there's `ScriptedLLMClient`.
 > the tool calls to `fatture-cli` pointed at the **test** environment of Fatture in Cloud
 > instead of the in-memory sandbox. Never production.
 
+### Static leaderboard (GitHub Pages ready)
+
+Each `--save` run also writes the full JSON report (`report.json`). Feed any number of
+them to the leaderboard generator to get a **single self-contained HTML page** —
+inline CSS, inline SVG reliability curves, no JavaScript, no external resources,
+readable in light and dark mode, deterministic (same input → same bytes):
+
+```bash
+python -m italbizbench.runner tasks --agent anthropic --json --save runs/claude > /dev/null
+python -m italbizbench.runner tasks --agent openai   --json --save runs/gpt    > /dev/null
+python -m italbizbench.leaderboard runs/claude/report.json runs/gpt/report.json \
+    -o leaderboard.html
+```
+
+The page shows the ranking (pass-rate with bootstrap + Wilson CIs, the 4 axes, tokens
+and cost), the per-difficulty breakdown and one reliability curve per agent. Publish it
+as-is on GitHub Pages.
+
 ### Token usage and cost (€)
 
 The efficiency axis is not just tool-call discipline: every LLM run records the token
@@ -186,6 +204,7 @@ italbizbench/
   scoring.py           # 4 axes + bootstrap & Wilson CIs + calibration (Brier/ECE)
   costs.py             # per-model price table (costs.yaml) -> cost in EUR per run
   piva.py              # P.IVA check digit + synthetic (valid) P.IVA generator
+  leaderboard.py       # N runner reports -> static self-contained HTML leaderboard
   runner.py            # load YAML -> run agent -> scorecard
   adapters/
     base.py            # vendor-agnostic agent interface

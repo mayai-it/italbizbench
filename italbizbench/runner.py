@@ -112,12 +112,19 @@ def main(argv: list[str] | None = None) -> int:
     verdicts, scorecard = run(args.tasks, agent, save_dir=args.save,
                               cost_table=load_cost_table(args.costs))
 
+    report = {
+        "agent": agent.name,
+        "scorecard": scorecard,
+        "verdicts": [v.model_dump(mode="json") for v in verdicts],
+    }
+    # Con --save il report JSON viene anche scritto su file: e l'input del
+    # generatore di leaderboard (italbizbench.leaderboard).
+    if args.save is not None:
+        (args.save / "report.json").write_text(
+            json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
+
     if args.json:
-        print(json.dumps({
-            "agent": agent.name,
-            "scorecard": scorecard,
-            "verdicts": [v.model_dump(mode="json") for v in verdicts],
-        }, indent=2, ensure_ascii=False))
+        print(json.dumps(report, indent=2, ensure_ascii=False))
         return 0
 
     print(f"\n=== ItalBizBench — agente: {agent.name} ===")

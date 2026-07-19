@@ -38,6 +38,7 @@ Issues = "https://github.com/mayai-it/italbizbench/issues"
 
 [project.scripts]
 italbizbench = "italbizbench.runner:main"
+italbizbench-leaderboard = "italbizbench.leaderboard:main"
 
 [build-system]
 requires = ["hatchling"]

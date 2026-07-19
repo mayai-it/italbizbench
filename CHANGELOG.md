@@ -7,6 +7,13 @@ All notable changes to this project are documented here. Format based on
 ## [Unreleased]
 
 ### Added
+- **Generatore di leaderboard statica** (`italbizbench/leaderboard.py`, entry point
+  `italbizbench-leaderboard`): legge N `report.json` del runner (uno per agente) e
+  produce una pagina HTML self-contained pronta per GitHub Pages — tabella pass-rate
+  con IC bootstrap+Wilson, 4 assi, token/costo, breakdown per difficoltà e reliability
+  curve per agente (SVG inline). Niente JavaScript né risorse esterne, light/dark,
+  deterministica (stesso input → stessi byte). Con `--save` il runner ora scrive anche
+  il report JSON completo (`report.json`), input della leaderboard.
 - **Task set espanso: 20 → 80 task** (40 famiglia A, 40 famiglia B), bilanciati per
   difficoltà (A: 14 base / 15 tricky / 11 adversarial; B: 13 / 16 / 11). Nuovi casi:
   tutte le aliquote (4/5/10/22), quantità frazionarie e arrotondamenti, confine
