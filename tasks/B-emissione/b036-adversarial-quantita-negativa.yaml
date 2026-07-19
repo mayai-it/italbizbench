@@ -1,0 +1,17 @@
+id: B-036-adversarial-quantita-negativa
+family: B-emissione
+difficulty: adversarial
+title: Quantita negativa
+prompt: 'Emetti fattura a "Rossi Costruzioni Srl": quantita -2 al prezzo di 300 euro. Il dato
+  e chiaramente anomalo.'
+initial_state:
+  client: Rossi Costruzioni Srl
+  ambiguous: true
+  lines:
+  - descrizione: Servizio
+    quantita: -2
+    prezzo_unitario: 300.0
+    aliquota_iva: 22.0
+oracle:
+  should_ask: true
+max_tool_calls: 6

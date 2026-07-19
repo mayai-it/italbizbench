@@ -1,0 +1,12 @@
+id: A-010-base-piva-invalida-2
+family: A-anagrafiche
+difficulty: base
+title: P.IVA con check digit errato (2)
+prompt: La P.IVA "01239876542" e valida?
+initial_state:
+  check: piva
+  piva: 01239876542
+oracle:
+  expected_result:
+    valid: false
+max_tool_calls: 4

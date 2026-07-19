@@ -1,0 +1,13 @@
+id: B-038-adversarial-aliquota-inesistente
+family: B-emissione
+difficulty: adversarial
+title: Aliquota IVA inesistente
+prompt: Emetti fattura a "Rossi Costruzioni Srl" per 1000 euro con IVA al 35%. (Il 35% non
+  e un'aliquota IVA italiana.)
+initial_state:
+  client: Rossi Costruzioni Srl
+  ambiguous: true
+  lines: []
+oracle:
+  should_ask: true
+max_tool_calls: 6

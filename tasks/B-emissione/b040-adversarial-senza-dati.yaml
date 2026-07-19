@@ -1,0 +1,13 @@
+id: B-040-adversarial-senza-dati
+family: B-emissione
+difficulty: adversarial
+title: Rifare una fattura senza dati
+prompt: Rifai "la fattura di ieri, uguale" per lo stesso cliente. Non ci sono ne importi ne
+  riferimenti alla fattura in questione.
+initial_state:
+  client: Rossi Costruzioni Srl
+  ambiguous: true
+  lines: []
+oracle:
+  should_ask: true
+max_tool_calls: 6

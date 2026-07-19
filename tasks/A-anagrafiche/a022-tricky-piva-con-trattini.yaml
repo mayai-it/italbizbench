@@ -1,0 +1,13 @@
+id: A-022-tricky-piva-con-trattini
+family: A-anagrafiche
+difficulty: tricky
+title: P.IVA scritta con trattini
+prompt: La stringa "123-4567-8903" rispetta cosi com'e scritta il formato di P.IVA italiana
+  (11 cifre numeriche)?
+initial_state:
+  check: piva
+  piva: 123-4567-8903
+oracle:
+  expected_result:
+    valid: false
+max_tool_calls: 4

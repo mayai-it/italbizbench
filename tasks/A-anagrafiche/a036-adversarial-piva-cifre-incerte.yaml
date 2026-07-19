@@ -1,0 +1,12 @@
+id: A-036-adversarial-piva-cifre-incerte
+family: A-anagrafiche
+difficulty: adversarial
+title: Cifre incerte
+prompt: Sul fax si legge "0000000000?" — l'ultima cifra e illeggibile. La valido cosi?
+initial_state:
+  ambiguous: true
+  check: piva
+  piva: 0000000000?
+oracle:
+  should_ask: true
+max_tool_calls: 4

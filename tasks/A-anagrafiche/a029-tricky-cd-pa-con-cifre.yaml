@@ -1,0 +1,17 @@
+id: A-029-tricky-cd-pa-con-cifre
+family: A-anagrafiche
+difficulty: tricky
+title: Codice ufficio PA con cifre
+prompt: Qual e il codice univoco ufficio dell'"Ufficio Tributi di Prova"?
+initial_state:
+  check: codice_destinatario
+  client: Ufficio Tributi di Prova
+  extra_clients:
+    Ufficio Tributi di Prova:
+      piva: '88800033347'
+      codice_destinatario: UFF123
+      pa: true
+oracle:
+  expected_result:
+    codice_destinatario: UFF123
+max_tool_calls: 4

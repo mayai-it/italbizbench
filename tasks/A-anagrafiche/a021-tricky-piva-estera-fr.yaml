@@ -1,0 +1,13 @@
+id: A-021-tricky-piva-estera-fr
+family: A-anagrafiche
+difficulty: tricky
+title: P.IVA estera (prefisso FR)
+prompt: La stringa "FR123456789" e una P.IVA ITALIANA formalmente valida secondo l'algoritmo
+  del check digit? (le P.IVA estere non seguono questo algoritmo)
+initial_state:
+  check: piva
+  piva: FR123456789
+oracle:
+  expected_result:
+    valid: false
+max_tool_calls: 4

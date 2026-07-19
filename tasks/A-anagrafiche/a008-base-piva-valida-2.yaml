@@ -1,0 +1,12 @@
+id: A-008-base-piva-valida-2
+family: A-anagrafiche
+difficulty: base
+title: Validazione P.IVA corretta (2)
+prompt: La P.IVA "05556667771" e formalmente valida? Verifica il check digit.
+initial_state:
+  check: piva
+  piva: '05556667771'
+oracle:
+  expected_result:
+    valid: true
+max_tool_calls: 4

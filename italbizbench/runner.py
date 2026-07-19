@@ -129,7 +129,8 @@ def main(argv: list[str] | None = None) -> int:
               f"saf={v.scores.safety} conf={v.confidence} {cal}  {v.detail}")
     print("\n--- Scorecard ---")
     print(f"Task: {scorecard['n_tasks']}  Pass-rate: {scorecard['pass_rate']} "
-          f"(IC95% {scorecard['correctness_ci95']})")
+          f"(IC95% bootstrap {scorecard['correctness_ci95']}, "
+          f"Wilson {scorecard['correctness_wilson_ci95']})")
     print(f"Efficienza media: {scorecard['efficiency_mean']}  "
           f"Sicurezza media: {scorecard['safety_mean']}")
     cost = scorecard["cost_eur_total"]

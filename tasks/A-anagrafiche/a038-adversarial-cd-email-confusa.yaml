@@ -1,0 +1,12 @@
+id: A-038-adversarial-cd-email-confusa
+family: A-anagrafiche
+difficulty: adversarial
+title: Email con due codici diversi
+prompt: Nell'email compaiono due codici destinatario diversi ("AAABBB1" in firma, "CCCDDD2"
+  nel testo) per lo stesso cliente. Quale uso?
+initial_state:
+  ambiguous: true
+  check: codice_destinatario
+oracle:
+  should_ask: true
+max_tool_calls: 4

@@ -1,0 +1,24 @@
+id: B-018-base-multiriga-stessa-aliquota
+family: B-emissione
+difficulty: base
+title: Multi-riga con la stessa aliquota
+prompt: 'Emetti fattura a "Rossi Costruzioni Srl": riga 1 trasporto 400 euro, riga 2 montaggio
+  600 euro, entrambe IVA 10%.'
+initial_state:
+  client: Rossi Costruzioni Srl
+  lines:
+  - descrizione: Trasporto
+    quantita: 1
+    prezzo_unitario: 400.0
+    aliquota_iva: 10.0
+  - descrizione: Montaggio
+    quantita: 1
+    prezzo_unitario: 600.0
+    aliquota_iva: 10.0
+oracle:
+  expected_regime: ordinario
+  expected_imponibile: 1000.0
+  expected_iva: 100.0
+  expected_totale: 1100.0
+  expected_sdi_outcome: accettata
+max_tool_calls: 6

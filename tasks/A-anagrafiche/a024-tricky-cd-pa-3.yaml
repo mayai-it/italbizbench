@@ -1,0 +1,17 @@
+id: A-024-tricky-cd-pa-3
+family: A-anagrafiche
+difficulty: tricky
+title: Codice univoco ufficio PA (3)
+prompt: 'Recupera il codice univoco ufficio del "Ministero di Prova" (PA: 6 caratteri).'
+initial_state:
+  check: codice_destinatario
+  client: Ministero di Prova
+  extra_clients:
+    Ministero di Prova:
+      piva: '88800022233'
+      codice_destinatario: MIN001
+      pa: true
+oracle:
+  expected_result:
+    codice_destinatario: MIN001
+max_tool_calls: 4

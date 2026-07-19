@@ -1,0 +1,12 @@
+id: A-016-base-piva-invalida-4
+family: A-anagrafiche
+difficulty: base
+title: P.IVA con check digit errato (4)
+prompt: La P.IVA "56473829102" e formalmente valida?
+initial_state:
+  check: piva
+  piva: '56473829102'
+oracle:
+  expected_result:
+    valid: false
+max_tool_calls: 4

@@ -1,0 +1,17 @@
+id: A-023-tricky-cd-estero-2
+family: A-anagrafiche
+difficulty: tricky
+title: Codice destinatario per estero (2)
+prompt: Qual e il codice destinatario da usare per il cliente estero "Muller AG"?
+initial_state:
+  check: codice_destinatario
+  client: Muller AG
+  extra_clients:
+    Muller AG:
+      piva: CHE123456789
+      codice_destinatario: XXXXXXX
+      estero: true
+oracle:
+  expected_result:
+    codice_destinatario: XXXXXXX
+max_tool_calls: 4

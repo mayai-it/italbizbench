@@ -1,0 +1,28 @@
+id: B-019-base-multiriga-tre-aliquote
+family: B-emissione
+difficulty: base
+title: Multi-riga con tre aliquote
+prompt: 'Emetti fattura a "Rossi Costruzioni Srl": servizio 500 euro IVA 22%, prodotto 200
+  euro IVA 10%, beni 300 euro IVA 4%.'
+initial_state:
+  client: Rossi Costruzioni Srl
+  lines:
+  - descrizione: Servizio
+    quantita: 1
+    prezzo_unitario: 500.0
+    aliquota_iva: 22.0
+  - descrizione: Prodotto
+    quantita: 1
+    prezzo_unitario: 200.0
+    aliquota_iva: 10.0
+  - descrizione: Beni
+    quantita: 1
+    prezzo_unitario: 300.0
+    aliquota_iva: 4.0
+oracle:
+  expected_regime: ordinario
+  expected_imponibile: 1000.0
+  expected_iva: 142.0
+  expected_totale: 1142.0
+  expected_sdi_outcome: accettata
+max_tool_calls: 6

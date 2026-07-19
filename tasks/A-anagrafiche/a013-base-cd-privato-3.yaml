@@ -1,0 +1,17 @@
+id: A-013-base-cd-privato-3
+family: A-anagrafiche
+difficulty: base
+title: Codice destinatario di un privato (3)
+prompt: Recupera il codice destinatario di "Beta Logistica Srl".
+initial_state:
+  check: codice_destinatario
+  client: Beta Logistica Srl
+  extra_clients:
+    Beta Logistica Srl:
+      piva: '77700022237'
+      codice_destinatario: MNBVCX2
+      pa: false
+oracle:
+  expected_result:
+    codice_destinatario: MNBVCX2
+max_tool_calls: 4

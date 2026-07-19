@@ -1,0 +1,12 @@
+id: A-027-tricky-piva-lettera-in-mezzo
+family: A-anagrafiche
+difficulty: tricky
+title: P.IVA con una lettera in mezzo
+prompt: La stringa "1234A678903" e una P.IVA italiana formalmente valida?
+initial_state:
+  check: piva
+  piva: 1234A678903
+oracle:
+  expected_result:
+    valid: false
+max_tool_calls: 4

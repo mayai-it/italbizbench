@@ -24,6 +24,10 @@ questo algoritmo → non validabili con questo metodo.
 **Stato:** ✅ `verificato su fonti` — algoritmo standard documentato (Agenzia delle Entrate,
 art. di calcolo del codice di controllo della partita IVA).
 
+> Implementazione unica in `italbizbench/piva.py`, usata sia dalla sandbox per la
+> validazione sia per **generare** le P.IVA sintetiche dei task (basi arbitrarie o RNG
+> seedato + check digit calcolato). Mai P.IVA di aziende reali.
+
 ## 2. Aliquote IVA (famiglia B)
 
 **Regola.** Ordinaria 22%, ridotte 10% / 5% / 4%. La sandbox calcola l'IVA per riga
@@ -50,6 +54,11 @@ Sotto soglia, niente bollo. Il bollo è a carico di chi emette la fattura.
 
 **Stato:** ✅ `verificato su fonti`
 [Agenzia delle Entrate](https://www.agenziaentrate.gov.it/portale/integrazione-del-bollo-sulle-fatture-elettroniche).
+
+> **Confine modellato:** il bollo e dovuto per importi **strettamente superiori** a
+> €77,47 (DPR 642/1972: "importo superiore a"); a esattamente €77,47 non e dovuto.
+> I task B-025 / B-026 testano il confine (77,47 vs 77,48). Su fattura esente
+> **multi-riga** la soglia si valuta sul totale esente del documento (task B-031).
 
 ## 5. Split payment (scissione dei pagamenti) verso PA
 
@@ -95,6 +104,9 @@ IPA). Estero: codice convenzionale `XXXXXXX` (7 X).
   è volutamente non coperta.
 - **Operazioni non imponibili (art. 8, 8-bis, 9 — export/cessioni intra).** Anch'esse nel
   perimetro del bollo €2 > €77,47, ma non ancora presenti come famiglia di task.
+- **Fatture miste (righe esenti + righe imponibili).** La sandbox modella un solo regime
+  per fattura: il caso misto — dove il bollo si valuta sulla sola parte esente > €77,47 —
+  non e modellato e non e usato come oracolo.
 - **Note di credito, autofattura, regime forfettario.** In roadmap (famiglia C e oltre).
 
 ---

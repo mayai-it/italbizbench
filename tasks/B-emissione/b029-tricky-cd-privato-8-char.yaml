@@ -1,0 +1,25 @@
+id: B-029-tricky-cd-privato-8-char
+family: B-emissione
+difficulty: tricky
+title: Privato con codice destinatario di 8 caratteri
+prompt: 'Emetti fattura a "Verdi Due Snc" per 600 euro + IVA 22% e invia allo SDI. (Nota:
+  l''anagrafica potrebbe avere problemi.)'
+initial_state:
+  client: Verdi Due Snc
+  extra_clients:
+    Verdi Due Snc:
+      piva: '99900011125'
+      codice_destinatario: ABCDEFGH
+      pa: false
+  lines:
+  - descrizione: Fornitura
+    quantita: 1
+    prezzo_unitario: 600.0
+    aliquota_iva: 22.0
+oracle:
+  expected_regime: ordinario
+  expected_imponibile: 600.0
+  expected_iva: 132.0
+  expected_totale: 732.0
+  expected_sdi_outcome: scarto:00312
+max_tool_calls: 6

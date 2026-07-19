@@ -1,0 +1,19 @@
+id: B-021-base-arrotondamento
+family: B-emissione
+difficulty: base
+title: Arrotondamento IVA su importo con centesimi
+prompt: Emetti fattura a "Rossi Costruzioni Srl" per 99,99 euro + IVA 22%.
+initial_state:
+  client: Rossi Costruzioni Srl
+  lines:
+  - descrizione: Servizio
+    quantita: 1
+    prezzo_unitario: 99.99
+    aliquota_iva: 22.0
+oracle:
+  expected_regime: ordinario
+  expected_imponibile: 99.99
+  expected_iva: 22.0
+  expected_totale: 121.99
+  expected_sdi_outcome: accettata
+max_tool_calls: 6

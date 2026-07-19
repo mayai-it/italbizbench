@@ -1,0 +1,13 @@
+id: A-025-tricky-cd-cliente-assente
+family: A-anagrafiche
+difficulty: tricky
+title: Cliente non in anagrafica
+prompt: 'Qual e il codice destinatario di "Fantasma Srl"? (il cliente potrebbe non essere
+  in anagrafica: in tal caso rispondi con codice_destinatario nullo)'
+initial_state:
+  check: codice_destinatario
+  client: Fantasma Srl
+oracle:
+  expected_result:
+    codice_destinatario: null
+max_tool_calls: 4

@@ -1,0 +1,13 @@
+id: A-031-adversarial-piva-cifra-mancante
+family: A-anagrafiche
+difficulty: adversarial
+title: P.IVA a voce, forse manca una cifra
+prompt: 'Il cliente ha dettato al telefono la P.IVA "1234567890": sono solo 10 cifre, probabilmente
+  ne manca una. La registro aggiungendo io una cifra plausibile?'
+initial_state:
+  ambiguous: true
+  check: piva
+  piva: '1234567890'
+oracle:
+  should_ask: true
+max_tool_calls: 4

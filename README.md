@@ -49,8 +49,28 @@ The leaderboard does not report a single average. It reports:
   Counting abstentions as p=0 would make "never do anything" a perfectly calibrated
   strategy. Acting on an ambiguous task *does* enter the pool (with outcome 0), so
   overconfidence on dirty data is punished, not hidden.
-- **Bootstrap confidence intervals** on the pass-rate: two agents at 0.81 and 0.79 are
-  "different" only if their CIs don't overlap. The average alone is misleading.
+- **Bootstrap *and* Wilson confidence intervals** on the pass-rate: two agents at 0.81
+  and 0.79 are "different" only if their CIs don't overlap. The average alone is
+  misleading. Wilson is a closed-form interval that stays honest even at extreme
+  proportions (0/n, n/n), where the percentile bootstrap collapses to a degenerate
+  (p, p).
+
+### How many tasks before the CIs can tell two agents apart?
+
+Be suspicious of benchmarks that rank on a handful of tasks. The half-width of a
+Wilson/Wald interval scales as `~1.96·√(p(1−p)/n)`. In practice:
+
+| n tasks | CI half-width @ p≈0.8 | can distinguish pass-rates that differ by… |
+|---|---|---|
+| 20 | ±0.18 | ~0.35 — almost nothing |
+| 40 (one family) | ±0.12 | ~0.25 |
+| 80 (current suite) | ±0.09 | ~0.18 |
+| 300 | ±0.045 | ~0.09 (≈10 points) |
+
+So with the current 80 tasks the benchmark can separate *clearly different* agents
+(e.g. 0.95 vs 0.75), but **not** agents ~10 points apart — that needs roughly 300
+tasks (or paired per-task comparisons, planned for a later release). This is stated
+here so nobody reads a 2-point leaderboard gap as signal.
 
 ## Golden rule
 
@@ -90,10 +110,11 @@ Example output:
 [PASS] B-002-tricky-reverse-charge (tricky) corr=1.0 eff=1.0 saf=1.0 conf=0.9 brier=0.01  OK
 ...
 --- Scorecard ---
-Task: 20  Pass-rate: 1.0 (IC95% (1.0, 1.0))
+Task: 80  Pass-rate: 1.0 (IC95% bootstrap (1.0, 1.0), Wilson (0.954, 1.0))
 Efficienza media: 1.0  Sicurezza media: 1.0
-Calibrazione (su 16 predizioni): Brier=0.0086  ECE=0.0906
-Astensioni: 4 (accuratezza: 1.0)
+Token: 0 in / 0 out  Costo: EUR 0.0
+Calibrazione (su 58 predizioni): Brier=0.0077  ECE=0.0845
+Astensioni: 22 (accuratezza: 1.0)
 Per difficolta: {'adversarial': 1.0, 'base': 1.0, 'tricky': 1.0}
 ```
 
@@ -103,10 +124,10 @@ Each task = scenario + sandbox seed + deterministic oracle. Three difficulty tie
 `base` (clean case), `tricky` (fiscal edge case), `adversarial` (dirty/ambiguous input
 where the agent *should* stop and ask for confirmation).
 
-| Family | v0.1 | Examples |
+| Family | now | Examples |
 |---|---|---|
-| **A — Anagrafiche / validation** | ✅ 7 tasks | P.IVA check digit, recipient code (private 7-char / PA 6-char / foreign) |
-| **B — Invoice issuance** | ✅ 13 tasks | Ordinary, reverse charge, split payment (PA), exempt art.10, stamp duty, SDI rejections |
+| **A — Anagrafiche / validation** | ✅ 40 tasks | P.IVA check digit (valid/invalid/transposed/foreign), recipient code (private 7-char / PA 6-char / foreign), dirty data |
+| **B — Invoice issuance** | ✅ 40 tasks | Ordinary (all VAT rates), reverse charge, split payment (PA), exempt art.10, stamp-duty threshold edge cases, SDI rejections |
 | C — SDI handling | roadmap | Rejection codes, credit notes, correct-and-resend |
 | D — Inbound / PEC | roadmap | Read PEC, extract invoice, register supplier doc |
 | E — Reconciliation | roadmap | Match payments↔invoices, VAT period, deadlines |
@@ -162,8 +183,9 @@ italbizbench/
   models.py            # Scenario, Oracle, Verdict (pydantic)
   sandbox.py           # invoicing mock + SDI simulator (no live API)
   verifier.py          # deterministic outcome check, per family
-  scoring.py           # 4 axes + bootstrap CI
+  scoring.py           # 4 axes + bootstrap & Wilson CIs + calibration (Brier/ECE)
   costs.py             # per-model price table (costs.yaml) -> cost in EUR per run
+  piva.py              # P.IVA check digit + synthetic (valid) P.IVA generator
   runner.py            # load YAML -> run agent -> scorecard
   adapters/
     base.py            # vendor-agnostic agent interface
@@ -172,8 +194,8 @@ italbizbench/
     anthropic_client.py# Anthropic API client (lazy import)
     openai_client.py   # OpenAI-compatible client — GPT and local models (lazy import)
 tasks/
-  A-anagrafiche/       # 7 tasks
-  B-emissione/         # 13 tasks
+  A-anagrafiche/       # 40 tasks
+  B-emissione/         # 40 tasks
 examples/run_llm.py    # run the suite with an Anthropic agent
 docs/blueprint.md      # design rationale & roadmap
 ```

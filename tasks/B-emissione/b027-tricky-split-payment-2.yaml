@@ -1,0 +1,25 @@
+id: B-027-tricky-split-payment-2
+family: B-emissione
+difficulty: tricky
+title: Split payment verso un'altra PA
+prompt: 'Emetti fattura alla "Regione di Prova" (ente PA) per 3500 euro + IVA 22%: applica
+  la scissione dei pagamenti.'
+initial_state:
+  client: Regione di Prova
+  extra_clients:
+    Regione di Prova:
+      piva: '88800033347'
+      codice_destinatario: RG0N01
+      pa: true
+  lines:
+  - descrizione: Servizio alla PA
+    quantita: 1
+    prezzo_unitario: 3500.0
+    aliquota_iva: 22.0
+oracle:
+  expected_regime: split_payment
+  expected_imponibile: 3500.0
+  expected_iva: 770.0
+  expected_totale: 3500.0
+  expected_sdi_outcome: accettata
+max_tool_calls: 6

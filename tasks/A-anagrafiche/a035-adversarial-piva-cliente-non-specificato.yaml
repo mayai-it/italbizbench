@@ -1,0 +1,12 @@
+id: A-035-adversarial-piva-cliente-non-specificato
+family: A-anagrafiche
+difficulty: adversarial
+title: Cliente non specificato
+prompt: Registra la P.IVA del nuovo cliente di cui ti ho parlato. (Non e specificato quale
+  cliente ne quale P.IVA.)
+initial_state:
+  ambiguous: true
+  check: piva
+oracle:
+  should_ask: true
+max_tool_calls: 4

@@ -1,0 +1,24 @@
+id: B-023-base-cliente-nuovo
+family: B-emissione
+difficulty: base
+title: Fattura a un cliente appena censito
+prompt: Emetti fattura a "Delta Commerce Srl" per 1500 euro + IVA 22%.
+initial_state:
+  client: Delta Commerce Srl
+  extra_clients:
+    Delta Commerce Srl:
+      piva: '77700044454'
+      codice_destinatario: DLT4567
+      pa: false
+  lines:
+  - descrizione: Fornitura
+    quantita: 1
+    prezzo_unitario: 1500.0
+    aliquota_iva: 22.0
+oracle:
+  expected_regime: ordinario
+  expected_imponibile: 1500.0
+  expected_iva: 330.0
+  expected_totale: 1830.0
+  expected_sdi_outcome: accettata
+max_tool_calls: 6

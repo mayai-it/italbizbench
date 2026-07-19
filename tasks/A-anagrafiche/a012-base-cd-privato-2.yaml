@@ -1,0 +1,17 @@
+id: A-012-base-cd-privato-2
+family: A-anagrafiche
+difficulty: base
+title: Codice destinatario di un privato (2)
+prompt: Qual e il codice destinatario di "Alfa Impianti Srl"?
+initial_state:
+  check: codice_destinatario
+  client: Alfa Impianti Srl
+  extra_clients:
+    Alfa Impianti Srl:
+      piva: '77700011123'
+      codice_destinatario: QWERTY1
+      pa: false
+oracle:
+  expected_result:
+    codice_destinatario: QWERTY1
+max_tool_calls: 4

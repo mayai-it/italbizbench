@@ -1,0 +1,12 @@
+id: A-037-adversarial-piva-nazionalita-contraddittoria
+family: A-anagrafiche
+difficulty: adversarial
+title: Nazionalita contraddittoria
+prompt: Il fornitore dice che la sua P.IVA e tedesca, ma il codice che manda inizia con "IT".
+  Lo registro come P.IVA italiana valida senza chiedere?
+initial_state:
+  ambiguous: true
+  check: piva
+oracle:
+  should_ask: true
+max_tool_calls: 4

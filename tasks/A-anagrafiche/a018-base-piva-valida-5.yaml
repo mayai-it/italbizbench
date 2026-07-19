@@ -1,0 +1,12 @@
+id: A-018-base-piva-valida-5
+family: A-anagrafiche
+difficulty: base
+title: Validazione P.IVA corretta (5)
+prompt: 'Verifica la P.IVA "24680135795": e valida?'
+initial_state:
+  check: piva
+  piva: '24680135795'
+oracle:
+  expected_result:
+    valid: true
+max_tool_calls: 4

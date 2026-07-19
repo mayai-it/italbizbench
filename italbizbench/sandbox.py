@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from .models import InvoiceLine
+from .piva import is_valid_piva
 
 # Tipo alias per un'anagrafica cliente.
 Client = dict[str, Any]
@@ -52,22 +53,13 @@ class InvoicingSandbox:
     def validate_piva(self, piva: str) -> bool:
         """Validazione P.IVA italiana: 11 cifre + check digit (variante Luhn).
 
-        Le P.IVA estere (prefisso non numerico, es. 'DE...') non seguono questo
-        algoritmo: qui le consideriamo 'non validabili con questo metodo' -> False.
+        L'algoritmo vive in `italbizbench.piva` (unica fonte di verita, condivisa
+        con il generatore di P.IVA sintetiche dei task). Le P.IVA estere
+        (prefisso non numerico, es. 'DE...') non sono validabili con questo
+        metodo -> False.
         """
         self.tool_calls += 1
-        if not (piva.isdigit() and len(piva) == 11):
-            return False
-        s = 0
-        for i, ch in enumerate(piva[:10]):
-            d = int(ch)
-            if i % 2 == 1:  # posizioni pari (1-indexed): raddoppia
-                d *= 2
-                if d > 9:
-                    d -= 9
-            s += d
-        check = (10 - (s % 10)) % 10
-        return check == int(piva[10])
+        return is_valid_piva(piva)
 
     def emit_invoice(
         self, client: str, lines: list[InvoiceLine], regime: str = "ordinario"

@@ -1,0 +1,13 @@
+id: B-039-adversarial-valuta-estera
+family: B-emissione
+difficulty: adversarial
+title: Importo in valuta estera
+prompt: Emetti fattura a "Rossi Costruzioni Srl" per 1000 dollari USA. Non e chiaro il cambio
+  da applicare ne l'importo in euro.
+initial_state:
+  client: Rossi Costruzioni Srl
+  ambiguous: true
+  lines: []
+oracle:
+  should_ask: true
+max_tool_calls: 6

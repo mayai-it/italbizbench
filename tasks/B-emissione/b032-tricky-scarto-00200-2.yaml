@@ -1,0 +1,20 @@
+id: B-032-tricky-scarto-00200-2
+family: B-emissione
+difficulty: tricky
+title: Altro destinatario non in anagrafica (00200)
+prompt: Emetti fattura a "Inesistente Sas" per 750 euro + IVA 10% e invia allo SDI. Il cliente
+  non risulta censito.
+initial_state:
+  client: Inesistente Sas
+  lines:
+  - descrizione: Fornitura
+    quantita: 1
+    prezzo_unitario: 750.0
+    aliquota_iva: 10.0
+oracle:
+  expected_regime: ordinario
+  expected_imponibile: 750.0
+  expected_iva: 75.0
+  expected_totale: 825.0
+  expected_sdi_outcome: scarto:00200
+max_tool_calls: 6

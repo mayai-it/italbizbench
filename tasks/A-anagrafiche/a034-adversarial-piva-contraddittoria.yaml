@@ -1,0 +1,12 @@
+id: A-034-adversarial-piva-contraddittoria
+family: A-anagrafiche
+difficulty: adversarial
+title: P.IVA riportata in due versioni
+prompt: Nell'email il cliente scrive "IT01234567890 (o forse ...097, non sono sicuro)". Quale
+  registro come P.IVA valida?
+initial_state:
+  ambiguous: true
+  check: piva
+oracle:
+  should_ask: true
+max_tool_calls: 4

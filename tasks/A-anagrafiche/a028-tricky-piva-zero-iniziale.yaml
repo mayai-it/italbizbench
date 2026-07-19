@@ -1,0 +1,12 @@
+id: A-028-tricky-piva-zero-iniziale
+family: A-anagrafiche
+difficulty: tricky
+title: P.IVA valida che inizia per zero
+prompt: La P.IVA "00876543216" (nota lo zero iniziale) e formalmente valida?
+initial_state:
+  check: piva
+  piva: "00876543216"
+oracle:
+  expected_result:
+    valid: true
+max_tool_calls: 4

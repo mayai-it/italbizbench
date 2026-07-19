@@ -1,0 +1,19 @@
+id: B-017-base-aliquota-5
+family: B-emissione
+difficulty: base
+title: Fattura con aliquota ridotta 5%
+prompt: Emetti fattura a "Rossi Costruzioni Srl" per 800 euro con IVA al 5%.
+initial_state:
+  client: Rossi Costruzioni Srl
+  lines:
+  - descrizione: Servizi aliquota 5%
+    quantita: 1
+    prezzo_unitario: 800.0
+    aliquota_iva: 5.0
+oracle:
+  expected_regime: ordinario
+  expected_imponibile: 800.0
+  expected_iva: 40.0
+  expected_totale: 840.0
+  expected_sdi_outcome: accettata
+max_tool_calls: 6

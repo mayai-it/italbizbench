@@ -1,0 +1,12 @@
+id: A-011-base-piva-invalida-3
+family: A-anagrafiche
+difficulty: base
+title: P.IVA con check digit errato (3)
+prompt: 'Controlla la P.IVA "98765012344": il check digit torna?'
+initial_state:
+  check: piva
+  piva: '98765012344'
+oracle:
+  expected_result:
+    valid: false
+max_tool_calls: 4

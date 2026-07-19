@@ -26,6 +26,7 @@ sovraconfidenza sui dati sporchi viene punita da Brier/ECE, non nascosta.
 from __future__ import annotations
 
 import random
+from math import sqrt
 from statistics import mean
 from typing import Any
 
@@ -88,6 +89,23 @@ def _bootstrap_ci(values: list[float], n: int = 2000, seed: int = 42) -> tuple[f
     lo = means[int(0.025 * n)]
     hi = means[int(0.975 * n)]
     return (round(lo, 3), round(hi, 3))
+
+
+def wilson_ci(successes: int, n: int, z: float = 1.96) -> tuple[float, float]:
+    """Intervallo di Wilson al 95% per una proporzione (chiuso, niente resampling).
+
+    Complementare al bootstrap: formula chiusa, ben definita anche con n piccolo
+    o proporzioni estreme (0/n, n/n), dove il bootstrap percentile collassa
+    sull'intervallo degenere (p, p).
+    """
+    if n <= 0:
+        return (0.0, 0.0)
+    phat = successes / n
+    z2 = z * z
+    denom = 1 + z2 / n
+    centre = (phat + z2 / (2 * n)) / denom
+    margin = z * sqrt(phat * (1 - phat) / n + z2 / (4 * n * n)) / denom
+    return (round(max(0.0, centre - margin), 3), round(min(1.0, centre + margin), 3))
 
 
 def reliability_bins(
@@ -173,6 +191,7 @@ def aggregate(verdicts: list[Verdict]) -> dict[str, Any]:
         "n_tasks": len(verdicts),
         "pass_rate": round(mean(corr), 3),
         "correctness_ci95": _bootstrap_ci(corr),
+        "correctness_wilson_ci95": wilson_ci(sum(v.passed for v in verdicts), len(verdicts)),
         "efficiency_mean": round(mean(eff), 3),
         "tokens_input_total": tokens_in,
         "tokens_output_total": tokens_out,

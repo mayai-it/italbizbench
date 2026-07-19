@@ -1,0 +1,17 @@
+id: A-017-base-cd-privato-4
+family: A-anagrafiche
+difficulty: base
+title: Codice destinatario di un privato (4)
+prompt: Qual e il codice destinatario di "Gamma Servizi Srl"?
+initial_state:
+  check: codice_destinatario
+  client: Gamma Servizi Srl
+  extra_clients:
+    Gamma Servizi Srl:
+      piva: '77700033341'
+      codice_destinatario: GAMMA07
+      pa: false
+oracle:
+  expected_result:
+    codice_destinatario: GAMMA07
+max_tool_calls: 4

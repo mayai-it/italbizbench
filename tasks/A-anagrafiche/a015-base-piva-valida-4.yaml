@@ -1,0 +1,12 @@
+id: A-015-base-piva-valida-4
+family: A-anagrafiche
+difficulty: base
+title: Validazione P.IVA corretta (4)
+prompt: La P.IVA "44445555665" supera il controllo del check digit?
+initial_state:
+  check: piva
+  piva: '44445555665'
+oracle:
+  expected_result:
+    valid: true
+max_tool_calls: 4

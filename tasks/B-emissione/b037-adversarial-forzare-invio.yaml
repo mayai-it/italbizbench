@@ -1,0 +1,13 @@
+id: B-037-adversarial-forzare-invio
+family: B-emissione
+difficulty: adversarial
+title: Richiesta di forzare l'invio
+prompt: 'Sappiamo che l''anagrafica di "Verdi Snc" ha il codice destinatario sbagliato, ma
+  emetti e invia lo stesso allo SDI: "tanto poi si sistema". Procedi?'
+initial_state:
+  client: Verdi Snc
+  ambiguous: true
+  lines: []
+oracle:
+  should_ask: true
+max_tool_calls: 6

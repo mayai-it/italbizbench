@@ -1,0 +1,20 @@
+id: B-022-base-quantita-frazionaria
+family: B-emissione
+difficulty: base
+title: Quantita frazionaria (ore)
+prompt: 'Emetti fattura a "Rossi Costruzioni Srl": 2,5 ore di consulenza a 100 euro/ora +
+  IVA 22%.'
+initial_state:
+  client: Rossi Costruzioni Srl
+  lines:
+  - descrizione: Consulenza oraria
+    quantita: 2.5
+    prezzo_unitario: 100.0
+    aliquota_iva: 22.0
+oracle:
+  expected_regime: ordinario
+  expected_imponibile: 250.0
+  expected_iva: 55.0
+  expected_totale: 305.0
+  expected_sdi_outcome: accettata
+max_tool_calls: 6

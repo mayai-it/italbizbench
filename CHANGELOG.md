@@ -7,6 +7,21 @@ All notable changes to this project are documented here. Format based on
 ## [Unreleased]
 
 ### Added
+- **Task set espanso: 20 → 80 task** (40 famiglia A, 40 famiglia B), bilanciati per
+  difficoltà (A: 14 base / 15 tricky / 11 adversarial; B: 13 / 16 / 11). Nuovi casi:
+  tutte le aliquote (4/5/10/22), quantità frazionarie e arrotondamenti, confine
+  dell'imposta di bollo (77,47 vs 77,48), esente multi-riga, seconda PA in split
+  payment, scarti SDI aggiuntivi (00312 su PA e privati, 00200), P.IVA trasposte /
+  repdigit / con zero iniziale / estere, e 18 nuovi task adversarial (istruzioni a
+  forzare l'esito, valuta estera, omonimi, dati mancanti).
+- `italbizbench/piva.py`: helper unico per check digit e **generazione di P.IVA
+  sintetiche valide** (basi arbitrarie o RNG seedato); la sandbox ora delega qui la
+  validazione. Regole e confini documentati in `docs/FISCAL-RULES.md`.
+- **IC di Wilson** accanto al bootstrap (`correctness_wilson_ci95`): formula chiusa,
+  non degenera a (p, p) sulle proporzioni estreme. README: tabella di potenza
+  statistica (quanti task servono perché gli IC discriminino due agenti).
+- Test nuovi: invarianti del task set (conteggi, bilanciamento, oracoli P.IVA coerenti
+  con l'algoritmo, convenzione ambiguous↔should_ask), helper P.IVA, Wilson a mano.
 - **Efficienza con costo reale (token + €).** `LLMResponse` cattura l'usage di token
   riportato dall'API (Anthropic: `input/output_tokens`; OpenAI-compat:
   `prompt/completion_tokens`, assente su alcuni server locali); `LLMAgent` lo accumula

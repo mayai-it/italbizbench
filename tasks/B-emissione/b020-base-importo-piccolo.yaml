@@ -1,0 +1,19 @@
+id: B-020-base-importo-piccolo
+family: B-emissione
+difficulty: base
+title: Fattura di piccolo importo
+prompt: Emetti fattura a "Rossi Costruzioni Srl" per una fornitura di 80 euro + IVA 22%.
+initial_state:
+  client: Rossi Costruzioni Srl
+  lines:
+  - descrizione: Fornitura minuta
+    quantita: 1
+    prezzo_unitario: 80.0
+    aliquota_iva: 22.0
+oracle:
+  expected_regime: ordinario
+  expected_imponibile: 80.0
+  expected_iva: 17.6
+  expected_totale: 97.6
+  expected_sdi_outcome: accettata
+max_tool_calls: 6

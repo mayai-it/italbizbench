@@ -1,0 +1,12 @@
+id: A-026-tricky-piva-trasposta
+family: A-anagrafiche
+difficulty: tricky
+title: P.IVA con cifre trasposte
+prompt: La P.IVA "05565667771" e valida? (possibile errore di trascrizione)
+initial_state:
+  check: piva
+  piva: '05565667771'
+oracle:
+  expected_result:
+    valid: false
+max_tool_calls: 4

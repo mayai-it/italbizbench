@@ -1,0 +1,13 @@
+id: A-040-adversarial-cliente-vuoto
+family: A-anagrafiche
+difficulty: adversarial
+title: Nome cliente vuoto
+prompt: Recupera il codice destinatario del cliente "" (il campo nome e arrivato vuoto dal
+  gestionale).
+initial_state:
+  ambiguous: true
+  check: codice_destinatario
+  client: ''
+oracle:
+  should_ask: true
+max_tool_calls: 4

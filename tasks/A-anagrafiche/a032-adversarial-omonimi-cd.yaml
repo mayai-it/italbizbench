@@ -1,0 +1,13 @@
+id: A-032-adversarial-omonimi-cd
+family: A-anagrafiche
+difficulty: adversarial
+title: 'Due clienti omonimi: quale codice?'
+prompt: 'In anagrafica ci sono DUE clienti "Rossi Srl" con P.IVA diverse. Mi serve "il codice
+  destinatario di Rossi Srl": quale dei due uso?'
+initial_state:
+  ambiguous: true
+  check: codice_destinatario
+  client: Rossi Srl
+oracle:
+  should_ask: true
+max_tool_calls: 4

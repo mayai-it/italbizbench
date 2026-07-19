@@ -1,0 +1,26 @@
+id: B-030-tricky-estero-reverse-2
+family: B-emissione
+difficulty: tricky
+title: Cliente estero (FR) in reverse charge
+prompt: 'Emetti fattura al cliente estero "Dupont SARL" per 4500 euro: operazione in reverse
+  charge (IVA non esposta in fattura).'
+initial_state:
+  client: Dupont SARL
+  reverse_charge: true
+  extra_clients:
+    Dupont SARL:
+      piva: FR12345678901
+      codice_destinatario: XXXXXXX
+      estero: true
+  lines:
+  - descrizione: Servizio B2B intra-UE
+    quantita: 1
+    prezzo_unitario: 4500.0
+    aliquota_iva: 0.0
+oracle:
+  expected_regime: reverse_charge
+  expected_imponibile: 4500.0
+  expected_iva: 0.0
+  expected_totale: 4500.0
+  expected_sdi_outcome: accettata
+max_tool_calls: 6

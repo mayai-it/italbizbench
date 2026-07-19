@@ -1,0 +1,12 @@
+id: A-009-base-piva-valida-3
+family: A-anagrafiche
+difficulty: base
+title: Validazione P.IVA corretta (3)
+prompt: 'Verifica il check digit della P.IVA "10293847561": e valida?'
+initial_state:
+  check: piva
+  piva: '10293847561'
+oracle:
+  expected_result:
+    valid: true
+max_tool_calls: 4

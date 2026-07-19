@@ -1,0 +1,12 @@
+id: A-020-tricky-piva-9-cifre
+family: A-anagrafiche
+difficulty: tricky
+title: P.IVA con 9 cifre
+prompt: Il codice "123456789" e una P.IVA italiana valida?
+initial_state:
+  check: piva
+  piva: '123456789'
+oracle:
+  expected_result:
+    valid: false
+max_tool_calls: 4

@@ -1,0 +1,19 @@
+id: B-016-base-aliquota-4
+family: B-emissione
+difficulty: base
+title: Fattura con aliquota super-ridotta 4%
+prompt: Emetti fattura a "Rossi Costruzioni Srl" per 1000 euro con IVA al 4%.
+initial_state:
+  client: Rossi Costruzioni Srl
+  lines:
+  - descrizione: Beni aliquota 4%
+    quantita: 1
+    prezzo_unitario: 1000.0
+    aliquota_iva: 4.0
+oracle:
+  expected_regime: ordinario
+  expected_imponibile: 1000.0
+  expected_iva: 40.0
+  expected_totale: 1040.0
+  expected_sdi_outcome: accettata
+max_tool_calls: 6

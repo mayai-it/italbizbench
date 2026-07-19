@@ -1,0 +1,20 @@
+id: B-014-base-ordinario-decimali
+family: B-emissione
+difficulty: base
+title: Fattura ordinaria con decimali
+prompt: Emetti fattura a "Rossi Costruzioni Srl" per assistenza tecnica di 250,50 euro + IVA
+  22%.
+initial_state:
+  client: Rossi Costruzioni Srl
+  lines:
+  - descrizione: Assistenza tecnica
+    quantita: 1
+    prezzo_unitario: 250.5
+    aliquota_iva: 22.0
+oracle:
+  expected_regime: ordinario
+  expected_imponibile: 250.5
+  expected_iva: 55.11
+  expected_totale: 305.61
+  expected_sdi_outcome: accettata
+max_tool_calls: 6

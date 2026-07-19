@@ -1,0 +1,20 @@
+id: B-015-base-ordinario-quantita
+family: B-emissione
+difficulty: base
+title: Fattura con quantita > 1
+prompt: 'Emetti fattura a "Rossi Costruzioni Srl": 3 giornate di formazione a 120 euro l''una
+  + IVA 22%.'
+initial_state:
+  client: Rossi Costruzioni Srl
+  lines:
+  - descrizione: Giornata di formazione
+    quantita: 3
+    prezzo_unitario: 120.0
+    aliquota_iva: 22.0
+oracle:
+  expected_regime: ordinario
+  expected_imponibile: 360.0
+  expected_iva: 79.2
+  expected_totale: 439.2
+  expected_sdi_outcome: accettata
+max_tool_calls: 6

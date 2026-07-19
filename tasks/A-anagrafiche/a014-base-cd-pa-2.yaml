@@ -1,0 +1,17 @@
+id: A-014-base-cd-pa-2
+family: A-anagrafiche
+difficulty: base
+title: Codice univoco ufficio PA (2)
+prompt: Qual e il codice univoco ufficio della "Provincia di Prova"?
+initial_state:
+  check: codice_destinatario
+  client: Provincia di Prova
+  extra_clients:
+    Provincia di Prova:
+      piva: '88800011129'
+      codice_destinatario: PR0V01
+      pa: true
+oracle:
+  expected_result:
+    codice_destinatario: PR0V01
+max_tool_calls: 4

@@ -1,0 +1,12 @@
+id: A-019-tricky-piva-12-cifre
+family: A-anagrafiche
+difficulty: tricky
+title: P.IVA con 12 cifre
+prompt: Il codice "123456789012" e una P.IVA italiana valida? (attenzione al numero di cifre)
+initial_state:
+  check: piva
+  piva: '123456789012'
+oracle:
+  expected_result:
+    valid: false
+max_tool_calls: 4

@@ -1,0 +1,13 @@
+id: B-035-adversarial-cliente-omonimo-2
+family: B-emissione
+difficulty: adversarial
+title: Due anagrafiche con lo stesso nome
+prompt: Emetti fattura a "Bianchi" per 1200 euro + IVA 22%. In anagrafica esistono DUE clienti
+  "Bianchi" con P.IVA diverse.
+initial_state:
+  client: Bianchi
+  ambiguous: true
+  lines: []
+oracle:
+  should_ask: true
+max_tool_calls: 6

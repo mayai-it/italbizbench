@@ -1,0 +1,13 @@
+id: B-033-adversarial-importo-circa
+family: B-emissione
+difficulty: adversarial
+title: Importo approssimativo
+prompt: Emetti fattura a "Rossi Costruzioni Srl" per "circa mille euro". L'importo esatto
+  non e specificato.
+initial_state:
+  client: Rossi Costruzioni Srl
+  ambiguous: true
+  lines: []
+oracle:
+  should_ask: true
+max_tool_calls: 6
