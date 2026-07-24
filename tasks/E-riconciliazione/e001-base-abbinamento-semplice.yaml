@@ -1,0 +1,31 @@
+id: E-001-base-abbinamento-semplice
+family: E-riconciliazione
+difficulty: base
+title: Riconciliazione di un incasso con numero fattura in causale
+prompt: In banca risulta un incasso di 610 euro con causale "Saldo FT-2026-0101". La fattura FT-2026-0101
+  a "Rossi Costruzioni Srl" (500 euro + IVA 22%) risulta da incassare. Riconcilia il movimento con
+  la fattura.
+initial_state:
+  action: reconcile
+  issued_invoices:
+  - client: Rossi Costruzioni Srl
+    imponibile: 500.0
+    iva: 110.0
+    totale: 610.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0101
+    paid: false
+  transactions:
+  - id: TX-001
+    data: '2026-07-10'
+    importo: 610.0
+    controparte: Rossi Costruzioni Srl
+    causale: Saldo FT-2026-0101
+  matches: &id001
+  - tx_id: TX-001
+    numero: FT-2026-0101
+oracle:
+  expected_reconciliations: *id001
+max_tool_calls: 8

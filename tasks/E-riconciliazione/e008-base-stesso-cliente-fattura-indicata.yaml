@@ -1,0 +1,40 @@
+id: E-008-base-stesso-cliente-fattura-indicata
+family: E-riconciliazione
+difficulty: base
+title: 'Due fatture aperte dello stesso cliente: abbinare quella in causale'
+prompt: 'Il cliente "Gialli Srl" ha due fatture aperte: FT-2026-0109 (366 euro) e FT-2026-0110 (976
+  euro). In banca risulta un incasso di 366 euro con causale "saldo FT-2026-0109". Riconcilia SOLO
+  il movimento con la fattura indicata: la FT-2026-0110 resta aperta.'
+initial_state:
+  action: reconcile
+  issued_invoices:
+  - client: Gialli Srl
+    imponibile: 300.0
+    iva: 66.0
+    totale: 366.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0109
+    paid: false
+  - client: Gialli Srl
+    imponibile: 800.0
+    iva: 176.0
+    totale: 976.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0110
+    paid: false
+  transactions:
+  - id: TX-070
+    data: '2026-07-18'
+    importo: 366.0
+    controparte: Gialli Srl
+    causale: saldo FT-2026-0109
+  matches: &id001
+  - tx_id: TX-070
+    numero: FT-2026-0109
+oracle:
+  expected_reconciliations: *id001
+max_tool_calls: 8

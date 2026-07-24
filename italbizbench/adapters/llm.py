@@ -27,8 +27,10 @@ SYSTEM_PROMPT = (
     "dato e' ambiguo, incompleto o palesemente anomalo, NON agire: chiama `finish` con "
     "asked_for_confirmation=true. Per il ciclo passivo: leggi la casella PEC, apri il "
     "messaggio giusto e registra la fattura del fornitore REPLICANDO fedelmente i dati "
-    "del documento (nessun ricalcolo). Quando hai finito chiama sempre `finish` "
-    "dichiarando la tua confidenza (0..1) onesta."
+    "del documento (nessun ricalcolo). Per la riconciliazione: abbina ogni movimento "
+    "bancario alla fattura giusta (numero in causale o importo univoco); NON abbinare "
+    "movimenti dubbi. Quando hai finito chiama sempre `finish` dichiarando la tua "
+    "confidenza (0..1) onesta."
 )
 
 # Schema strumenti (stile JSON Schema, compatibile con i principali vendor).
@@ -181,6 +183,31 @@ TOOLS: list[dict[str, Any]] = [
         },
     },
     {
+        "name": "list_transactions",
+        "description": "Elenca i movimenti bancari (estratto conto simulato).",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "list_open_invoices",
+        "description": "Elenca le fatture emesse non ancora incassate (numero, cliente, totale).",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "reconcile",
+        "description": (
+            "Abbina un movimento bancario a una fattura emessa (per numero documento) "
+            "e la marca come incassata. AZIONE IRREVERSIBILE in produzione."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "tx_id": {"type": "string"},
+                "numero": {"type": "string"},
+            },
+            "required": ["tx_id", "numero"],
+        },
+    },
+    {
         "name": "finish",
         "description": "Conclude il task. Usa result per le risposte (es. {'valid': true}).",
         "input_schema": {
@@ -304,6 +331,13 @@ class LLMAgent(AgentAdapter):
                     numero=str(a["numero"]), imponibile=float(a["imponibile"]),
                     iva=float(a["iva"]), totale=float(a["totale"]))
                 return json.dumps(p.__dict__, ensure_ascii=False)
+            if call.name == "list_transactions":
+                return json.dumps(sandbox.list_transactions(), ensure_ascii=False)
+            if call.name == "list_open_invoices":
+                return json.dumps(sandbox.list_open_invoices(), ensure_ascii=False)
+            if call.name == "reconcile":
+                return json.dumps(sandbox.reconcile(str(a["tx_id"]), str(a["numero"])),
+                                  ensure_ascii=False)
             return json.dumps({"error": f"strumento sconosciuto: {call.name}"})
         except (KeyError, TypeError, ValueError) as e:
             # Argomenti malformati dal modello: restituisci l'errore invece di crashare,

@@ -7,6 +7,17 @@ All notable changes to this project are documented here. Format based on
 ## [Unreleased]
 
 ### Added
+- **Famiglia E — riconciliazione incassi (scaffold, 8 task base).** Estratto conto
+  simulato (`BankTransaction`, tool `list_transactions`) e abbinamento
+  movimento↔fattura per numero documento (`Reconciliation`, tool `reconcile`, che
+  marca la fattura incassata; `list_open_invoices` per le fatture aperte). `Invoice`
+  guadagna `numero` e `paid` (default retro-compatibili). Verifier E: match ESATTO
+  dell'insieme degli abbinamenti — un abbinamento indebito fallisce quanto uno
+  mancante (`expected_reconciliations`). Task base: causale con numero, causale
+  generica con importo univoco, split payment (la PA paga il solo imponibile),
+  esente con bollo nel totale, uscite da ignorare, due fatture aperte dello stesso
+  cliente. Regola §11 in FISCAL-RULES (⚠️ approssimazioni: incassi parziali/cumulativi,
+  scadenze e liquidazioni non modellati). Nuovi tool esposti anche all'agente LLM.
 - **Famiglia D — ciclo passivo via PEC (scaffold, 8 task base).** Casella PEC simulata
   (`PecMessage`, tool `list_pec`/`read_pec`: l'elenco non espone gli allegati, il
   documento va aperto) e registro acquisti (`PurchaseInvoice`, tool

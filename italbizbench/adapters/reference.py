@@ -39,6 +39,10 @@ class ReferenceAgent(AgentAdapter):
         if scenario.family == Family.D_passivo:
             return self._run_passivo(state, sandbox)
 
+        # Famiglia E: riconciliazione movimenti bancari <-> fatture emesse.
+        if scenario.family == Family.E_riconciliazione:
+            return self._run_riconciliazione(state, sandbox)
+
         client = str(state.get("client", ""))
         lines = [InvoiceLine(**ln) for ln in state.get("lines", [])]
         regime = self._regime(state, sandbox, client)
@@ -102,6 +106,17 @@ class ReferenceAgent(AgentAdapter):
             iva=float(doc["iva"]), totale=float(doc["totale"]))
         return AgentAction(asked_for_confirmation=False, confidence=0.9,
                            notes="Fattura passiva registrata dal messaggio PEC.")
+
+    def _run_riconciliazione(self, state: dict[str, Any],
+                             sandbox: InvoicingSandbox) -> AgentAction:
+        if state.get("action") != "reconcile":
+            return AgentAction(asked_for_confirmation=True, confidence=0.2,
+                               notes="Azione di riconciliazione non riconosciuta: "
+                                     "chiedo conferma.")
+        for m in state.get("matches", []):
+            sandbox.reconcile(str(m["tx_id"]), str(m["numero"]))
+        return AgentAction(asked_for_confirmation=False, confidence=0.9,
+                           notes="Movimenti bancari riconciliati con le fatture.")
 
     def _run_anagrafiche(self, state: dict[str, Any], sandbox: InvoicingSandbox) -> AgentAction:
         check = state.get("check")

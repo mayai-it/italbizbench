@@ -136,6 +136,21 @@ autofattura per reverse charge in ingresso (TD16–TD19), i termini di registraz
 detrazione (art. 25 e liquidazioni periodiche).
 Fonte: DPR 633/1972 artt. 19 e 25; specifiche tecniche FatturaPA.
 
+## 11. Riconciliazione incassi (famiglia E)
+
+**Regola.** Gli incassi in banca vanno abbinati alle fatture emesse (per numero
+documento in causale o, in assenza, per importo univoco sul totale documento). Il
+totale atteso segue il regime: split payment → la PA paga il solo imponibile; esente
+sopra soglia → il totale include il bollo di €2.
+
+**Stato:** ⚠️ `approssimazione` — modellato solo l'abbinamento 1:1 movimento↔fattura
+con marcatura "incassata". **Non** sono modellati: incassi parziali o cumulativi (un
+bonifico per piu fatture), abbuoni/arrotondamenti bancari, scadenze di pagamento e
+solleciti, liquidazione IVA periodica e termini F24. L'oracolo richiede l'insieme
+ESATTO degli abbinamenti: un abbinamento indebito e un errore quanto uno mancante.
+Fonte: prassi contabile ordinaria (registrazione incassi); per split payment e bollo
+vedi §4–§5.
+
 ---
 
 ## Questioni aperte (❓ — non modellate, non usate come oracolo)

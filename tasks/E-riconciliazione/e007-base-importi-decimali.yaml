@@ -1,0 +1,30 @@
+id: E-007-base-importi-decimali
+family: E-riconciliazione
+difficulty: base
+title: Riconciliazione con importi decimali
+prompt: In banca risulta un incasso di 150,61 euro da "Officina Eta Sas" con causale "saldo FT-2026-0108".
+  La fattura FT-2026-0108 e di 123,45 euro + IVA 22%. Riconcilia il movimento con la fattura.
+initial_state:
+  action: reconcile
+  issued_invoices:
+  - client: Officina Eta Sas
+    imponibile: 123.45
+    iva: 27.16
+    totale: 150.61
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0108
+    paid: false
+  transactions:
+  - id: TX-060
+    data: '2026-07-17'
+    importo: 150.61
+    controparte: Officina Eta Sas
+    causale: saldo FT-2026-0108
+  matches: &id001
+  - tx_id: TX-060
+    numero: FT-2026-0108
+oracle:
+  expected_reconciliations: *id001
+max_tool_calls: 8

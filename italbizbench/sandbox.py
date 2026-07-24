@@ -37,6 +37,10 @@ class Invoice:
     regime: str
     bollo: float = 0.0
     sdi_outcome: str = "in_attesa"
+    # Famiglia E (riconciliazione): numero del documento e stato di incasso.
+    # Default retro-compatibili: i task A/B/C non li dichiarano.
+    numero: str = ""
+    paid: bool = False
 
 
 @dataclass
@@ -88,6 +92,27 @@ class PurchaseInvoice:
 
 
 @dataclass
+class BankTransaction:
+    """Movimento bancario simulato (famiglia E — riconciliazione).
+
+    `importo` positivo = incasso, negativo = pagamento in uscita. La `causale` e
+    il testo libero del bonifico: puo citare il numero fattura oppure no.
+    """
+    id: str
+    data: str
+    importo: float
+    controparte: str
+    causale: str = ""
+
+
+@dataclass
+class Reconciliation:
+    """Abbinamento movimento bancario <-> fattura emessa (per numero documento)."""
+    tx_id: str
+    numero: str
+
+
+@dataclass
 class InvoicingSandbox:
     # deepcopy: ogni sandbox ha copie PROPRIE delle anagrafiche. Con una copia
     # shallow, update_client muterebbe i dict condivisi di DEFAULT_CLIENTS e lo
@@ -97,6 +122,8 @@ class InvoicingSandbox:
     credit_notes: list[CreditNote] = field(default_factory=list)
     pec_inbox: list[PecMessage] = field(default_factory=list)
     purchases: list[PurchaseInvoice] = field(default_factory=list)
+    transactions: list[BankTransaction] = field(default_factory=list)
+    reconciliations: list[Reconciliation] = field(default_factory=list)
     tool_calls: int = 0
     # Numero di documenti SEMINATI dallo stato iniziale (famiglie C/D): non sono
     # opera dell'agente e non contano come sua azione.
@@ -108,7 +135,8 @@ class InvoicingSandbox:
         """True se l'agente ha prodotto side effect oltre lo stato seminato."""
         return (len(self.issued) > self.seeded_invoices
                 or bool(self.credit_notes)
-                or len(self.purchases) > self.seeded_purchases)
+                or len(self.purchases) > self.seeded_purchases
+                or bool(self.reconciliations))
 
     # --- strumenti esposti all'agente ---------------------------------------
 
@@ -180,6 +208,32 @@ class InvoicingSandbox:
                             imponibile=imponibile, iva=iva, totale=totale)
         self.purchases.append(p)
         return p
+
+    def list_transactions(self) -> list[dict[str, Any]]:
+        """Elenca i movimenti bancari (estratto conto simulato)."""
+        self.tool_calls += 1
+        return [dict(t.__dict__) for t in self.transactions]
+
+    def list_open_invoices(self) -> list[dict[str, Any]]:
+        """Fatture emesse non ancora incassate (numero, cliente, totale)."""
+        self.tool_calls += 1
+        return [{"numero": i.numero, "client": i.client, "totale": i.totale}
+                for i in self.issued if not i.paid]
+
+    def reconcile(self, tx_id: str, numero: str) -> dict[str, Any]:
+        """Abbina un movimento bancario a una fattura emessa e la marca incassata.
+
+        Modellazione semplificata (FISCAL-RULES §11): solo abbinamento 1:1
+        movimento<->fattura; incassi parziali/cumulativi non modellati.
+        """
+        self.tool_calls += 1
+        tx = next((t for t in self.transactions if t.id == tx_id), None)
+        inv = next((i for i in self.issued if i.numero == numero), None)
+        if tx is None or inv is None:
+            return {"error": f"movimento {tx_id!r} o fattura {numero!r} non trovati"}
+        inv.paid = True
+        self.reconciliations.append(Reconciliation(tx_id=tx_id, numero=numero))
+        return {"tx_id": tx_id, "numero": numero, "paid": True}
 
     @staticmethod
     def _amounts(lines: list[InvoiceLine], regime: str) -> tuple[float, float, float, float]:

@@ -19,7 +19,7 @@ import yaml
 from .adapters import AgentAdapter, ReferenceAgent
 from .costs import CostTable, compute_cost_eur, load_cost_table
 from .models import Scenario, UsageStats, Verdict
-from .sandbox import Invoice, InvoicingSandbox, PecMessage, PurchaseInvoice
+from .sandbox import BankTransaction, Invoice, InvoicingSandbox, PecMessage, PurchaseInvoice
 from .scoring import aggregate, score_task
 
 # ID modello di default per vendor — verificati sulla documentazione ufficiale dei
@@ -114,6 +114,9 @@ def run(path: Path | Sequence[Path], agent: AgentAdapter, save_dir: Path | None 
         for pur in sc.initial_state.get("purchases", []):
             sandbox.purchases.append(PurchaseInvoice(**pur))
         sandbox.seeded_purchases = len(sandbox.purchases)
+        # Famiglia E: semina i movimenti bancari (estratto conto simulato).
+        for tx in sc.initial_state.get("transactions", []):
+            sandbox.transactions.append(BankTransaction(**tx))
         action = agent.run(sc, sandbox)
         verdicts.append(score_task(sc, sandbox, action, usage=_run_usage(agent, cost_table)))
         # Salva il transcript dell'agente (per riproducibilita / debug dei run reali).

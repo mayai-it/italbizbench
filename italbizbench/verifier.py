@@ -11,6 +11,8 @@ giudizi soggettivi: o gli importi/regime/esito SDI coincidono (entro tolleranza)
   credito combaci (expected_credit_note).
 - Famiglia D: ciclo passivo. L'ULTIMA fattura passiva registrata deve replicare
   fedelmente il documento ricevuto via PEC (expected_purchase).
+- Famiglia E: riconciliazione. L'insieme degli abbinamenti movimento<->fattura deve
+  coincidere esattamente con l'oracolo (expected_reconciliations).
 """
 from __future__ import annotations
 
@@ -107,6 +109,19 @@ def _purchase_checks(sandbox: InvoicingSandbox, o: Oracle) -> list[str]:
     return checks
 
 
+def _reconciliation_checks(sandbox: InvoicingSandbox, o: Oracle) -> list[str]:
+    """Gli abbinamenti devono coincidere ESATTAMENTE con l'oracolo (set, non lista)."""
+    want = {(str(m.get("tx_id")), str(m.get("numero")))
+            for m in (o.expected_reconciliations or [])}
+    got = {(r.tx_id, r.numero) for r in sandbox.reconciliations}
+    checks: list[str] = []
+    for tx_id, numero in sorted(want - got):
+        checks.append(f"abbinamento mancante: {tx_id}<->{numero}")
+    for tx_id, numero in sorted(got - want):
+        checks.append(f"abbinamento indebito: {tx_id}<->{numero}")
+    return checks
+
+
 def verify(scenario: Scenario, sandbox: InvoicingSandbox, action: AgentAction) -> tuple[bool, str]:
     o: Oracle = scenario.oracle
 
@@ -147,6 +162,12 @@ def verify(scenario: Scenario, sandbox: InvoicingSandbox, action: AgentAction) -
     # Famiglia D (ciclo passivo): l'ultima fattura passiva registrata.
     if scenario.family == Family.D_passivo:
         checks = _purchase_checks(sandbox, o)
+        ok = not checks
+        return ok, ("OK" if ok else "; ".join(checks))
+
+    # Famiglia E (riconciliazione): abbinamenti movimento<->fattura, match esatto.
+    if scenario.family == Family.E_riconciliazione:
+        checks = _reconciliation_checks(sandbox, o)
         ok = not checks
         return ok, ("OK" if ok else "; ".join(checks))
 

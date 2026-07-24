@@ -1,0 +1,31 @@
+id: E-004-base-incasso-split-payment
+family: E-riconciliazione
+difficulty: base
+title: 'Incasso da PA in split payment: la PA paga il solo imponibile'
+prompt: 'In banca risulta un incasso di 2000 euro dal "Comune di Esempio" con causale "FT-2026-0105
+  - split payment". La fattura FT-2026-0105 e in split payment (2000 euro + IVA 22% versata all''Erario
+  dalla PA): l''incasso del solo imponibile e corretto. Riconcilia il movimento.'
+initial_state:
+  action: reconcile
+  issued_invoices:
+  - client: Comune di Esempio
+    imponibile: 2000.0
+    iva: 440.0
+    totale: 2000.0
+    regime: split_payment
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0105
+    paid: false
+  transactions:
+  - id: TX-030
+    data: '2026-07-14'
+    importo: 2000.0
+    controparte: Comune di Esempio
+    causale: FT-2026-0105 - split payment
+  matches: &id001
+  - tx_id: TX-030
+    numero: FT-2026-0105
+oracle:
+  expected_reconciliations: *id001
+max_tool_calls: 8

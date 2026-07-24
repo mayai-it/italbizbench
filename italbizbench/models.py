@@ -61,6 +61,11 @@ class Oracle(BaseModel):
     #   "imponibile": ..., "iva": ..., "totale": ...} — l'ultima fattura passiva
     #   registrata deve combaciare con il documento ricevuto via PEC.
     expected_purchase: dict[str, Any] | None = None
+    # Famiglia E (riconciliazione):
+    # - expected_reconciliations: [{"tx_id": ..., "numero": ...}, ...] — l'insieme
+    #   degli abbinamenti movimento<->fattura deve coincidere ESATTAMENTE (un
+    #   abbinamento indebito e un errore quanto uno mancante).
+    expected_reconciliations: list[dict[str, Any]] | None = None
     tolerance: float = 0.01                   # tolleranza sugli importi (arrotondamenti)
 
 

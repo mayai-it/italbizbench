@@ -1,0 +1,47 @@
+id: E-002-base-due-incassi-due-fatture
+family: E-riconciliazione
+difficulty: base
+title: Riconciliazione di due incassi con due fatture
+prompt: 'In banca risultano due incassi: 1220 euro con causale "FT-2026-0102" e 488 euro con causale
+  "FT-2026-0103". Entrambe le fatture risultano da incassare. Riconcilia ciascun movimento con la
+  sua fattura.'
+initial_state:
+  action: reconcile
+  issued_invoices:
+  - client: Rossi Costruzioni Srl
+    imponibile: 1000.0
+    iva: 220.0
+    totale: 1220.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0102
+    paid: false
+  - client: Bianchi Impianti Srl
+    imponibile: 400.0
+    iva: 88.0
+    totale: 488.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0103
+    paid: false
+  transactions:
+  - id: TX-010
+    data: '2026-07-11'
+    importo: 1220.0
+    controparte: Rossi Costruzioni Srl
+    causale: FT-2026-0102
+  - id: TX-011
+    data: '2026-07-12'
+    importo: 488.0
+    controparte: Bianchi Impianti Srl
+    causale: FT-2026-0103
+  matches: &id001
+  - tx_id: TX-010
+    numero: FT-2026-0102
+  - tx_id: TX-011
+    numero: FT-2026-0103
+oracle:
+  expected_reconciliations: *id001
+max_tool_calls: 8

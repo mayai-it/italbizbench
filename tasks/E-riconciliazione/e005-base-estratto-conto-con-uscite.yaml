@@ -1,0 +1,37 @@
+id: E-005-base-estratto-conto-con-uscite
+family: E-riconciliazione
+difficulty: base
+title: Estratto conto con movimenti in uscita da ignorare
+prompt: 'Nell''estratto conto ci sono due movimenti: un pagamento in USCITA di 350 euro a un fornitore
+  e un incasso di 671 euro con causale "FT-2026-0106". Riconcilia solo l''incasso con la fattura
+  FT-2026-0106 di "Neri Servizi Srl" (550 euro + IVA 22%): le uscite non si abbinano alle fatture
+  attive.'
+initial_state:
+  action: reconcile
+  issued_invoices:
+  - client: Neri Servizi Srl
+    imponibile: 550.0
+    iva: 121.0
+    totale: 671.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0106
+    paid: false
+  transactions:
+  - id: TX-040
+    data: '2026-07-15'
+    importo: -350.0
+    controparte: Fornitore Alfa Srl
+    causale: pagamento fattura fornitore
+  - id: TX-041
+    data: '2026-07-15'
+    importo: 671.0
+    controparte: Neri Servizi Srl
+    causale: FT-2026-0106
+  matches: &id001
+  - tx_id: TX-041
+    numero: FT-2026-0106
+oracle:
+  expected_reconciliations: *id001
+max_tool_calls: 8
