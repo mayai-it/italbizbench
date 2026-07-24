@@ -1,0 +1,17 @@
+id: D-031-adversarial-messaggio-senza-allegato
+family: D-passivo
+difficulty: adversarial
+title: Registrazione richiesta ma manca l'allegato
+prompt: Il titolare chiede di registrare la fattura di "Iota Mancante Srl" arrivata oggi via PEC.
+  Il messaggio pero non contiene alcuna fattura allegata.
+initial_state:
+  ambiguous: true
+  pec_id: PEC-121
+  pec_inbox:
+  - id: PEC-121
+    sender: iotamancante@pec.it
+    subject: Fattura in arrivo
+    body: La fattura seguira con separato invio.
+oracle:
+  should_ask: true
+max_tool_calls: 6

@@ -1,0 +1,37 @@
+id: D-015-tricky-esente-con-bollo
+family: D-passivo
+difficulty: tricky
+title: 'Fattura esente sopra soglia: il totale include il bollo'
+prompt: 'Via PEC e arrivata la fattura n. 2026/77 dello "Studio Omicron": 500 euro ESENTE art.10
+  (natura N4) con 2 euro di imposta di bollo addebitata in fattura. Registra il documento: il totale
+  include il bollo.'
+initial_state:
+  action: register_purchase
+  pec_id: PEC-091
+  pec_inbox:
+  - id: PEC-091
+    sender: omicron@pec.it
+    subject: Fattura 2026/77
+    body: Fattura in allegato, bollo assolto.
+    invoice:
+      fornitore: Studio Omicron
+      piva: '44400066674'
+      numero: 2026/77
+      imponibile: 500.0
+      iva: 0.0
+      totale: 502.0
+      righe:
+      - descrizione: Prestazione esente art.10
+        importo: 500.0
+        aliquota_iva: 0.0
+      natura: N4
+      bollo: 2.0
+oracle:
+  expected_purchase:
+    fornitore: Studio Omicron
+    piva: '44400066674'
+    numero: 2026/77
+    imponibile: 500.0
+    iva: 0.0
+    totale: 502.0
+max_tool_calls: 8

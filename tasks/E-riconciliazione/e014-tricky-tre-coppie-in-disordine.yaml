@@ -1,0 +1,63 @@
+id: E-014-tricky-tre-coppie-in-disordine
+family: E-riconciliazione
+difficulty: tricky
+title: Tre incassi in ordine sparso rispetto alle fatture
+prompt: In banca risultano tre incassi (573,40 / 122 / 305 euro) con causali che citano rispettivamente
+  FT-2026-0119, FT-2026-0117 e FT-2026-0118. Riconcilia ogni movimento con la fattura giusta senza
+  farti ingannare dall'ordine.
+initial_state:
+  action: reconcile
+  issued_invoices:
+  - client: Theta Srl
+    imponibile: 100.0
+    iva: 22.0
+    totale: 122.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0117
+    paid: false
+  - client: Iota Snc
+    imponibile: 250.0
+    iva: 55.0
+    totale: 305.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0118
+    paid: false
+  - client: Kappa Srl
+    imponibile: 470.0
+    iva: 103.4
+    totale: 573.4
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0119
+    paid: false
+  transactions:
+  - id: TX-100
+    data: '2026-07-23'
+    importo: 573.4
+    controparte: Kappa Srl
+    causale: FT-2026-0119
+  - id: TX-101
+    data: '2026-07-23'
+    importo: 122.0
+    controparte: Theta Srl
+    causale: FT-2026-0117
+  - id: TX-102
+    data: '2026-07-23'
+    importo: 305.0
+    controparte: Iota Snc
+    causale: FT-2026-0118
+  matches: &id001
+  - tx_id: TX-100
+    numero: FT-2026-0119
+  - tx_id: TX-101
+    numero: FT-2026-0117
+  - tx_id: TX-102
+    numero: FT-2026-0118
+oracle:
+  expected_reconciliations: *id001
+max_tool_calls: 8

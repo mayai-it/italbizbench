@@ -1,0 +1,38 @@
+id: D-014-tricky-multiriga-aliquote-miste
+family: D-passivo
+difficulty: tricky
+title: Registrazione multiriga con aliquote miste
+prompt: 'Via PEC e arrivata la fattura n. 2026/601 di "Xi Commercio Srl": 500 euro al 22% e 300 euro
+  al 10%. Registra la fattura con imponibile e IVA complessivi del documento (l''IVA si calcola per
+  aliquota).'
+initial_state:
+  action: register_purchase
+  pec_id: PEC-090
+  pec_inbox:
+  - id: PEC-090
+    sender: xi@pec.it
+    subject: Fattura 2026/601
+    body: Fattura in allegato.
+    invoice:
+      fornitore: Xi Commercio Srl
+      piva: '44400055560'
+      numero: 2026/601
+      imponibile: 800.0
+      iva: 140.0
+      totale: 940.0
+      righe:
+      - descrizione: Merce aliquota ordinaria
+        importo: 500.0
+        aliquota_iva: 22.0
+      - descrizione: Generi alimentari
+        importo: 300.0
+        aliquota_iva: 10.0
+oracle:
+  expected_purchase:
+    fornitore: Xi Commercio Srl
+    piva: '44400055560'
+    numero: 2026/601
+    imponibile: 800.0
+    iva: 140.0
+    totale: 940.0
+max_tool_calls: 8

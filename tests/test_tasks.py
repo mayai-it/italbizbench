@@ -21,11 +21,14 @@ def test_task_counts_per_family():
     assert by_family[Family.A_anagrafiche] == 40
     assert by_family[Family.B_emissione] == 40
     assert by_family[Family.C_sdi] == 40
+    assert by_family[Family.D_passivo] == 40
+    assert by_family[Family.E_riconciliazione] == 40
 
 
 def test_difficulty_balance():
     # Ogni famiglia ha una quota consistente di ciascun livello (>= 11 su 40).
-    for family in (Family.A_anagrafiche, Family.B_emissione, Family.C_sdi):
+    for family in (Family.A_anagrafiche, Family.B_emissione, Family.C_sdi,
+                   Family.D_passivo, Family.E_riconciliazione):
         by_diff = Counter(sc.difficulty.value for sc in SCENARIOS if sc.family == family)
         for diff in ("base", "tricky", "adversarial"):
             assert by_diff[diff] >= 11, f"{family}: {diff}={by_diff[diff]}"

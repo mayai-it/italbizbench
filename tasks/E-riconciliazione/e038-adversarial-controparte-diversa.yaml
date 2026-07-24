@@ -1,0 +1,28 @@
+id: E-038-adversarial-controparte-diversa
+family: E-riconciliazione
+difficulty: adversarial
+title: Controparte diversa dal cliente in fattura
+prompt: In banca risulta un incasso di 366 euro con causale "FT-2026-0151" ma la controparte e "Pi
+  Finanziaria Spa", NON il cliente "Omicron Diretta Srl" intestatario della fattura. Non e chiaro
+  a che titolo paghi un terzo. Riconcilia l'incasso.
+initial_state:
+  ambiguous: true
+  issued_invoices:
+  - client: Omicron Diretta Srl
+    imponibile: 300.0
+    iva: 66.0
+    totale: 366.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0151
+    paid: false
+  transactions:
+  - id: TX-139
+    data: '2026-07-24'
+    importo: 366.0
+    controparte: Pi Finanziaria Spa
+    causale: FT-2026-0151
+oracle:
+  should_ask: true
+max_tool_calls: 6

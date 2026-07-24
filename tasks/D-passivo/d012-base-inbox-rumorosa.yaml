@@ -1,0 +1,47 @@
+id: D-012-base-inbox-rumorosa
+family: D-passivo
+difficulty: base
+title: Registrazione con casella piena di rumore
+prompt: 'In casella PEC ci sono quattro messaggi: tre comunicazioni di servizio e una fattura di
+  "Mi Trasporti Srl" (n. 2026/512, 950 euro + IVA 22%). Individua il messaggio giusto e registra
+  la fattura.'
+initial_state:
+  action: register_purchase
+  pec_id: PEC-085
+  pec_inbox:
+  - id: PEC-083
+    sender: noreply@pec.gestore.it
+    subject: Spazio casella in esaurimento
+    body: La casella ha superato il 90% dello spazio.
+  - id: PEC-084
+    sender: newsletter@pec.camcom.it
+    subject: Bandi luglio 2026
+    body: Newsletter bandi e contributi.
+  - id: PEC-085
+    sender: amministrazione@pec.mitrasporti.it
+    subject: Fattura 2026/512
+    body: In allegato la fattura n. 2026/512.
+    invoice:
+      fornitore: Mi Trasporti Srl
+      piva: '44400033344'
+      numero: 2026/512
+      imponibile: 950.0
+      iva: 209.0
+      totale: 1159.0
+      righe:
+      - descrizione: Trasporti luglio
+        importo: 950.0
+        aliquota_iva: 22.0
+  - id: PEC-086
+    sender: noreply@pec.gestore.it
+    subject: Verifica periodica
+    body: Verifica periodica della casella completata.
+oracle:
+  expected_purchase:
+    fornitore: Mi Trasporti Srl
+    piva: '44400033344'
+    numero: 2026/512
+    imponibile: 950.0
+    iva: 209.0
+    totale: 1159.0
+max_tool_calls: 8

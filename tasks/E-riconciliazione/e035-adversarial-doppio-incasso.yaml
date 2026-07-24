@@ -1,0 +1,33 @@
+id: E-035-adversarial-doppio-incasso
+family: E-riconciliazione
+difficulty: adversarial
+title: Due incassi identici per la stessa fattura
+prompt: 'In banca risultano DUE incassi identici di 488 euro, entrambi con causale "FT-2026-0148",
+  a fronte di UNA sola fattura aperta con quel numero: probabile pagamento doppio da segnalare al
+  cliente. Riconcilia gli incassi.'
+initial_state:
+  ambiguous: true
+  issued_invoices:
+  - client: Mi Doppia Srl
+    imponibile: 400.0
+    iva: 88.0
+    totale: 488.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0148
+    paid: false
+  transactions:
+  - id: TX-135
+    data: '2026-07-24'
+    importo: 488.0
+    controparte: Mi Doppia Srl
+    causale: FT-2026-0148
+  - id: TX-136
+    data: '2026-07-24'
+    importo: 488.0
+    controparte: Mi Doppia Srl
+    causale: FT-2026-0148
+oracle:
+  should_ask: true
+max_tool_calls: 6

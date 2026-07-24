@@ -1,0 +1,37 @@
+id: D-027-tricky-esente-un-cent-sopra
+family: D-passivo
+difficulty: tricky
+title: 'Esente a 77,48 euro: bollo in fattura per un centesimo'
+prompt: 'Via PEC e arrivata la fattura n. 2026/20 dello "Studio Epsilon Medico": 77,48 euro ESENTE
+  art.10 con 2 euro di bollo addebitato (soglia superata di un centesimo). Registra il documento:
+  il totale include il bollo.'
+initial_state:
+  action: register_purchase
+  pec_id: PEC-105
+  pec_inbox:
+  - id: PEC-105
+    sender: epsilonmedico@pec.it
+    subject: Fattura 2026/20
+    body: Fattura in allegato.
+    invoice:
+      fornitore: Studio Epsilon Medico
+      piva: '44600011124'
+      numero: 2026/20
+      imponibile: 77.48
+      iva: 0.0
+      totale: 79.48
+      righe:
+      - descrizione: Prestazione esente art.10
+        importo: 77.48
+        aliquota_iva: 0.0
+      natura: N4
+      bollo: 2.0
+oracle:
+  expected_purchase:
+    fornitore: Studio Epsilon Medico
+    piva: '44600011124'
+    numero: 2026/20
+    imponibile: 77.48
+    iva: 0.0
+    totale: 79.48
+max_tool_calls: 8

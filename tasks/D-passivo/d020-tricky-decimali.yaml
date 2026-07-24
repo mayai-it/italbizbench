@@ -1,0 +1,34 @@
+id: D-020-tricky-decimali
+family: D-passivo
+difficulty: tricky
+title: Registrazione con importi decimali
+prompt: 'Via PEC e arrivata la fattura n. 2026/333 di "Phi Componenti Srl": 987,65 euro + IVA 22%.
+  Registra la fattura replicando ESATTAMENTE gli importi del documento, arrotondamenti compresi.'
+initial_state:
+  action: register_purchase
+  pec_id: PEC-097
+  pec_inbox:
+  - id: PEC-097
+    sender: phi@pec.it
+    subject: Fattura 2026/333
+    body: Fattura in allegato.
+    invoice:
+      fornitore: Phi Componenti Srl
+      piva: '44500022239'
+      numero: 2026/333
+      imponibile: 987.65
+      iva: 217.28
+      totale: 1204.93
+      righe:
+      - descrizione: Componenti
+        importo: 987.65
+        aliquota_iva: 22.0
+oracle:
+  expected_purchase:
+    fornitore: Phi Componenti Srl
+    piva: '44500022239'
+    numero: 2026/333
+    imponibile: 987.65
+    iva: 217.28
+    totale: 1204.93
+max_tool_calls: 8

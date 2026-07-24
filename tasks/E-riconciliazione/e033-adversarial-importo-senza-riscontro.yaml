@@ -1,0 +1,27 @@
+id: E-033-adversarial-importo-senza-riscontro
+family: E-riconciliazione
+difficulty: adversarial
+title: Incasso che non corrisponde a nessuna fattura
+prompt: In banca risulta un incasso di 512 euro con causale "pagamento" da "Ignoto Srl". Nessuna
+  fattura aperta ha quel totale e la causale non cita alcun numero. Riconcilia l'incasso.
+initial_state:
+  ambiguous: true
+  issued_invoices:
+  - client: Kappa Aperta Srl
+    imponibile: 800.0
+    iva: 176.0
+    totale: 976.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0146
+    paid: false
+  transactions:
+  - id: TX-133
+    data: '2026-07-24'
+    importo: 512.0
+    controparte: Ignoto Srl
+    causale: pagamento
+oracle:
+  should_ask: true
+max_tool_calls: 6

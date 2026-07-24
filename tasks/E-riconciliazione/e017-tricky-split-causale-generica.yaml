@@ -1,0 +1,32 @@
+id: E-017-tricky-split-causale-generica
+family: E-riconciliazione
+difficulty: tricky
+title: 'Incasso PA con causale generica: torna il solo imponibile'
+prompt: 'In banca risulta un incasso di 3000 euro dal "Comune di Collina" con causale generica "mandato
+  di pagamento n. 4412". La fattura aperta FT-2026-0123 verso quell''ente e in SPLIT PAYMENT: 3000
+  euro di imponibile + IVA versata all''Erario dalla PA. L''importo corrisponde al solo imponibile,
+  come corretto. Riconcilia il movimento.'
+initial_state:
+  action: reconcile
+  issued_invoices:
+  - client: Comune di Collina
+    imponibile: 3000.0
+    iva: 660.0
+    totale: 3000.0
+    regime: split_payment
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0123
+    paid: false
+  transactions:
+  - id: TX-105
+    data: '2026-07-23'
+    importo: 3000.0
+    controparte: Comune di Collina
+    causale: mandato di pagamento n. 4412
+  matches: &id001
+  - tx_id: TX-105
+    numero: FT-2026-0123
+oracle:
+  expected_reconciliations: *id001
+max_tool_calls: 8

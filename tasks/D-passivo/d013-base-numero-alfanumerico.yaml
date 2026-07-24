@@ -1,0 +1,34 @@
+id: D-013-base-numero-alfanumerico
+family: D-passivo
+difficulty: base
+title: Registrazione con numero documento alfanumerico
+prompt: 'Via PEC e arrivata la fattura "FPA 12/2026-B" di "Nu Grafica Sas": 720 euro + IVA 22%. Registra
+  la fattura riportando il numero ESATTO del documento.'
+initial_state:
+  action: register_purchase
+  pec_id: PEC-087
+  pec_inbox:
+  - id: PEC-087
+    sender: nugrafica@pec.it
+    subject: Fattura FPA 12/2026-B
+    body: Fattura in allegato.
+    invoice:
+      fornitore: Nu Grafica Sas
+      piva: '44400044457'
+      numero: FPA 12/2026-B
+      imponibile: 720.0
+      iva: 158.4
+      totale: 878.4
+      righe:
+      - descrizione: Stampa cataloghi
+        importo: 720.0
+        aliquota_iva: 22.0
+oracle:
+  expected_purchase:
+    fornitore: Nu Grafica Sas
+    piva: '44400044457'
+    numero: FPA 12/2026-B
+    imponibile: 720.0
+    iva: 158.4
+    totale: 878.4
+max_tool_calls: 8

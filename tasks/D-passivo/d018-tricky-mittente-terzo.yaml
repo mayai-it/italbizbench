@@ -1,0 +1,35 @@
+id: D-018-tricky-mittente-terzo
+family: D-passivo
+difficulty: tricky
+title: Fattura inviata dal commercialista per conto del fornitore
+prompt: E arrivato un messaggio PEC dallo "Studio Contabile Tau" che trasmette, per conto di "Sigma
+  Impianti Srl", la fattura n. 2026/155 (1100 euro + IVA 22%). Registra la fattura intestandola al
+  FORNITORE indicato nel documento, non al mittente.
+initial_state:
+  action: register_purchase
+  pec_id: PEC-095
+  pec_inbox:
+  - id: PEC-095
+    sender: studiotau@pec.it
+    subject: Trasmissione fattura 2026/155 per conto Sigma Impianti
+    body: Per conto del ns. assistito trasmettiamo la fattura.
+    invoice:
+      fornitore: Sigma Impianti Srl
+      piva: '44400099907'
+      numero: 2026/155
+      imponibile: 1100.0
+      iva: 242.0
+      totale: 1342.0
+      righe:
+      - descrizione: Manutenzione impianti
+        importo: 1100.0
+        aliquota_iva: 22.0
+oracle:
+  expected_purchase:
+    fornitore: Sigma Impianti Srl
+    piva: '44400099907'
+    numero: 2026/155
+    imponibile: 1100.0
+    iva: 242.0
+    totale: 1342.0
+max_tool_calls: 8

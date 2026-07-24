@@ -1,0 +1,31 @@
+id: E-011-base-incasso-reverse-charge
+family: E-riconciliazione
+difficulty: base
+title: 'Incasso di fattura in reverse charge: totale = imponibile'
+prompt: 'In banca risulta un incasso di 5000 euro con causale "FT-2026-0115". La fattura FT-2026-0115
+  a "Epsilon Edile Srl" e in REVERSE CHARGE (5000 euro, IVA non esposta): l''incasso del solo imponibile
+  e corretto. Riconcilia il movimento.'
+initial_state:
+  action: reconcile
+  issued_invoices:
+  - client: Epsilon Edile Srl
+    imponibile: 5000.0
+    iva: 0.0
+    totale: 5000.0
+    regime: reverse_charge
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0115
+    paid: false
+  transactions:
+  - id: TX-091
+    data: '2026-07-22'
+    importo: 5000.0
+    controparte: Epsilon Edile Srl
+    causale: FT-2026-0115
+  matches: &id001
+  - tx_id: TX-091
+    numero: FT-2026-0115
+oracle:
+  expected_reconciliations: *id001
+max_tool_calls: 8

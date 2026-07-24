@@ -111,7 +111,7 @@ def test_verify_adversarial_reconcile_is_failure():
 
 def test_reference_passes_family_e():
     verdicts, scorecard = run(TASKS / "E-riconciliazione", ReferenceAgent())
-    assert scorecard["n_tasks"] == 8
+    assert scorecard["n_tasks"] == 40
     assert scorecard["pass_rate"] == 1.0
 
 

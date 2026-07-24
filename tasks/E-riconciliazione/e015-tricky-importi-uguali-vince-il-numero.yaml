@@ -1,0 +1,40 @@
+id: E-015-tricky-importi-uguali-vince-il-numero
+family: E-riconciliazione
+difficulty: tricky
+title: 'Due fatture con lo stesso importo: fa fede il numero in causale'
+prompt: 'Due fatture aperte hanno lo stesso totale di 610 euro: FT-2026-0120 ("Lambda Srl") e FT-2026-0121
+  ("Mi Snc"). In banca c''e UN incasso di 610 euro con causale "saldo FT-2026-0121". Riconcilia il
+  movimento con la fattura citata in causale: l''altra resta aperta.'
+initial_state:
+  action: reconcile
+  issued_invoices:
+  - client: Lambda Srl
+    imponibile: 500.0
+    iva: 110.0
+    totale: 610.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0120
+    paid: false
+  - client: Mi Snc
+    imponibile: 500.0
+    iva: 110.0
+    totale: 610.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0121
+    paid: false
+  transactions:
+  - id: TX-103
+    data: '2026-07-23'
+    importo: 610.0
+    controparte: Mi Snc
+    causale: saldo FT-2026-0121
+  matches: &id001
+  - tx_id: TX-103
+    numero: FT-2026-0121
+oracle:
+  expected_reconciliations: *id001
+max_tool_calls: 8

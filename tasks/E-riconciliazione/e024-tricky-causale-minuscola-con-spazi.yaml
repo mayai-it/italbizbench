@@ -1,0 +1,31 @@
+id: E-024-tricky-causale-minuscola-con-spazi
+family: E-riconciliazione
+difficulty: tricky
+title: Numero fattura in causale scritto in minuscolo e con spazi
+prompt: In banca risulta un incasso di 2928 euro con causale "saldo ft - 2026 - 0133". Nonostante
+  la formattazione, il riferimento e alla fattura FT-2026-0133 di "Omega Impianti Srl" (2400 euro
+  + IVA 22%), unica aperta con quel totale. Riconcilia il movimento.
+initial_state:
+  action: reconcile
+  issued_invoices:
+  - client: Omega Impianti Srl
+    imponibile: 2400.0
+    iva: 528.0
+    totale: 2928.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0133
+    paid: false
+  transactions:
+  - id: TX-117
+    data: '2026-07-24'
+    importo: 2928.0
+    controparte: Omega Impianti Srl
+    causale: saldo ft - 2026 - 0133
+  matches: &id001
+  - tx_id: TX-117
+    numero: FT-2026-0133
+oracle:
+  expected_reconciliations: *id001
+max_tool_calls: 8

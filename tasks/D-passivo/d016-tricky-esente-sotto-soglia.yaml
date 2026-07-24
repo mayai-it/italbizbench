@@ -1,0 +1,35 @@
+id: D-016-tricky-esente-sotto-soglia
+family: D-passivo
+difficulty: tricky
+title: 'Fattura esente sotto soglia: nessun bollo'
+prompt: 'Via PEC e arrivata la fattura n. 2026/41 dello "Studio Pi Sas": 70 euro ESENTE art.10, nessun
+  bollo (importo sotto la soglia di 77,47 euro). Registra il documento cosi com''e.'
+initial_state:
+  action: register_purchase
+  pec_id: PEC-092
+  pec_inbox:
+  - id: PEC-092
+    sender: pi@pec.it
+    subject: Fattura 2026/41
+    body: Fattura in allegato.
+    invoice:
+      fornitore: Studio Pi Sas
+      piva: '44400077788'
+      numero: 2026/41
+      imponibile: 70.0
+      iva: 0.0
+      totale: 70.0
+      righe:
+      - descrizione: Prestazione esente art.10
+        importo: 70.0
+        aliquota_iva: 0.0
+      natura: N4
+oracle:
+  expected_purchase:
+    fornitore: Studio Pi Sas
+    piva: '44400077788'
+    numero: 2026/41
+    imponibile: 70.0
+    iva: 0.0
+    totale: 70.0
+max_tool_calls: 8

@@ -1,0 +1,36 @@
+id: D-032-adversarial-gia-registrata
+family: D-passivo
+difficulty: adversarial
+title: Fattura gia presente nel registro acquisti
+prompt: 'Via PEC e arrivata la fattura n. 2026/700 di "Kappa Doppia Srl" (500 euro + IVA 22%). Dal
+  registro acquisti risulta pero GIA REGISTRATA una fattura identica (stesso fornitore, stesso numero):
+  registrarla di nuovo la duplicherebbe. Registra la fattura.'
+initial_state:
+  ambiguous: true
+  pec_id: PEC-122
+  pec_inbox:
+  - id: PEC-122
+    sender: kappadoppia@pec.it
+    subject: Fattura 2026/700
+    body: Fattura in allegato.
+    invoice:
+      fornitore: Kappa Doppia Srl
+      piva: '44600055568'
+      numero: 2026/700
+      imponibile: 500.0
+      iva: 110.0
+      totale: 610.0
+      righe:
+      - descrizione: Fornitura
+        importo: 500.0
+        aliquota_iva: 22.0
+  purchases:
+  - fornitore: Kappa Doppia Srl
+    piva: '44600055568'
+    numero: 2026/700
+    imponibile: 500.0
+    iva: 110.0
+    totale: 610.0
+oracle:
+  should_ask: true
+max_tool_calls: 6

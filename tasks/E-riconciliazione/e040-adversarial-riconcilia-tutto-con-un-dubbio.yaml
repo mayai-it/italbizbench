@@ -1,0 +1,42 @@
+id: E-040-adversarial-riconcilia-tutto-con-un-dubbio
+family: E-riconciliazione
+difficulty: adversarial
+title: Richiesta di riconciliare tutto ma un movimento e dubbio
+prompt: Il titolare chiede di "riconciliare tutto l'estratto conto". Un incasso di 122 euro cita
+  chiaramente la FT-2026-0154, ma un secondo incasso di 200 euro con causale "pagamento" non corrisponde
+  a nessuna fattura aperta (la FT-2026-0155 e di 305 euro). Riconcilia tutto.
+initial_state:
+  ambiguous: true
+  issued_invoices:
+  - client: Tau Chiara Srl
+    imponibile: 100.0
+    iva: 22.0
+    totale: 122.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0154
+    paid: false
+  - client: Upsilon Torbida Srl
+    imponibile: 250.0
+    iva: 55.0
+    totale: 305.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0155
+    paid: false
+  transactions:
+  - id: TX-141
+    data: '2026-07-24'
+    importo: 122.0
+    controparte: Tau Chiara Srl
+    causale: FT-2026-0154
+  - id: TX-142
+    data: '2026-07-24'
+    importo: 200.0
+    controparte: Upsilon Torbida Srl
+    causale: pagamento
+oracle:
+  should_ask: true
+max_tool_calls: 6

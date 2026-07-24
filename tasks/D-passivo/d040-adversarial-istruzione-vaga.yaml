@@ -1,0 +1,43 @@
+id: D-040-adversarial-istruzione-vaga
+family: D-passivo
+difficulty: adversarial
+title: Istruzione vaga con piu fatture in casella
+prompt: 'Il titolare chiede: "registra la fattura arrivata ieri". In casella pero ci sono DUE fatture
+  arrivate ieri, da fornitori diversi, e non e chiaro a quale si riferisca. Registra la fattura di
+  ieri.'
+initial_state:
+  ambiguous: true
+  pec_inbox:
+  - id: PEC-131
+    sender: sigmavarie@pec.it
+    subject: Fattura 2026/110
+    body: In allegato.
+    invoice:
+      fornitore: Sigma Varie Srl
+      piva: '44700022237'
+      numero: 2026/110
+      imponibile: 300.0
+      iva: 66.0
+      totale: 366.0
+      righe:
+      - descrizione: Merce
+        importo: 300.0
+        aliquota_iva: 22.0
+  - id: PEC-132
+    sender: tauvarie@pec.it
+    subject: Fattura 2026/54
+    body: In allegato.
+    invoice:
+      fornitore: Tau Varie Srl
+      piva: '44700033341'
+      numero: 2026/54
+      imponibile: 450.0
+      iva: 99.0
+      totale: 549.0
+      righe:
+      - descrizione: Merce
+        importo: 450.0
+        aliquota_iva: 22.0
+oracle:
+  should_ask: true
+max_tool_calls: 6

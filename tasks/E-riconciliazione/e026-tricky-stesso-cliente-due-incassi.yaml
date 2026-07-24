@@ -1,0 +1,47 @@
+id: E-026-tricky-stesso-cliente-due-incassi
+family: E-riconciliazione
+difficulty: tricky
+title: Stesso cliente, due incassi distinti con numeri in causale
+prompt: 'Il cliente "Beta Costruzioni Srl" ha due fatture aperte e in banca risultano due incassi
+  separati: 1220 euro ("FT-2026-0135") e 732 euro ("FT-2026-0136"). Riconcilia ciascun movimento
+  con la sua fattura.'
+initial_state:
+  action: reconcile
+  issued_invoices:
+  - client: Beta Costruzioni Srl
+    imponibile: 1000.0
+    iva: 220.0
+    totale: 1220.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0135
+    paid: false
+  - client: Beta Costruzioni Srl
+    imponibile: 600.0
+    iva: 132.0
+    totale: 732.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0136
+    paid: false
+  transactions:
+  - id: TX-119
+    data: '2026-07-24'
+    importo: 1220.0
+    controparte: Beta Costruzioni Srl
+    causale: FT-2026-0135
+  - id: TX-120
+    data: '2026-07-24'
+    importo: 732.0
+    controparte: Beta Costruzioni Srl
+    causale: FT-2026-0136
+  matches: &id001
+  - tx_id: TX-119
+    numero: FT-2026-0135
+  - tx_id: TX-120
+    numero: FT-2026-0136
+oracle:
+  expected_reconciliations: *id001
+max_tool_calls: 8

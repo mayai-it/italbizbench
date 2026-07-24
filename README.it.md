@@ -15,8 +15,8 @@ Fa parte di [MayAI](https://mayai.it).
 
 ## In sintesi
 
-**136 task** su 5 famiglie (A anagrafiche: 40, B emissione fattura: 40, C gestione
-scarti SDI: 40, D ciclo passivo/PEC: 8, E riconciliazione: 8 — D ed E scaffold), ciascuno con **oracolo deterministico** (niente LLM-giudice) e tre
+**200 task** su 5 famiglie da 40 ciascuna (A anagrafiche, B emissione fattura,
+C gestione scarti SDI, D ciclo passivo/PEC, E riconciliazione incassi), ciascuno con **oracolo deterministico** (niente LLM-giudice) e tre
 livelli di difficoltà: `base`, `tricky` (eccezione fiscale), `adversarial` (dato
 sporco/ambiguo: l'agente *deve* fermarsi e chiedere).
 
@@ -32,7 +32,7 @@ Il punteggio è un profilo su **4 assi**:
    non risulta perfettamente calibrato.
 
 Il pass-rate esce con **due intervalli di confidenza al 95%** (bootstrap e Wilson).
-Con 136 task si distinguono agenti con gap ≳ 0.14; per ~10 punti servono ~300 task —
+Con 200 task si distinguono agenti con gap ≳ 0.11; per ~10 punti servono ~300 task —
 è scritto nel README perché nessuno legga 2 punti di differenza come un segnale.
 
 ## Regola d'oro

@@ -10,14 +10,14 @@ TASKS = Path(__file__).resolve().parent.parent / "tasks"
 
 def test_reference_agent_passes_all():
     verdicts, scorecard = run(TASKS, ReferenceAgent())
-    assert scorecard["n_tasks"] == 136  # 40 A + 40 B + 40 C + 8 D + 8 E (scaffold)
+    assert scorecard["n_tasks"] == 200  # 40 per ciascuna famiglia A-E
     # La baseline rule-based e progettata per essere corretta su tutti i task ben formati.
     assert scorecard["pass_rate"] == 1.0
     # Ben calibrata: predice con confidenza alta e passa (Brier basso), e si astiene
     # esattamente sui task adversarial (accuratezza di astensione 1.0).
     assert scorecard["brier"] is not None and scorecard["brier"] < 0.05
     assert scorecard["abstention_accuracy"] == 1.0
-    assert scorecard["n_predictions"] + scorecard["n_abstentions"] == 136
+    assert scorecard["n_predictions"] + scorecard["n_abstentions"] == 200
 
 
 def test_piva_checksum():

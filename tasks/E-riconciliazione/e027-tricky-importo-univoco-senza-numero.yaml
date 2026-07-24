@@ -1,0 +1,31 @@
+id: E-027-tricky-importo-univoco-senza-numero
+family: E-riconciliazione
+difficulty: tricky
+title: 'Causale muta: abbinamento per importo univoco'
+prompt: 'In banca risulta un incasso di 1913,57 euro da "Gamma Global Srl" con causale vuota. L''unica
+  fattura aperta con quel totale e la FT-2026-0137 (1568,50 euro + IVA 22%) allo stesso cliente:
+  l''abbinamento per importo e univoco. Riconcilia il movimento.'
+initial_state:
+  action: reconcile
+  issued_invoices:
+  - client: Gamma Global Srl
+    imponibile: 1568.5
+    iva: 345.07
+    totale: 1913.57
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0137
+    paid: false
+  transactions:
+  - id: TX-121
+    data: '2026-07-24'
+    importo: 1913.57
+    controparte: Gamma Global Srl
+    causale: ''
+  matches: &id001
+  - tx_id: TX-121
+    numero: FT-2026-0137
+oracle:
+  expected_reconciliations: *id001
+max_tool_calls: 8

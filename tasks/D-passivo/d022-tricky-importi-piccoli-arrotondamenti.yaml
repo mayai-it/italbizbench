@@ -1,0 +1,41 @@
+id: D-022-tricky-importi-piccoli-arrotondamenti
+family: D-passivo
+difficulty: tricky
+title: 'Righe con importi piccoli: attenzione agli arrotondamenti'
+prompt: 'Via PEC e arrivata la fattura n. 2026/612 di "Omega Cancelleria Snc": tre righe da 0,99,
+  1,01 e 12,50 euro + IVA 22%. Registra la fattura con i totali del documento (IVA arrotondata per
+  riga).'
+initial_state:
+  action: register_purchase
+  pec_id: PEC-100
+  pec_inbox:
+  - id: PEC-100
+    sender: omega@pec.it
+    subject: Fattura 2026/612
+    body: Fattura in allegato.
+    invoice:
+      fornitore: Omega Cancelleria Snc
+      piva: '44500055569'
+      numero: 2026/612
+      imponibile: 14.5
+      iva: 3.19
+      totale: 17.69
+      righe:
+      - descrizione: Articolo A
+        importo: 0.99
+        aliquota_iva: 22.0
+      - descrizione: Articolo B
+        importo: 1.01
+        aliquota_iva: 22.0
+      - descrizione: Articolo C
+        importo: 12.5
+        aliquota_iva: 22.0
+oracle:
+  expected_purchase:
+    fornitore: Omega Cancelleria Snc
+    piva: '44500055569'
+    numero: 2026/612
+    imponibile: 14.5
+    iva: 3.19
+    totale: 17.69
+max_tool_calls: 8

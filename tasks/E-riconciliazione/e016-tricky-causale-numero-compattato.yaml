@@ -1,0 +1,31 @@
+id: E-016-tricky-causale-numero-compattato
+family: E-riconciliazione
+difficulty: tricky
+title: Numero fattura scritto senza separatori in causale
+prompt: In banca risulta un incasso di 1037 euro con causale "PAG FT20260122". Il numero compattato
+  corrisponde alla fattura FT-2026-0122 di "Nu Meccanica Srl" (850 euro + IVA 22%), unica aperta
+  con quel totale. Riconcilia il movimento.
+initial_state:
+  action: reconcile
+  issued_invoices:
+  - client: Nu Meccanica Srl
+    imponibile: 850.0
+    iva: 187.0
+    totale: 1037.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0122
+    paid: false
+  transactions:
+  - id: TX-104
+    data: '2026-07-23'
+    importo: 1037.0
+    controparte: Nu Meccanica Srl
+    causale: PAG FT20260122
+  matches: &id001
+  - tx_id: TX-104
+    numero: FT-2026-0122
+oracle:
+  expected_reconciliations: *id001
+max_tool_calls: 8

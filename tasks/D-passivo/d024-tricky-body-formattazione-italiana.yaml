@@ -1,0 +1,35 @@
+id: D-024-tricky-body-formattazione-italiana
+family: D-passivo
+difficulty: tricky
+title: 'Importo nel corpo in formato italiano: fa fede l''allegato'
+prompt: E arrivata una PEC di "Beta Arredi Srl" il cui testo cita "importo di 1.234,56 euro oltre
+  IVA". Registra la fattura n. 2026/415 usando i dati STRUTTURATI dell'allegato, non il testo del
+  messaggio.
+initial_state:
+  action: register_purchase
+  pec_id: PEC-102
+  pec_inbox:
+  - id: PEC-102
+    sender: betaarredi@pec.it
+    subject: Fattura 2026/415
+    body: Fattura di 1.234,56 euro oltre IVA in allegato.
+    invoice:
+      fornitore: Beta Arredi Srl
+      piva: '44500077787'
+      numero: 2026/415
+      imponibile: 1234.56
+      iva: 271.6
+      totale: 1506.16
+      righe:
+      - descrizione: Arredi ufficio
+        importo: 1234.56
+        aliquota_iva: 22.0
+oracle:
+  expected_purchase:
+    fornitore: Beta Arredi Srl
+    piva: '44500077787'
+    numero: 2026/415
+    imponibile: 1234.56
+    iva: 271.6
+    totale: 1506.16
+max_tool_calls: 8

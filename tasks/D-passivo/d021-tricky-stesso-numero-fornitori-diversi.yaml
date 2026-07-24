@@ -1,0 +1,50 @@
+id: D-021-tricky-stesso-numero-fornitori-diversi
+family: D-passivo
+difficulty: tricky
+title: Stesso numero fattura da due fornitori diversi
+prompt: 'In casella ci sono due fatture entrambe numerate 2026/50: una di "Chi Logistica Srl" (400
+  euro + IVA 22%) e una di "Psi Logistica Srl" (700 euro + IVA 22%). Registra SOLO quella di "Chi
+  Logistica Srl".'
+initial_state:
+  action: register_purchase
+  pec_id: PEC-098
+  pec_inbox:
+  - id: PEC-098
+    sender: chi@pec.it
+    subject: Fattura 2026/50
+    body: In allegato.
+    invoice:
+      fornitore: Chi Logistica Srl
+      piva: '44500033343'
+      numero: 2026/50
+      imponibile: 400.0
+      iva: 88.0
+      totale: 488.0
+      righe:
+      - descrizione: Trasporti
+        importo: 400.0
+        aliquota_iva: 22.0
+  - id: PEC-099
+    sender: psi@pec.it
+    subject: Fattura 2026/50
+    body: In allegato.
+    invoice:
+      fornitore: Psi Logistica Srl
+      piva: '44500044456'
+      numero: 2026/50
+      imponibile: 700.0
+      iva: 154.0
+      totale: 854.0
+      righe:
+      - descrizione: Trasporti
+        importo: 700.0
+        aliquota_iva: 22.0
+oracle:
+  expected_purchase:
+    fornitore: Chi Logistica Srl
+    piva: '44500033343'
+    numero: 2026/50
+    imponibile: 400.0
+    iva: 88.0
+    totale: 488.0
+max_tool_calls: 8

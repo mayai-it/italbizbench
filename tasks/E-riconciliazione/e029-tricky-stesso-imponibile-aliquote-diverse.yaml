@@ -1,0 +1,41 @@
+id: E-029-tricky-stesso-imponibile-aliquote-diverse
+family: E-riconciliazione
+difficulty: tricky
+title: 'Stesso imponibile ma aliquote diverse: decide il totale'
+prompt: 'Il cliente "Epsilon Group Srl" ha due fatture aperte da 500 euro di imponibile: FT-2026-0139
+  al 22% (totale 610) e FT-2026-0140 al 10% (totale 550). In banca c''e un incasso di 550 euro con
+  causale generica "acconto lavori". Il totale identifica univocamente la FT-2026-0140. Riconcilia
+  il movimento.'
+initial_state:
+  action: reconcile
+  issued_invoices:
+  - client: Epsilon Group Srl
+    imponibile: 500.0
+    iva: 110.0
+    totale: 610.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0139
+    paid: false
+  - client: Epsilon Group Srl
+    imponibile: 500.0
+    iva: 50.0
+    totale: 550.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0140
+    paid: false
+  transactions:
+  - id: TX-123
+    data: '2026-07-24'
+    importo: 550.0
+    controparte: Epsilon Group Srl
+    causale: acconto lavori
+  matches: &id001
+  - tx_id: TX-123
+    numero: FT-2026-0140
+oracle:
+  expected_reconciliations: *id001
+max_tool_calls: 8

@@ -1,0 +1,30 @@
+id: E-012-base-fattura-anno-precedente
+family: E-riconciliazione
+difficulty: base
+title: Incasso tardivo di una fattura dell'anno precedente
+prompt: In banca risulta un incasso di 780,80 euro con causale "saldo ns fattura FT-2025-0999". La
+  fattura, dell'anno scorso, risulta ancora aperta. Riconcilia il movimento.
+initial_state:
+  action: reconcile
+  issued_invoices:
+  - client: Zeta Trasporti Srl
+    imponibile: 640.0
+    iva: 140.8
+    totale: 780.8
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2025-0999
+    paid: false
+  transactions:
+  - id: TX-092
+    data: '2026-07-22'
+    importo: 780.8
+    controparte: Zeta Trasporti Srl
+    causale: saldo ns fattura FT-2025-0999
+  matches: &id001
+  - tx_id: TX-092
+    numero: FT-2025-0999
+oracle:
+  expected_reconciliations: *id001
+max_tool_calls: 8

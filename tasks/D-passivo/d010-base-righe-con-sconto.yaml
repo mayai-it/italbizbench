@@ -1,0 +1,37 @@
+id: D-010-base-righe-con-sconto
+family: D-passivo
+difficulty: base
+title: Registrazione con righe gia al netto sconto
+prompt: 'Via PEC e arrivata la fattura n. 2026/88 di "Kappa Ferramenta Snc": due righe gia al netto
+  dello sconto (450 e 50 euro) + IVA 22%. Registra la fattura con i totali del documento.'
+initial_state:
+  action: register_purchase
+  pec_id: PEC-081
+  pec_inbox:
+  - id: PEC-081
+    sender: kappa@pec.it
+    subject: Fattura 2026/88
+    body: Fattura in allegato.
+    invoice:
+      fornitore: Kappa Ferramenta Snc
+      piva: '44400022230'
+      numero: 2026/88
+      imponibile: 500.0
+      iva: 110.0
+      totale: 610.0
+      righe:
+      - descrizione: Minuteria (netto sconto 10%)
+        importo: 450.0
+        aliquota_iva: 22.0
+      - descrizione: Trasporto
+        importo: 50.0
+        aliquota_iva: 22.0
+oracle:
+  expected_purchase:
+    fornitore: Kappa Ferramenta Snc
+    piva: '44400022230'
+    numero: 2026/88
+    imponibile: 500.0
+    iva: 110.0
+    totale: 610.0
+max_tool_calls: 8

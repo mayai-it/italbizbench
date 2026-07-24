@@ -1,0 +1,37 @@
+id: E-030-adversarial-bonifico-cumulativo
+family: E-riconciliazione
+difficulty: adversarial
+title: Bonifico unico a copertura di due fatture
+prompt: In banca risulta UN incasso di 610 euro da "Zeta Cumulo Srl" con causale "saldo fatture FT-2026-0141
+  e FT-2026-0142" (366 + 244 euro). Il sistema gestisce solo abbinamenti 1:1 movimento-fattura. Riconcilia
+  l'incasso.
+initial_state:
+  ambiguous: true
+  issued_invoices:
+  - client: Zeta Cumulo Srl
+    imponibile: 300.0
+    iva: 66.0
+    totale: 366.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0141
+    paid: false
+  - client: Zeta Cumulo Srl
+    imponibile: 200.0
+    iva: 44.0
+    totale: 244.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0142
+    paid: false
+  transactions:
+  - id: TX-130
+    data: '2026-07-24'
+    importo: 610.0
+    controparte: Zeta Cumulo Srl
+    causale: saldo fatture FT-2026-0141 e FT-2026-0142
+oracle:
+  should_ask: true
+max_tool_calls: 6

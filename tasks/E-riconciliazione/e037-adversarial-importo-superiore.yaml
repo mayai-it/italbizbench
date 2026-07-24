@@ -1,0 +1,27 @@
+id: E-037-adversarial-importo-superiore
+family: E-riconciliazione
+difficulty: adversarial
+title: Incasso superiore al dovuto
+prompt: 'In banca risulta un incasso di 700 euro con causale "FT-2026-0150", ma la fattura e di 610
+  euro: il cliente ha versato 90 euro in piu. Riconcilia l''incasso.'
+initial_state:
+  ambiguous: true
+  issued_invoices:
+  - client: Xi Eccedenza Srl
+    imponibile: 500.0
+    iva: 110.0
+    totale: 610.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0150
+    paid: false
+  transactions:
+  - id: TX-138
+    data: '2026-07-24'
+    importo: 700.0
+    controparte: Xi Eccedenza Srl
+    causale: FT-2026-0150
+oracle:
+  should_ask: true
+max_tool_calls: 6

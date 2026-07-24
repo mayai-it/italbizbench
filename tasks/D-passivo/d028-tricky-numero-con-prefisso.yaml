@@ -1,0 +1,34 @@
+id: D-028-tricky-numero-con-prefisso
+family: D-passivo
+difficulty: tricky
+title: Numero documento con prefisso e suffisso
+prompt: 'Via PEC e arrivata la fattura "NOLO-2026/07-A" di "Zeta Noleggi Srl": 880 euro + IVA 22%.
+  Registra la fattura riportando il numero ESATTO, prefisso e suffisso compresi.'
+initial_state:
+  action: register_purchase
+  pec_id: PEC-106
+  pec_inbox:
+  - id: PEC-106
+    sender: zetanoleggi@pec.it
+    subject: Fattura NOLO-2026/07-A
+    body: Fattura in allegato.
+    invoice:
+      fornitore: Zeta Noleggi Srl
+      piva: '44600022238'
+      numero: NOLO-2026/07-A
+      imponibile: 880.0
+      iva: 193.6
+      totale: 1073.6
+      righe:
+      - descrizione: Noleggio attrezzature luglio
+        importo: 880.0
+        aliquota_iva: 22.0
+oracle:
+  expected_purchase:
+    fornitore: Zeta Noleggi Srl
+    piva: '44600022238'
+    numero: NOLO-2026/07-A
+    imponibile: 880.0
+    iva: 193.6
+    totale: 1073.6
+max_tool_calls: 8

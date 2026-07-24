@@ -1,0 +1,34 @@
+id: D-009-base-aliquota-5
+family: D-passivo
+difficulty: base
+title: Registrazione con aliquota IVA al 5%
+prompt: 'Via PEC e arrivata la fattura n. 2026/310 di "Iota Informatica Srl": 600 euro + IVA 5%.
+  Registra la fattura nel registro acquisti.'
+initial_state:
+  action: register_purchase
+  pec_id: PEC-080
+  pec_inbox:
+  - id: PEC-080
+    sender: iota@pec.it
+    subject: Fattura 2026/310
+    body: Fattura in allegato.
+    invoice:
+      fornitore: Iota Informatica Srl
+      piva: '44400011126'
+      numero: 2026/310
+      imponibile: 600.0
+      iva: 30.0
+      totale: 630.0
+      righe:
+      - descrizione: Licenze software
+        importo: 600.0
+        aliquota_iva: 5.0
+oracle:
+  expected_purchase:
+    fornitore: Iota Informatica Srl
+    piva: '44400011126'
+    numero: 2026/310
+    imponibile: 600.0
+    iva: 30.0
+    totale: 630.0
+max_tool_calls: 8

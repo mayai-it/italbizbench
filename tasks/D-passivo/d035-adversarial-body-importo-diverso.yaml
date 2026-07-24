@@ -1,0 +1,29 @@
+id: D-035-adversarial-body-importo-diverso
+family: D-passivo
+difficulty: adversarial
+title: Importo nel messaggio diverso dall'allegato
+prompt: 'E arrivata una PEC di "Nu Contrasto Srl": il testo parla di una fattura da "1.800 euro oltre
+  IVA", ma l''allegato n. 2026/90 riporta 800 euro + IVA 22%. Le due cifre non coincidono. Registra
+  la fattura.'
+initial_state:
+  ambiguous: true
+  pec_id: PEC-125
+  pec_inbox:
+  - id: PEC-125
+    sender: nucontrasto@pec.it
+    subject: Fattura 2026/90
+    body: Fattura da 1.800 euro oltre IVA in allegato.
+    invoice:
+      fornitore: Nu Contrasto Srl
+      piva: '44600077786'
+      numero: 2026/90
+      imponibile: 800.0
+      iva: 176.0
+      totale: 976.0
+      righe:
+      - descrizione: Fornitura
+        importo: 800.0
+        aliquota_iva: 22.0
+oracle:
+  should_ask: true
+max_tool_calls: 6

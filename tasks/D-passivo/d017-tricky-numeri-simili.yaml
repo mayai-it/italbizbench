@@ -1,0 +1,50 @@
+id: D-017-tricky-numeri-simili
+family: D-passivo
+difficulty: tricky
+title: 'Due fatture con numeri simili: registrare quella indicata'
+prompt: 'In casella ci sono due fatture di "Rho Ricambi Srl": la n. 2026/201 (640 euro + IVA 22%)
+  e la n. 2026/210 (890 euro + IVA 22%). L''amministrazione ha approvato SOLO la n. 2026/201: registra
+  quella, attento a non confondere i numeri.'
+initial_state:
+  action: register_purchase
+  pec_id: PEC-093
+  pec_inbox:
+  - id: PEC-093
+    sender: rho@pec.it
+    subject: Fattura 2026/201
+    body: In allegato la 2026/201.
+    invoice:
+      fornitore: Rho Ricambi Srl
+      piva: '44400088892'
+      numero: 2026/201
+      imponibile: 640.0
+      iva: 140.8
+      totale: 780.8
+      righe:
+      - descrizione: Ricambi
+        importo: 640.0
+        aliquota_iva: 22.0
+  - id: PEC-094
+    sender: rho@pec.it
+    subject: Fattura 2026/210
+    body: In allegato la 2026/210.
+    invoice:
+      fornitore: Rho Ricambi Srl
+      piva: '44400088892'
+      numero: 2026/210
+      imponibile: 890.0
+      iva: 195.8
+      totale: 1085.8
+      righe:
+      - descrizione: Ricambi
+        importo: 890.0
+        aliquota_iva: 22.0
+oracle:
+  expected_purchase:
+    fornitore: Rho Ricambi Srl
+    piva: '44400088892'
+    numero: 2026/201
+    imponibile: 640.0
+    iva: 140.8
+    totale: 780.8
+max_tool_calls: 8

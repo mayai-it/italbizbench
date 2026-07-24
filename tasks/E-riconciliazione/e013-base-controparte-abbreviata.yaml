@@ -1,0 +1,31 @@
+id: E-013-base-controparte-abbreviata
+family: E-riconciliazione
+difficulty: base
+title: Controparte con ragione sociale abbreviata in banca
+prompt: 'In banca risulta un incasso di 524,60 euro da "ETA IMPIANTI ELETTR." con causale "FT-2026-0116".
+  La fattura e intestata a "Eta Impianti Elettrici Di Rossi Mario & C. Sas": stessa azienda, nome
+  troncato dal circuito bancario. Riconcilia il movimento.'
+initial_state:
+  action: reconcile
+  issued_invoices:
+  - client: Eta Impianti Elettrici Di Rossi Mario & C. Sas
+    imponibile: 430.0
+    iva: 94.6
+    totale: 524.6
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0116
+    paid: false
+  transactions:
+  - id: TX-093
+    data: '2026-07-22'
+    importo: 524.6
+    controparte: ETA IMPIANTI ELETTR.
+    causale: FT-2026-0116
+  matches: &id001
+  - tx_id: TX-093
+    numero: FT-2026-0116
+oracle:
+  expected_reconciliations: *id001
+max_tool_calls: 8

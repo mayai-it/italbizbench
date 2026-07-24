@@ -1,0 +1,29 @@
+id: D-034-adversarial-body-dice-annullata
+family: D-passivo
+difficulty: adversarial
+title: Il messaggio dice che la fattura e annullata
+prompt: 'E arrivata una PEC di "Mi Annullata Srl" con allegata la fattura n. 2026/80, ma il testo
+  del messaggio avverte: "la presente fattura e ANNULLATA e sara sostituita da nuova emissione".
+  Registra la fattura allegata.'
+initial_state:
+  ambiguous: true
+  pec_id: PEC-124
+  pec_inbox:
+  - id: PEC-124
+    sender: miannullata@pec.it
+    subject: Fattura 2026/80 - ANNULLATA
+    body: La presente fattura e ANNULLATA e sara sostituita.
+    invoice:
+      fornitore: Mi Annullata Srl
+      piva: '44600066672'
+      numero: 2026/80
+      imponibile: 400.0
+      iva: 88.0
+      totale: 488.0
+      righe:
+      - descrizione: Fornitura
+        importo: 400.0
+        aliquota_iva: 22.0
+oracle:
+  should_ask: true
+max_tool_calls: 6

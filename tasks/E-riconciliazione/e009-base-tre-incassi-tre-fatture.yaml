@@ -1,0 +1,62 @@
+id: E-009-base-tre-incassi-tre-fatture
+family: E-riconciliazione
+difficulty: base
+title: Riconciliazione di tre incassi con tre fatture
+prompt: In banca risultano tre incassi con causali "FT-2026-0111" (244 euro), "FT-2026-0112" (1098
+  euro) e "FT-2026-0113" (73,20 euro). Riconcilia ciascun movimento con la sua fattura.
+initial_state:
+  action: reconcile
+  issued_invoices:
+  - client: Alfa Costruzioni Srl
+    imponibile: 200.0
+    iva: 44.0
+    totale: 244.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0111
+    paid: false
+  - client: Beta Servizi Snc
+    imponibile: 900.0
+    iva: 198.0
+    totale: 1098.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0112
+    paid: false
+  - client: Gamma Forniture Srl
+    imponibile: 60.0
+    iva: 13.2
+    totale: 73.2
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0113
+    paid: false
+  transactions:
+  - id: TX-080
+    data: '2026-07-20'
+    importo: 244.0
+    controparte: Alfa Costruzioni Srl
+    causale: FT-2026-0111
+  - id: TX-081
+    data: '2026-07-20'
+    importo: 1098.0
+    controparte: Beta Servizi Snc
+    causale: FT-2026-0112
+  - id: TX-082
+    data: '2026-07-21'
+    importo: 73.2
+    controparte: Gamma Forniture Srl
+    causale: FT-2026-0113
+  matches: &id001
+  - tx_id: TX-080
+    numero: FT-2026-0111
+  - tx_id: TX-081
+    numero: FT-2026-0112
+  - tx_id: TX-082
+    numero: FT-2026-0113
+oracle:
+  expected_reconciliations: *id001
+max_tool_calls: 8

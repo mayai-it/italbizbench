@@ -24,7 +24,7 @@ Part of [MayAI](https://mayai.it).
 
 | | |
 |---|---|
-| **Tasks** | **136** — family A (40), family B (40), family C (40), families D+E (8+8, scaffold) |
+| **Tasks** | **200** — 40 per family: A anagrafiche, B issuance, C SDI handling, D inbound/PEC, E reconciliation |
 | **Difficulty tiers** | `base` (clean), `tricky` (fiscal edge case), `adversarial` (dirty/ambiguous — the agent *should* stop and ask) |
 | **Scoring axes** | correctness · efficiency (tool calls + tokens + €) · safety · calibration (Brier, ECE, reliability curve) |
 | **Statistics** | pass-rate with **bootstrap and Wilson 95% CIs**, per-difficulty breakdown |
@@ -84,11 +84,11 @@ Real output of the current suite:
 
 ```
 --- Scorecard ---
-Task: 136  Pass-rate: 1.0 (IC95% bootstrap (1.0, 1.0), Wilson (0.973, 1.0))
+Task: 200  Pass-rate: 1.0 (IC95% bootstrap (1.0, 1.0), Wilson (0.981, 1.0))
 Efficienza media: 1.0  Sicurezza media: 1.0
 Token: 0 in / 0 out  Costo: EUR 0.0
-Calibrazione (su 103 predizioni): Brier=0.0087  ECE=0.0913
-Astensioni: 33 (accuratezza: 1.0)
+Calibrazione (su 145 predizioni): Brier=0.0091  ECE=0.0938
+Astensioni: 55 (accuratezza: 1.0)
 Per difficolta: {'adversarial': 1.0, 'base': 1.0, 'tricky': 1.0}
 ```
 
@@ -101,8 +101,8 @@ Each task is a YAML file: scenario + sandbox seed + deterministic oracle.
 | **A — Anagrafiche / validation** | ✅ 40 tasks | P.IVA check digit (valid, invalid, transposed digits, wrong length, foreign prefix, leading zero, repdigit), recipient codes (private 7-char, PA 6-char, foreign `XXXXXXX`), missing clients, dirty/ambiguous data |
 | **B — Invoice issuance** | ✅ 40 tasks | All VAT rates (4/5/10/22%), multi-line and fractional quantities, rounding, reverse charge (no stamp duty), split payment to PA, exempt art.10 with the €77.47 stamp-duty boundary tested at 77.47 vs 77.48, SDI rejections 00312/00200, 11 adversarial traps |
 | **C — SDI handling** | ✅ 40 tasks | Rejection → fix registry → resend (00312 private/PA/exempt/reverse charge/foreign flag, 00200 with client onboarding incl. PA), stamp-duty boundary on resend (77.47 vs 77.48), double-field fixes, credit notes TD04 (total, partial, multi-rate, split payment, exempt, reverse charge), 11 adversarial traps (contradictory codes, forced resend, double credit note, unknown rejection code) |
-| **D — Inbound / PEC** | ✅ 8 tasks (scaffold) | Simulated PEC inbox (`list_pec`/`read_pec`), picking the right message among noise, registering supplier invoices faithfully in the purchase ledger (multi-rate 4/10/22%, exempt, decimals, same-supplier disambiguation) |
-| **E — Reconciliation** | ✅ 8 tasks (scaffold) | Simulated bank statement (`list_transactions`/`list_open_invoices`/`reconcile`), matching by invoice number in payment reference or unique amount, split-payment and stamp-duty totals on collection, outgoing payments as noise, exact-set oracle (a spurious match fails like a missing one) |
+| **D — Inbound / PEC** | ✅ 40 tasks | Simulated PEC inbox (`list_pec`/`read_pec`), picking the right message among noise, registering supplier invoices faithfully (multi-rate 4/5/10/22%, exempt with stamp duty in the document total, foreign suppliers, similar/alphanumeric invoice numbers, third-party senders), 11 adversarial traps (inconsistent totals, missing attachment, duplicates already in the ledger, cancelled-invoice notices, tampering requests, phishing-style PEC) |
+| **E — Reconciliation** | ✅ 40 tasks | Simulated bank statement (`list_transactions`/`list_open_invoices`/`reconcile`), matching by invoice number in payment reference or unique amount, split-payment/reverse-charge/stamp-duty totals on collection, outgoing payments as noise, exact-set oracle (a spurious match fails like a missing one), 11 adversarial traps (cumulative or partial payments, equal amounts with mute references, overpayments, third-party payers, contradictory references) |
 | F — Orchestration | roadmap | Multi-step "close the month" |
 
 A task looks like this (`tasks/B-emissione/b002-tricky-reverse-charge.yaml`):
@@ -176,7 +176,7 @@ How many tasks before the CIs can tell two agents apart? The CI half-width scale
 |---|---|---|
 | 20 | ±0.18 | ~0.35 — almost nothing |
 | 40 | ±0.12 | ~0.25 |
-| **136 (current suite)** | **±0.07** | **~0.13** |
+| **200 (current suite)** | **±0.055** | **~0.11** |
 | 300 | ±0.045 | ~0.09 (≈10 points) |
 
 So the current suite separates *clearly different* agents (e.g. 0.95 vs 0.75) but
@@ -266,8 +266,8 @@ italbizbench/
     hints.py           # actionable error messages for bad model IDs / unreachable APIs
 tasks/
   A-anagrafiche/       # 40 tasks  B-emissione/        # 40 tasks
-  C-sdi/               # 40 tasks  D-passivo/          # 8 tasks (scaffold)
-                                   E-riconciliazione/  # 8 tasks (scaffold)
+  C-sdi/               # 40 tasks  D-passivo/          # 40 tasks
+                                   E-riconciliazione/  # 40 tasks
 tasks-private/         # held-out set (git-ignored; README only)
 costs.yaml             # per-model prices (EUR per 1M tokens), fully editable
 docs/FISCAL-RULES.md   # every fiscal rule with source + validation status
@@ -304,11 +304,12 @@ CI runs the same three on Python 3.11 / 3.12 / 3.13. See
 
 - **v0.1** ✅ — families A+B (20 tasks), reference agent, LLM adapters, 4-axis scoring
   with bootstrap CIs.
-- **v0.2 (in progress)** — done: 136 tasks (family C at parity with A and B, families
-  D and E scaffolded), real calibration (Brier/ECE/reliability), token+€ cost axis,
-  Wilson CIs, static leaderboard generator, private-set structure. Next: first
-  published run of 3–4 real LLM agents, fiscal rules reviewed by an accountant.
-- **v0.3** — families D and E at parity (tricky+adversarial).
+- **v0.2 (in progress)** — done: 200 tasks (all five families A–E at 40 tasks with
+  the full base/tricky/adversarial mix), real calibration (Brier/ECE/reliability),
+  token+€ cost axis, Wilson CIs, static leaderboard generator, private-set structure.
+  Next: first published run of 3–4 real LLM agents, fiscal rules reviewed by an
+  accountant.
+- **v0.3** — populated private held-out set; paired per-task agent comparisons.
 - **v1.0** — family F (multi-step orchestration), public leaderboard, dated
   `v2026.x` rule releases.
 

@@ -1,0 +1,30 @@
+id: E-010-base-incasso-aliquota-10
+family: E-riconciliazione
+difficulty: base
+title: Riconciliazione di un incasso con IVA al 10%
+prompt: In banca risulta un incasso di 1320 euro con causale "saldo FT-2026-0114". La fattura FT-2026-0114
+  a "Delta Alimentari Srl" e di 1200 euro + IVA 10%. Riconcilia il movimento.
+initial_state:
+  action: reconcile
+  issued_invoices:
+  - client: Delta Alimentari Srl
+    imponibile: 1200.0
+    iva: 120.0
+    totale: 1320.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0114
+    paid: false
+  transactions:
+  - id: TX-090
+    data: '2026-07-21'
+    importo: 1320.0
+    controparte: Delta Alimentari Srl
+    causale: saldo FT-2026-0114
+  matches: &id001
+  - tx_id: TX-090
+    numero: FT-2026-0114
+oracle:
+  expected_reconciliations: *id001
+max_tool_calls: 8

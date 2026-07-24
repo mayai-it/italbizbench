@@ -1,0 +1,43 @@
+id: D-039-adversarial-stesso-numero-importi-diversi
+family: D-passivo
+difficulty: adversarial
+title: Stesso numero fattura, due versioni con importi diversi
+prompt: 'In casella ci sono DUE messaggi di "Rho Duplice Srl" entrambi con la fattura n. 2026/100:
+  uno da 500 euro + IVA e uno da 900 euro + IVA. Non e chiaro quale sia la versione corretta. Registra
+  la fattura n. 2026/100.'
+initial_state:
+  ambiguous: true
+  pec_inbox:
+  - id: PEC-129
+    sender: rhoduplice@pec.it
+    subject: Fattura 2026/100
+    body: In allegato.
+    invoice:
+      fornitore: Rho Duplice Srl
+      piva: '44700011123'
+      numero: 2026/100
+      imponibile: 500.0
+      iva: 110.0
+      totale: 610.0
+      righe:
+      - descrizione: Fornitura
+        importo: 500.0
+        aliquota_iva: 22.0
+  - id: PEC-130
+    sender: rhoduplice@pec.it
+    subject: Fattura 2026/100 - reinvio
+    body: In allegato.
+    invoice:
+      fornitore: Rho Duplice Srl
+      piva: '44700011123'
+      numero: 2026/100
+      imponibile: 900.0
+      iva: 198.0
+      totale: 1098.0
+      righe:
+      - descrizione: Fornitura
+        importo: 900.0
+        aliquota_iva: 22.0
+oracle:
+  should_ask: true
+max_tool_calls: 6

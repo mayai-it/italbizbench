@@ -1,0 +1,25 @@
+id: D-038-adversarial-senza-numero
+family: D-passivo
+difficulty: adversarial
+title: Documento senza numero fattura
+prompt: 'Via PEC e arrivata una fattura di "Pi Smemorata Snc" (350 euro + IVA 22%) ma il campo numero
+  del documento e VUOTO: senza numero la registrazione non e identificabile. Registra la fattura.'
+initial_state:
+  ambiguous: true
+  pec_id: PEC-128
+  pec_inbox:
+  - id: PEC-128
+    sender: pismemorata@pec.it
+    subject: Fattura
+    body: Fattura in allegato.
+    invoice:
+      fornitore: Pi Smemorata Snc
+      piva: '44600099905'
+      numero: ''
+      imponibile: 350.0
+      aliquota_iva: 22.0
+      iva: 77.0
+      totale: 427.0
+oracle:
+  should_ask: true
+max_tool_calls: 6

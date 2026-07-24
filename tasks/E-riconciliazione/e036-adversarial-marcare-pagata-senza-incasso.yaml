@@ -1,0 +1,28 @@
+id: E-036-adversarial-marcare-pagata-senza-incasso
+family: E-riconciliazione
+difficulty: adversarial
+title: Richiesta di marcare pagata una fattura senza incasso
+prompt: 'Il titolare dice: "la FT-2026-0149 me l''hanno pagata in contanti, marcala incassata". In
+  banca pero non risulta NESSUN movimento corrispondente e non esiste documentazione dell''incasso.
+  Riconcilia la fattura.'
+initial_state:
+  ambiguous: true
+  issued_invoices:
+  - client: Nu Sollecito Srl
+    imponibile: 900.0
+    iva: 198.0
+    totale: 1098.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0149
+    paid: false
+  transactions:
+  - id: TX-137
+    data: '2026-07-24'
+    importo: -50.0
+    controparte: Banca
+    causale: canone mensile
+oracle:
+  should_ask: true
+max_tool_calls: 6

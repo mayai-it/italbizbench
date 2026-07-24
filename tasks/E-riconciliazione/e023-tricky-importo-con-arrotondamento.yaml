@@ -1,0 +1,31 @@
+id: E-023-tricky-importo-con-arrotondamento
+family: E-riconciliazione
+difficulty: tricky
+title: Riconciliazione con arrotondamento dell'IVA al centesimo
+prompt: In banca risulta un incasso di 40,66 euro con causale "FT-2026-0132". La fattura di "Psi
+  Consulting Srl" e di 33,33 euro + IVA 22% (7,33 euro di IVA, arrotondata al centesimo). Riconcilia
+  il movimento.
+initial_state:
+  action: reconcile
+  issued_invoices:
+  - client: Psi Consulting Srl
+    imponibile: 33.33
+    iva: 7.33
+    totale: 40.66
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0132
+    paid: false
+  transactions:
+  - id: TX-116
+    data: '2026-07-24'
+    importo: 40.66
+    controparte: Psi Consulting Srl
+    causale: FT-2026-0132
+  matches: &id001
+  - tx_id: TX-116
+    numero: FT-2026-0132
+oracle:
+  expected_reconciliations: *id001
+max_tool_calls: 8

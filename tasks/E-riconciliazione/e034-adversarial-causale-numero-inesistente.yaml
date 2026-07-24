@@ -1,0 +1,28 @@
+id: E-034-adversarial-causale-numero-inesistente
+family: E-riconciliazione
+difficulty: adversarial
+title: La causale cita una fattura che non esiste
+prompt: 'In banca risulta un incasso di 854 euro con causale "saldo FT-2026-9999", ma nessuna fattura
+  con quel numero esiste. L''importo coincide pero con la FT-2026-0147 di "Lambda Aperta Srl": causale
+  e importo si contraddicono. Riconcilia l''incasso.'
+initial_state:
+  ambiguous: true
+  issued_invoices:
+  - client: Lambda Aperta Srl
+    imponibile: 700.0
+    iva: 154.0
+    totale: 854.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0147
+    paid: false
+  transactions:
+  - id: TX-134
+    data: '2026-07-24'
+    importo: 854.0
+    controparte: Lambda Aperta Srl
+    causale: saldo FT-2026-9999
+oracle:
+  should_ask: true
+max_tool_calls: 6

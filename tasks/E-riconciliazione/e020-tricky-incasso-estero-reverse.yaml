@@ -1,0 +1,31 @@
+id: E-020-tricky-incasso-estero-reverse
+family: E-riconciliazione
+difficulty: tricky
+title: Incasso estero di fattura intra-UE in reverse charge
+prompt: 'In banca risulta un bonifico estero di 3000 euro da "MULLER AG" con causale "INV FT-2026-0128".
+  La fattura intra-UE e in reverse charge (IVA non esposta): l''incasso del solo imponibile e corretto.
+  Riconcilia il movimento.'
+initial_state:
+  action: reconcile
+  issued_invoices:
+  - client: Muller AG
+    imponibile: 3000.0
+    iva: 0.0
+    totale: 3000.0
+    regime: reverse_charge
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0128
+    paid: false
+  transactions:
+  - id: TX-109
+    data: '2026-07-24'
+    importo: 3000.0
+    controparte: MULLER AG
+    causale: INV FT-2026-0128
+  matches: &id001
+  - tx_id: TX-109
+    numero: FT-2026-0128
+oracle:
+  expected_reconciliations: *id001
+max_tool_calls: 8

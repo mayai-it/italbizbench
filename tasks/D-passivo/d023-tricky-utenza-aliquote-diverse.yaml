@@ -1,0 +1,37 @@
+id: D-023-tricky-utenza-aliquote-diverse
+family: D-passivo
+difficulty: tricky
+title: Bolletta con quote ad aliquote diverse
+prompt: 'Via PEC e arrivata la fattura n. 2026/77012 di "Alfa Energia Spa": energia per 240 euro
+  + IVA 10% e oneri per 60 euro + IVA 22%. Registra la fattura con i totali complessivi del documento.'
+initial_state:
+  action: register_purchase
+  pec_id: PEC-101
+  pec_inbox:
+  - id: PEC-101
+    sender: alfaenergia@pec.it
+    subject: Fattura 2026/77012
+    body: Fattura in allegato.
+    invoice:
+      fornitore: Alfa Energia Spa
+      piva: '44500066673'
+      numero: 2026/77012
+      imponibile: 300.0
+      iva: 37.2
+      totale: 337.2
+      righe:
+      - descrizione: Energia elettrica
+        importo: 240.0
+        aliquota_iva: 10.0
+      - descrizione: Oneri di sistema
+        importo: 60.0
+        aliquota_iva: 22.0
+oracle:
+  expected_purchase:
+    fornitore: Alfa Energia Spa
+    piva: '44500066673'
+    numero: 2026/77012
+    imponibile: 300.0
+    iva: 37.2
+    totale: 337.2
+max_tool_calls: 8

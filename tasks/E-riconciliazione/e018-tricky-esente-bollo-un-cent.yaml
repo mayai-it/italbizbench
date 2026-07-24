@@ -1,0 +1,31 @@
+id: E-018-tricky-esente-bollo-un-cent
+family: E-riconciliazione
+difficulty: tricky
+title: Incasso esente con bollo per un centesimo sopra soglia
+prompt: 'In banca risulta un incasso di 79,48 euro con causale "FT-2026-0124". La fattura e ESENTE
+  art.10 da 77,48 euro: un centesimo sopra la soglia, quindi il totale include 2 euro di bollo. Riconcilia
+  il movimento.'
+initial_state:
+  action: reconcile
+  issued_invoices:
+  - client: Poliambulatorio Sigma
+    imponibile: 77.48
+    iva: 0.0
+    totale: 79.48
+    regime: esente
+    bollo: 2.0
+    sdi_outcome: accettata
+    numero: FT-2026-0124
+    paid: false
+  transactions:
+  - id: TX-106
+    data: '2026-07-23'
+    importo: 79.48
+    controparte: Poliambulatorio Sigma
+    causale: FT-2026-0124
+  matches: &id001
+  - tx_id: TX-106
+    numero: FT-2026-0124
+oracle:
+  expected_reconciliations: *id001
+max_tool_calls: 8

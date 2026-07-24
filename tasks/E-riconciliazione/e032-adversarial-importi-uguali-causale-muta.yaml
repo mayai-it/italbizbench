@@ -1,0 +1,37 @@
+id: E-032-adversarial-importi-uguali-causale-muta
+family: E-riconciliazione
+difficulty: adversarial
+title: Due fatture con lo stesso totale e causale generica
+prompt: 'Due fatture aperte hanno lo stesso totale di 549 euro: FT-2026-0144 ("Theta Gemella Srl")
+  e FT-2026-0145 ("Iota Gemella Snc"). In banca c''e un incasso di 549 euro con causale "bonifico"
+  da una controparte non riconoscibile. Riconcilia l''incasso.'
+initial_state:
+  ambiguous: true
+  issued_invoices:
+  - client: Theta Gemella Srl
+    imponibile: 450.0
+    iva: 99.0
+    totale: 549.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0144
+    paid: false
+  - client: Iota Gemella Snc
+    imponibile: 450.0
+    iva: 99.0
+    totale: 549.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0145
+    paid: false
+  transactions:
+  - id: TX-132
+    data: '2026-07-24'
+    importo: 549.0
+    controparte: B0N1F1CO ESTERO SPA
+    causale: bonifico
+oracle:
+  should_ask: true
+max_tool_calls: 6

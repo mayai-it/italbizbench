@@ -1,0 +1,51 @@
+id: E-021-tricky-estratto-conto-affollato
+family: E-riconciliazione
+difficulty: tricky
+title: Estratto conto affollato di uscite e commissioni
+prompt: 'Nell''estratto conto ci sono cinque movimenti: tre pagamenti in uscita, una commissione
+  bancaria e UN incasso di 512,40 euro con causale "FT-2026-0129". Riconcilia solo l''incasso con
+  la fattura di "Chi Servizi Srl"; il resto non riguarda le fatture attive.'
+initial_state:
+  action: reconcile
+  issued_invoices:
+  - client: Chi Servizi Srl
+    imponibile: 420.0
+    iva: 92.4
+    totale: 512.4
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0129
+    paid: false
+  transactions:
+  - id: TX-110
+    data: '2026-07-24'
+    importo: -230.0
+    controparte: Fornitore Uno Srl
+    causale: pag. fattura fornitore
+  - id: TX-111
+    data: '2026-07-24'
+    importo: -85.5
+    controparte: Fornitore Due Snc
+    causale: pag. fattura fornitore
+  - id: TX-112
+    data: '2026-07-24'
+    importo: -2.5
+    controparte: Banca
+    causale: commissioni bonifico
+  - id: TX-113
+    data: '2026-07-24'
+    importo: 512.4
+    controparte: Chi Servizi Srl
+    causale: FT-2026-0129
+  - id: TX-114
+    data: '2026-07-24'
+    importo: -1200.0
+    controparte: Erario
+    causale: F24 luglio
+  matches: &id001
+  - tx_id: TX-113
+    numero: FT-2026-0129
+oracle:
+  expected_reconciliations: *id001
+max_tool_calls: 8

@@ -1,0 +1,50 @@
+id: D-029-tricky-cinque-messaggi
+family: D-passivo
+difficulty: tricky
+title: Cinque messaggi in casella, uno solo pertinente
+prompt: 'In casella PEC ci sono cinque messaggi: quattro tra ricevute di consegna e comunicazioni,
+  e una fattura di "Eta Consulenze Srl" (n. 2026/64, 2200 euro + IVA 22%). Trova la fattura e registrala.'
+initial_state:
+  action: register_purchase
+  pec_id: PEC-110
+  pec_inbox:
+  - id: PEC-107
+    sender: posta-certificata@pec.gestore.it
+    subject: Ricevuta di consegna
+    body: Ricevuta di avvenuta consegna.
+  - id: PEC-108
+    sender: posta-certificata@pec.gestore.it
+    subject: Ricevuta di accettazione
+    body: Ricevuta di accettazione.
+  - id: PEC-109
+    sender: noreply@pec.inps.it
+    subject: Comunicazione
+    body: Comunicazione informativa.
+  - id: PEC-110
+    sender: etaconsulenze@pec.it
+    subject: Fattura 2026/64
+    body: In allegato la fattura.
+    invoice:
+      fornitore: Eta Consulenze Srl
+      piva: '44600033342'
+      numero: 2026/64
+      imponibile: 2200.0
+      iva: 484.0
+      totale: 2684.0
+      righe:
+      - descrizione: Consulenza direzionale
+        importo: 2200.0
+        aliquota_iva: 22.0
+  - id: PEC-111
+    sender: noreply@pec.gestore.it
+    subject: Rinnovo servizio
+    body: Promemoria rinnovo.
+oracle:
+  expected_purchase:
+    fornitore: Eta Consulenze Srl
+    piva: '44600033342'
+    numero: 2026/64
+    imponibile: 2200.0
+    iva: 484.0
+    totale: 2684.0
+max_tool_calls: 8

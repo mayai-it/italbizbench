@@ -7,6 +7,17 @@ All notable changes to this project are documented here. Format based on
 ## [Unreleased]
 
 ### Added
+- **Famiglie D ed E a regime: 40 task ciascuna (13 base, 16 tricky, 11 adversarial),
+  suite totale a 200.** D: aliquote miste per riga (IVA arrotondata al centesimo),
+  esente con bollo nel totale documento (soglia 77,47/77,48), fornitori esteri,
+  numeri simili/alfanumerici, mittenti terzi, casella affollata; trappole con totali
+  incoerenti, allegato mancante, duplicati gia a registro, fatture annullate,
+  richieste di alterare l'IVA, PEC sospette. E: abbinamento per numero anche con
+  causali compattate/sporche, importo univoco a causale muta, split payment e
+  reverse charge all'incasso, esente con bollo, estratti conto affollati; trappole
+  con bonifici cumulativi/parziali, importi uguali, eccedenze, pagatori terzi,
+  causali contraddittorie. Invarianti del task set estesi a tutte e cinque le
+  famiglie (5x40, bilanciamento difficolta).
 - **Famiglia E — riconciliazione incassi (scaffold, 8 task base).** Estratto conto
   simulato (`BankTransaction`, tool `list_transactions`) e abbinamento
   movimento↔fattura per numero documento (`Reconciliation`, tool `reconcile`, che

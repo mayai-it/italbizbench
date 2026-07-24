@@ -1,0 +1,25 @@
+id: D-033-adversarial-piva-10-cifre
+family: D-passivo
+difficulty: adversarial
+title: P.IVA del fornitore a 10 cifre nel documento
+prompt: Via PEC e arrivata la fattura n. 2026/71 di "Lambda Incerta Snc", ma la P.IVA indicata nel
+  documento ha solo 10 cifre (una P.IVA italiana ne ha 11). Registra la fattura.
+initial_state:
+  ambiguous: true
+  pec_id: PEC-123
+  pec_inbox:
+  - id: PEC-123
+    sender: lambdaincerta@pec.it
+    subject: Fattura 2026/71
+    body: Fattura in allegato.
+    invoice:
+      fornitore: Lambda Incerta Snc
+      piva: '1234567890'
+      numero: 2026/71
+      imponibile: 300.0
+      aliquota_iva: 22.0
+      iva: 66.0
+      totale: 366.0
+oracle:
+  should_ask: true
+max_tool_calls: 6

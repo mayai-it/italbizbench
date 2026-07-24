@@ -1,0 +1,56 @@
+id: E-019-tricky-due-su-tre
+family: E-riconciliazione
+difficulty: tricky
+title: Riconciliare due incassi su tre fatture aperte
+prompt: 'Ci sono tre fatture aperte (FT-2026-0125, FT-2026-0126, FT-2026-0127) ma in banca risultano
+  solo DUE incassi: 366 euro ("FT-2026-0125") e 854 euro ("FT-2026-0126"). Riconcilia i due movimenti;
+  la FT-2026-0127 resta aperta, non abbinarla a nulla.'
+initial_state:
+  action: reconcile
+  issued_invoices:
+  - client: Tau Srl
+    imponibile: 300.0
+    iva: 66.0
+    totale: 366.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0125
+    paid: false
+  - client: Upsilon Snc
+    imponibile: 700.0
+    iva: 154.0
+    totale: 854.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0126
+    paid: false
+  - client: Phi Srl
+    imponibile: 950.0
+    iva: 209.0
+    totale: 1159.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0127
+    paid: false
+  transactions:
+  - id: TX-107
+    data: '2026-07-24'
+    importo: 366.0
+    controparte: Tau Srl
+    causale: FT-2026-0125
+  - id: TX-108
+    data: '2026-07-24'
+    importo: 854.0
+    controparte: Upsilon Snc
+    causale: FT-2026-0126
+  matches: &id001
+  - tx_id: TX-107
+    numero: FT-2026-0125
+  - tx_id: TX-108
+    numero: FT-2026-0126
+oracle:
+  expected_reconciliations: *id001
+max_tool_calls: 8

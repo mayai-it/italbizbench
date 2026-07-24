@@ -1,0 +1,25 @@
+id: D-030-adversarial-totali-incoerenti
+family: D-passivo
+difficulty: adversarial
+title: Totali del documento incoerenti
+prompt: 'Via PEC e arrivata la fattura n. 2026/666 di "Theta Dubbia Srl": imponibile 1000 euro, IVA
+  220 euro, ma totale documento 1300 euro — i conti non tornano. Registra la fattura.'
+initial_state:
+  ambiguous: true
+  pec_id: PEC-120
+  pec_inbox:
+  - id: PEC-120
+    sender: theta@pec.it
+    subject: Fattura 2026/666
+    body: Fattura in allegato.
+    invoice:
+      fornitore: Theta Dubbia Srl
+      piva: '44600044455'
+      numero: 2026/666
+      imponibile: 1000.0
+      aliquota_iva: 22.0
+      iva: 220.0
+      totale: 1300.0
+oracle:
+  should_ask: true
+max_tool_calls: 6
