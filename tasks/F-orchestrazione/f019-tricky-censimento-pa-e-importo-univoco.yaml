@@ -1,0 +1,65 @@
+id: F-019-tricky-censimento-pa-e-importo-univoco
+family: F-orchestrazione
+difficulty: tricky
+title: Censimento PA dopo 00200 e incasso a causale muta
+prompt: 'Due attivita: (1) la fattura al "Comune di Collina" (2400 euro + IVA 22%) e stata scartata
+  (00200): censisci l''ente come PA (P.IVA 88800055563, codice ufficio "CLL010") e ritrasmetti col
+  regime corretto; (2) riconcilia l''incasso di 1913,57 euro a causale vuota: l''unica fattura aperta
+  con quel totale e la FT-2026-0219 di "Gamma Global Srl".'
+initial_state:
+  issued_invoices:
+  - client: Comune di Collina
+    imponibile: 2400.0
+    iva: 528.0
+    totale: 2400.0
+    regime: split_payment
+    bollo: 0.0
+    sdi_outcome: scarto:00200
+  - client: Gamma Global Srl
+    imponibile: 1568.5
+    iva: 345.07
+    totale: 1913.57
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0219
+    paid: false
+  transactions:
+  - id: TX-216
+    data: '2026-07-24'
+    importo: 1913.57
+    controparte: Gamma Global Srl
+    causale: ''
+  steps:
+  - action: fix_and_resend
+    client: Comune di Collina
+    fix:
+      new: true
+      piva: '88800055563'
+      codice_destinatario: CLL010
+      pa: true
+    lines:
+    - descrizione: Servizio alla PA
+      quantita: 1.0
+      prezzo_unitario: 2400.0
+      aliquota_iva: 22.0
+  - action: reconcile
+    matches:
+    - tx_id: TX-216
+      numero: FT-2026-0219
+oracle:
+  expected_client_update:
+    client: Comune di Collina
+    piva: '88800055563'
+    codice_destinatario: CLL010
+    pa: true
+  expected_regime: split_payment
+  expected_imponibile: 2400.0
+  expected_iva: 528.0
+  expected_totale: 2400.0
+  expected_sdi_outcome: accettata
+  expected_reconciliations:
+  - tx_id: TX-216
+    numero: FT-2026-0219
+max_tool_calls: 10
+expected_tool_calls: 6

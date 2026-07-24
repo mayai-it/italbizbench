@@ -1,0 +1,60 @@
+id: F-024-tricky-storno-reverse-e-passiva-esente
+family: F-orchestrazione
+difficulty: tricky
+title: Nota di credito reverse charge e passiva esente sotto soglia
+prompt: 'Due attivita: (1) storna integralmente la fattura FT-2026-0223 a "Rossi Costruzioni Srl"
+  (subappalto in REVERSE CHARGE, 2000 euro, IVA non esposta); (2) registra la passiva n. 2026/47
+  dello "Studio Pi Sas": 70 euro ESENTE art.10, nessun bollo (sotto soglia).'
+initial_state:
+  issued_invoices:
+  - client: Rossi Costruzioni Srl
+    imponibile: 2000.0
+    iva: 0.0
+    totale: 2000.0
+    regime: reverse_charge
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0223
+    paid: false
+  pec_inbox:
+  - id: PEC-213
+    sender: pi@pec.it
+    subject: Fattura 2026/47
+    body: In allegato.
+    invoice:
+      fornitore: Studio Pi Sas
+      piva: '55600033348'
+      numero: 2026/47
+      imponibile: 70.0
+      iva: 0.0
+      totale: 70.0
+      natura: N4
+  steps:
+  - action: credit_note
+    client: Rossi Costruzioni Srl
+    refers_to: FT-2026-0223
+    credit_lines:
+    - descrizione: Storno totale FT-2026-0223
+      quantita: 1.0
+      prezzo_unitario: 2000.0
+      aliquota_iva: 0.0
+      natura: N6
+    reverse_charge: true
+  - action: register_purchase
+    pec_id: PEC-213
+oracle:
+  expected_credit_note:
+    client: Rossi Costruzioni Srl
+    imponibile: 2000.0
+    iva: 0.0
+    totale: 2000.0
+    sdi_outcome: accettata
+  expected_purchase:
+    fornitore: Studio Pi Sas
+    piva: '55600033348'
+    numero: 2026/47
+    imponibile: 70.0
+    iva: 0.0
+    totale: 70.0
+max_tool_calls: 10
+expected_tool_calls: 6

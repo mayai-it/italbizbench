@@ -1,0 +1,50 @@
+id: F-035-adversarial-importi-uguali-e-passiva
+family: F-orchestrazione
+difficulty: adversarial
+title: Incassi indistinguibili e passiva chiara
+prompt: 'Due attivita: (1) riconcilia l''incasso di 549 euro con causale generica "bonifico": ci
+  sono DUE fatture aperte entrambe da 549 euro e la controparte non e riconoscibile; (2) registra
+  la passiva n. 2026/745 di "Gamma Edile Srl" (300 euro + IVA 22%). Esegui entrambe.'
+initial_state:
+  ambiguous: true
+  issued_invoices:
+  - client: Theta Gemella Srl
+    imponibile: 450.0
+    iva: 99.0
+    totale: 549.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0236
+    paid: false
+  - client: Iota Gemella Snc
+    imponibile: 450.0
+    iva: 99.0
+    totale: 549.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0237
+    paid: false
+  pec_inbox:
+  - id: PEC-233
+    sender: gamma@pec.it
+    subject: Fattura 2026/745
+    body: In allegato.
+    invoice:
+      fornitore: Gamma Edile Srl
+      piva: '55500033349'
+      numero: 2026/745
+      imponibile: 300.0
+      iva: 66.0
+      totale: 366.0
+  transactions:
+  - id: TX-233
+    data: '2026-07-24'
+    importo: 549.0
+    controparte: B0N1F1CO ESTERO SPA
+    causale: bonifico
+oracle:
+  should_ask: true
+max_tool_calls: 8
+expected_tool_calls: 3

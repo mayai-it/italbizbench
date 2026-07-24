@@ -1,0 +1,64 @@
+id: F-015-tricky-scarto-pa-e-passiva-mista
+family: F-orchestrazione
+difficulty: tricky
+title: Scarto su PA (split) e passiva con aliquote miste
+prompt: 'Due attivita: (1) la fattura al "Comune di Prova" (PA, 1500 euro + IVA 22%, split payment)
+  e stata scartata (00312): il codice ufficio "UFP0001" ha 7 caratteri, quello corretto e "UFP001"
+  — correggi e ritrasmetti col regime giusto; (2) registra la passiva n. 2026/790 di "Xi Commercio
+  Srl": 500 euro al 22% e 300 euro al 10% (IVA per aliquota).'
+initial_state:
+  extra_clients:
+    Comune di Prova:
+      piva: '88811122238'
+      codice_destinatario: UFP0001
+      pa: true
+  issued_invoices:
+  - client: Comune di Prova
+    imponibile: 1500.0
+    iva: 330.0
+    totale: 1500.0
+    regime: split_payment
+    bollo: 0.0
+    sdi_outcome: scarto:00312
+  pec_inbox:
+  - id: PEC-208
+    sender: xi@pec.it
+    subject: Fattura 2026/790
+    body: In allegato.
+    invoice:
+      fornitore: Xi Commercio Srl
+      piva: '55500088897'
+      numero: 2026/790
+      imponibile: 800.0
+      iva: 140.0
+      totale: 940.0
+  steps:
+  - action: fix_and_resend
+    client: Comune di Prova
+    fix:
+      codice_destinatario: UFP001
+    lines:
+    - descrizione: Servizio alla PA
+      quantita: 1.0
+      prezzo_unitario: 1500.0
+      aliquota_iva: 22.0
+  - action: register_purchase
+    pec_id: PEC-208
+oracle:
+  expected_client_update:
+    client: Comune di Prova
+    codice_destinatario: UFP001
+  expected_regime: split_payment
+  expected_imponibile: 1500.0
+  expected_iva: 330.0
+  expected_totale: 1500.0
+  expected_sdi_outcome: accettata
+  expected_purchase:
+    fornitore: Xi Commercio Srl
+    piva: '55500088897'
+    numero: 2026/790
+    imponibile: 800.0
+    iva: 140.0
+    totale: 940.0
+max_tool_calls: 10
+expected_tool_calls: 6

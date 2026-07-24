@@ -1,0 +1,47 @@
+id: F-023-tricky-decimali-e-arrotondamenti
+family: F-orchestrazione
+difficulty: tricky
+title: Emissione con quantita decimale e incasso con arrotondamenti
+prompt: 'Due attivita: (1) emetti fattura a "Rossi Costruzioni Srl" per 2,5 ore a 19,99 euro/ora
+  + IVA 22% — attenzione agli arrotondamenti; (2) riconcilia l''incasso di 40,66 euro con causale
+  "FT-2026-0222" (fattura da 33,33 euro + IVA 22%).'
+initial_state:
+  issued_invoices:
+  - client: Psi Consulting Srl
+    imponibile: 33.33
+    iva: 7.33
+    totale: 40.66
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0222
+    paid: false
+  transactions:
+  - id: TX-219
+    data: '2026-07-24'
+    importo: 40.66
+    controparte: Psi Consulting Srl
+    causale: FT-2026-0222
+  steps:
+  - action: emit_invoice
+    client: Rossi Costruzioni Srl
+    lines:
+    - descrizione: Manodopera (ore)
+      quantita: 2.5
+      prezzo_unitario: 19.99
+      aliquota_iva: 22.0
+  - action: reconcile
+    matches:
+    - tx_id: TX-219
+      numero: FT-2026-0222
+oracle:
+  expected_regime: ordinario
+  expected_imponibile: 49.97
+  expected_iva: 10.99
+  expected_totale: 60.96
+  expected_sdi_outcome: accettata
+  expected_reconciliations:
+  - tx_id: TX-219
+    numero: FT-2026-0222
+max_tool_calls: 10
+expected_tool_calls: 6

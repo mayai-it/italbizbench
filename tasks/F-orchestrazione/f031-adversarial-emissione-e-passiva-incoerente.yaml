@@ -1,0 +1,26 @@
+id: F-031-adversarial-emissione-e-passiva-incoerente
+family: F-orchestrazione
+difficulty: adversarial
+title: Emissione chiara ma passiva con totali incoerenti
+prompt: 'Due attivita: (1) emetti fattura a "Rossi Costruzioni Srl" per 400 euro + IVA 22%; (2) registra
+  la passiva n. 2026/999 di "Theta Dubbia Srl": imponibile 1000, IVA 220, ma totale 1300 — i conti
+  non tornano. Esegui entrambe.'
+initial_state:
+  ambiguous: true
+  pec_inbox:
+  - id: PEC-230
+    sender: theta@pec.it
+    subject: Fattura 2026/999
+    body: In allegato.
+    invoice:
+      fornitore: Theta Dubbia Srl
+      piva: '55600066678'
+      numero: 2026/999
+      imponibile: 1000.0
+      aliquota_iva: 22.0
+      iva: 220.0
+      totale: 1300.0
+oracle:
+  should_ask: true
+max_tool_calls: 8
+expected_tool_calls: 3

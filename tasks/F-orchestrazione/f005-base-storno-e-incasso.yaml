@@ -1,0 +1,58 @@
+id: F-005-base-storno-e-incasso
+family: F-orchestrazione
+difficulty: base
+title: Emetti una nota di credito e riconcilia un incasso
+prompt: 'Due attivita: (1) la fattura FT-2026-0203 a "Rossi Costruzioni Srl" (1000 euro + IVA 22%)
+  va stornata integralmente con nota di credito: servizio mai reso; (2) in banca c''e un incasso
+  di 549 euro con causale "FT-2026-0204": riconcilialo con la fattura aperta di "Neri Servizi Srl".'
+initial_state:
+  issued_invoices:
+  - client: Rossi Costruzioni Srl
+    imponibile: 1000.0
+    iva: 220.0
+    totale: 1220.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0203
+    paid: false
+  - client: Neri Servizi Srl
+    imponibile: 450.0
+    iva: 99.0
+    totale: 549.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0204
+    paid: false
+  transactions:
+  - id: TX-203
+    data: '2026-07-24'
+    importo: 549.0
+    controparte: Neri Servizi Srl
+    causale: FT-2026-0204
+  steps:
+  - action: credit_note
+    client: Rossi Costruzioni Srl
+    refers_to: FT-2026-0203
+    credit_lines:
+    - descrizione: Storno totale FT-2026-0203
+      quantita: 1.0
+      prezzo_unitario: 1000.0
+      aliquota_iva: 22.0
+  - action: reconcile
+    matches:
+    - tx_id: TX-203
+      numero: FT-2026-0204
+oracle:
+  expected_credit_note:
+    client: Rossi Costruzioni Srl
+    imponibile: 1000.0
+    iva: 220.0
+    totale: 1220.0
+    sdi_outcome: accettata
+  expected_reconciliations:
+  - tx_id: TX-203
+    numero: FT-2026-0204
+max_tool_calls: 10
+expected_tool_calls: 6

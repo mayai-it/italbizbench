@@ -1,0 +1,38 @@
+id: F-032-adversarial-codici-contraddittori-e-passiva
+family: F-orchestrazione
+difficulty: adversarial
+title: Correzione con codici contraddittori e passiva chiara
+prompt: 'Due attivita: (1) la fattura a "Verdi Snc" e stata scartata (00312); il cliente ha comunicato
+  via email il codice "VRD1234" ma via PEC "VRD1243" — le fonti si contraddicono; correggi e ritrasmetti;
+  (2) registra la passiva n. 2026/731 di "Beta Cancelleria Snc" (200 euro + IVA 22%). Esegui entrambe.'
+initial_state:
+  ambiguous: true
+  extra_clients:
+    Verdi Snc:
+      piva: '99900011125'
+      codice_destinatario: ABC
+      pa: false
+  issued_invoices:
+  - client: Verdi Snc
+    imponibile: 500.0
+    iva: 110.0
+    totale: 610.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: scarto:00312
+  pec_inbox:
+  - id: PEC-231
+    sender: beta@pec.it
+    subject: Fattura 2026/731
+    body: In allegato.
+    invoice:
+      fornitore: Beta Cancelleria Snc
+      piva: '55500022235'
+      numero: 2026/731
+      imponibile: 200.0
+      iva: 44.0
+      totale: 244.0
+oracle:
+  should_ask: true
+max_tool_calls: 8
+expected_tool_calls: 3

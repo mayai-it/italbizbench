@@ -1,0 +1,62 @@
+id: F-009-base-censimento-e-passiva
+family: F-orchestrazione
+difficulty: base
+title: Censisci un cliente dopo scarto 00200 e registra una passiva
+prompt: 'Due attivita: (1) la fattura a "Nuovi Orizzonti Srl" (500 euro + IVA 22%) e stata scartata
+  (00200): il cliente non e censito — censiscilo (P.IVA 11122233346, codice destinatario "NOR1234",
+  privato) e ritrasmetti; (2) registra la fattura passiva n. 2026/760 di "Epsilon Ricambi Srl" (450
+  euro + IVA 22%).'
+initial_state:
+  issued_invoices:
+  - client: Nuovi Orizzonti Srl
+    imponibile: 500.0
+    iva: 110.0
+    totale: 610.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: scarto:00200
+  pec_inbox:
+  - id: PEC-205
+    sender: epsilon@pec.it
+    subject: Fattura 2026/760
+    body: In allegato.
+    invoice:
+      fornitore: Epsilon Ricambi Srl
+      piva: '55500055565'
+      numero: 2026/760
+      imponibile: 450.0
+      iva: 99.0
+      totale: 549.0
+  steps:
+  - action: fix_and_resend
+    client: Nuovi Orizzonti Srl
+    fix:
+      new: true
+      piva: '11122233346'
+      codice_destinatario: NOR1234
+    lines:
+    - descrizione: Fornitura
+      quantita: 1.0
+      prezzo_unitario: 500.0
+      aliquota_iva: 22.0
+  - action: register_purchase
+    pec_id: PEC-205
+oracle:
+  expected_client_update:
+    client: Nuovi Orizzonti Srl
+    piva: '11122233346'
+    codice_destinatario: NOR1234
+  expected_regime: ordinario
+  expected_imponibile: 500.0
+  expected_iva: 110.0
+  expected_totale: 610.0
+  expected_sdi_outcome: accettata
+  expected_purchase:
+    fornitore: Epsilon Ricambi Srl
+    piva: '55500055565'
+    numero: 2026/760
+    imponibile: 450.0
+    iva: 99.0
+    totale: 549.0
+max_tool_calls: 10
+expected_tool_calls: 6

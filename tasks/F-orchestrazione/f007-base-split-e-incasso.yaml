@@ -1,0 +1,47 @@
+id: F-007-base-split-e-incasso
+family: F-orchestrazione
+difficulty: base
+title: Emetti alla PA in split payment e riconcilia un incasso
+prompt: 'Due attivita: (1) emetti fattura al "Comune di Esempio" (PA) per un servizio di 2000 euro
+  + IVA 22%, con il regime corretto per la PA; (2) in banca c''e un incasso di 976 euro con causale
+  "FT-2026-0207": riconcilialo.'
+initial_state:
+  issued_invoices:
+  - client: Gamma Srl
+    imponibile: 800.0
+    iva: 176.0
+    totale: 976.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0207
+    paid: false
+  transactions:
+  - id: TX-206
+    data: '2026-07-24'
+    importo: 976.0
+    controparte: Gamma Srl
+    causale: FT-2026-0207
+  steps:
+  - action: emit_invoice
+    client: Comune di Esempio
+    lines:
+    - descrizione: Servizio alla PA
+      quantita: 1.0
+      prezzo_unitario: 2000.0
+      aliquota_iva: 22.0
+  - action: reconcile
+    matches:
+    - tx_id: TX-206
+      numero: FT-2026-0207
+oracle:
+  expected_regime: split_payment
+  expected_imponibile: 2000.0
+  expected_iva: 440.0
+  expected_totale: 2000.0
+  expected_sdi_outcome: accettata
+  expected_reconciliations:
+  - tx_id: TX-206
+    numero: FT-2026-0207
+max_tool_calls: 10
+expected_tool_calls: 6

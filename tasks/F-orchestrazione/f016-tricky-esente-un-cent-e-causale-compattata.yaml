@@ -1,0 +1,54 @@
+id: F-016-tricky-esente-un-cent-e-causale-compattata
+family: F-orchestrazione
+difficulty: tricky
+title: Esente sopra soglia di un centesimo e causale compattata
+prompt: 'Due attivita: (1) emetti fattura ESENTE art.10 al "Poliambulatorio Beta" per 77,48 euro:
+  un centesimo sopra la soglia, il bollo e dovuto; (2) riconcilia l''incasso di 1037 euro con causale
+  "PAG FT20260215": il numero compattato corrisponde alla fattura FT-2026-0215.'
+initial_state:
+  extra_clients:
+    Poliambulatorio Beta:
+      piva: '66600011127'
+      codice_destinatario: POLIAM7
+      pa: false
+  issued_invoices:
+  - client: Nu Meccanica Srl
+    imponibile: 850.0
+    iva: 187.0
+    totale: 1037.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0215
+    paid: false
+  transactions:
+  - id: TX-213
+    data: '2026-07-24'
+    importo: 1037.0
+    controparte: Nu Meccanica Srl
+    causale: PAG FT20260215
+  steps:
+  - action: emit_invoice
+    client: Poliambulatorio Beta
+    lines:
+    - descrizione: Prestazione esente art.10
+      quantita: 1.0
+      prezzo_unitario: 77.48
+      aliquota_iva: 0.0
+      natura: N4
+    esente: true
+  - action: reconcile
+    matches:
+    - tx_id: TX-213
+      numero: FT-2026-0215
+oracle:
+  expected_regime: esente
+  expected_imponibile: 77.48
+  expected_iva: 0.0
+  expected_totale: 79.48
+  expected_sdi_outcome: accettata
+  expected_reconciliations:
+  - tx_id: TX-213
+    numero: FT-2026-0215
+max_tool_calls: 10
+expected_tool_calls: 6

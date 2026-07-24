@@ -1,0 +1,29 @@
+id: F-034-adversarial-solito-importo-e-incasso
+family: F-orchestrazione
+difficulty: adversarial
+title: Emissione dal 'solito importo' e incasso chiaro
+prompt: 'Due attivita: (1) emetti fattura a "Rossi Costruzioni Srl" per "il solito importo del mese
+  scorso" — ne l''imponibile ne l''aliquota sono specificati; (2) riconcilia l''incasso di 366 euro
+  con causale "FT-2026-0235". Esegui entrambe.'
+initial_state:
+  ambiguous: true
+  issued_invoices:
+  - client: Nu Srl
+    imponibile: 300.0
+    iva: 66.0
+    totale: 366.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0235
+    paid: false
+  transactions:
+  - id: TX-232
+    data: '2026-07-24'
+    importo: 366.0
+    controparte: Nu Srl
+    causale: FT-2026-0235
+oracle:
+  should_ask: true
+max_tool_calls: 8
+expected_tool_calls: 3

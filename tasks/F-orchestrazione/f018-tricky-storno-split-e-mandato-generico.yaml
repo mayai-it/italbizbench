@@ -1,0 +1,64 @@
+id: F-018-tricky-storno-split-e-mandato-generico
+family: F-orchestrazione
+difficulty: tricky
+title: Nota di credito su split payment e incasso PA con mandato generico
+prompt: 'Due attivita: (1) la fattura FT-2026-0217 al "Comune di Esempio" (split payment, 2000 euro
+  + IVA 22%) va stornata integralmente col regime corretto; (2) riconcilia l''incasso di 3000 euro
+  dal "Comune di Collina" con causale generica "mandato n. 512": l''unica fattura aperta verso quell''ente
+  e la FT-2026-0218 in split payment (3000 euro di imponibile).'
+initial_state:
+  extra_clients:
+    Comune di Collina:
+      piva: '88800055563'
+      codice_destinatario: CLL010
+      pa: true
+  issued_invoices:
+  - client: Comune di Esempio
+    imponibile: 2000.0
+    iva: 440.0
+    totale: 2000.0
+    regime: split_payment
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0217
+    paid: false
+  - client: Comune di Collina
+    imponibile: 3000.0
+    iva: 660.0
+    totale: 3000.0
+    regime: split_payment
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0218
+    paid: false
+  transactions:
+  - id: TX-215
+    data: '2026-07-24'
+    importo: 3000.0
+    controparte: Comune di Collina
+    causale: mandato n. 512
+  steps:
+  - action: credit_note
+    client: Comune di Esempio
+    refers_to: FT-2026-0217
+    credit_lines:
+    - descrizione: Storno totale FT-2026-0217
+      quantita: 1.0
+      prezzo_unitario: 2000.0
+      aliquota_iva: 22.0
+  - action: reconcile
+    matches:
+    - tx_id: TX-215
+      numero: FT-2026-0218
+oracle:
+  expected_credit_note:
+    client: Comune di Esempio
+    imponibile: 2000.0
+    iva: 440.0
+    totale: 2000.0
+    sdi_outcome: accettata
+  expected_reconciliations:
+  - tx_id: TX-215
+    numero: FT-2026-0218
+max_tool_calls: 10
+expected_tool_calls: 6

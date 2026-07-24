@@ -13,6 +13,9 @@ giudizi soggettivi: o gli importi/regime/esito SDI coincidono (entro tolleranza)
   fedelmente il documento ricevuto via PEC (expected_purchase).
 - Famiglia E: riconciliazione. L'insieme degli abbinamenti movimento<->fattura deve
   coincidere esattamente con l'oracolo (expected_reconciliations).
+- Famiglia F: orchestrazione multi-step. Si verifica lo STATO FINALE della sandbox
+  combinando tutti gli oracoli dichiarati (anagrafica, ultima fattura, nota di
+  credito, acquisto, riconciliazioni): non i singoli passi, che restano liberi.
 """
 from __future__ import annotations
 
@@ -168,6 +171,28 @@ def verify(scenario: Scenario, sandbox: InvoicingSandbox, action: AgentAction) -
     # Famiglia E (riconciliazione): abbinamenti movimento<->fattura, match esatto.
     if scenario.family == Family.E_riconciliazione:
         checks = _reconciliation_checks(sandbox, o)
+        ok = not checks
+        return ok, ("OK" if ok else "; ".join(checks))
+
+    # Famiglia F (orchestrazione): stato finale combinato, tutti gli oracoli dichiarati.
+    if scenario.family == Family.F_orchestrazione:
+        checks = []
+        if o.expected_client_update is not None:
+            checks += _client_update_checks(sandbox, o.expected_client_update)
+        if o.expected_credit_note is not None:
+            checks += _credit_note_checks(sandbox, o)
+        if o.expected_purchase is not None:
+            checks += _purchase_checks(sandbox, o)
+        if o.expected_reconciliations is not None:
+            checks += _reconciliation_checks(sandbox, o)
+        if any(x is not None for x in (o.expected_imponibile, o.expected_iva,
+                                       o.expected_totale, o.expected_regime,
+                                       o.expected_sdi_outcome)):
+            # L'ULTIMA fattura trasmessa (le seminate restano in coda prima).
+            if not sandbox.issued:
+                checks.append("nessuna fattura emessa")
+            else:
+                checks += _invoice_checks(sandbox.issued[-1], o)
         ok = not checks
         return ok, ("OK" if ok else "; ".join(checks))
 

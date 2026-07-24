@@ -43,8 +43,9 @@ def score_task(scenario: Scenario, sandbox: InvoicingSandbox, action: AgentActio
     passed, detail = verify(scenario, sandbox, action)
     correctness = 1.0 if passed else 0.0
 
-    # Efficienza: 1.0 se usa <= chiamate "attese" (~2: lookup + emit), degrada poi.
-    expected_calls = 3
+    # Efficienza: 1.0 se usa <= chiamate "attese" (dichiarate dal task: default 3,
+    # i multi-step della famiglia F ne dichiarano di piu), degrada poi.
+    expected_calls = scenario.expected_tool_calls
     used = max(sandbox.tool_calls, 1)
     efficiency = min(1.0, expected_calls / used) if used > expected_calls else 1.0
 

@@ -1,0 +1,74 @@
+id: F-006-base-passiva-e-due-incassi
+family: F-orchestrazione
+difficulty: base
+title: Registra una passiva e riconcilia due incassi
+prompt: 'Due attivita: (1) registra la fattura passiva n. 2026/750 di "Delta Impianti Srl" (900 euro
+  + IVA 22%); (2) in banca ci sono due incassi con causali "FT-2026-0205" (610 euro) e "FT-2026-0206"
+  (122 euro): riconcilia entrambi.'
+initial_state:
+  issued_invoices:
+  - client: Alfa Srl
+    imponibile: 500.0
+    iva: 110.0
+    totale: 610.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0205
+    paid: false
+  - client: Beta Snc
+    imponibile: 100.0
+    iva: 22.0
+    totale: 122.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0206
+    paid: false
+  pec_inbox:
+  - id: PEC-204
+    sender: delta@pec.it
+    subject: Fattura 2026/750
+    body: In allegato.
+    invoice:
+      fornitore: Delta Impianti Srl
+      piva: '55500044452'
+      numero: 2026/750
+      imponibile: 900.0
+      iva: 198.0
+      totale: 1098.0
+  transactions:
+  - id: TX-204
+    data: '2026-07-24'
+    importo: 610.0
+    controparte: Alfa Srl
+    causale: FT-2026-0205
+  - id: TX-205
+    data: '2026-07-24'
+    importo: 122.0
+    controparte: Beta Snc
+    causale: FT-2026-0206
+  steps:
+  - action: register_purchase
+    pec_id: PEC-204
+  - action: reconcile
+    matches:
+    - tx_id: TX-204
+      numero: FT-2026-0205
+    - tx_id: TX-205
+      numero: FT-2026-0206
+oracle:
+  expected_purchase:
+    fornitore: Delta Impianti Srl
+    piva: '55500044452'
+    numero: 2026/750
+    imponibile: 900.0
+    iva: 198.0
+    totale: 1098.0
+  expected_reconciliations:
+  - tx_id: TX-204
+    numero: FT-2026-0205
+  - tx_id: TX-205
+    numero: FT-2026-0206
+max_tool_calls: 10
+expected_tool_calls: 6

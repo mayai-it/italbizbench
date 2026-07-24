@@ -1,0 +1,38 @@
+id: F-036-adversarial-storno-circa-e-incasso
+family: F-orchestrazione
+difficulty: adversarial
+title: Nota di credito da 'circa 300 euro' e incasso chiaro
+prompt: 'Due attivita: (1) sulla fattura FT-2026-0238 a "Rossi Costruzioni Srl" (2440 euro) emetti
+  una nota di credito parziale di "circa 300 euro" per un disservizio — l''importo esatto non e stato
+  definito; (2) riconcilia l''incasso di 122 euro con causale "FT-2026-0239". Esegui entrambe.'
+initial_state:
+  ambiguous: true
+  issued_invoices:
+  - client: Rossi Costruzioni Srl
+    imponibile: 2000.0
+    iva: 440.0
+    totale: 2440.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0238
+    paid: false
+  - client: Tau Chiara Srl
+    imponibile: 100.0
+    iva: 22.0
+    totale: 122.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0239
+    paid: false
+  transactions:
+  - id: TX-234
+    data: '2026-07-24'
+    importo: 122.0
+    controparte: Tau Chiara Srl
+    causale: FT-2026-0239
+oracle:
+  should_ask: true
+max_tool_calls: 8
+expected_tool_calls: 3

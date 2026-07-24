@@ -1,0 +1,54 @@
+id: F-010-base-esente-e-incasso
+family: F-orchestrazione
+difficulty: base
+title: Emetti una fattura esente con bollo e riconcilia un incasso
+prompt: 'Due attivita: (1) emetti fattura ESENTE art.10 al "Poliambulatorio Beta" per 1000 euro,
+  ricordando l''imposta di bollo dove dovuta; (2) riconcilia l''incasso di 1220 euro con causale
+  "FT-2026-0209".'
+initial_state:
+  extra_clients:
+    Poliambulatorio Beta:
+      piva: '66600011127'
+      codice_destinatario: POLIAM7
+      pa: false
+  issued_invoices:
+  - client: Eta Srl
+    imponibile: 1000.0
+    iva: 220.0
+    totale: 1220.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0209
+    paid: false
+  transactions:
+  - id: TX-208
+    data: '2026-07-24'
+    importo: 1220.0
+    controparte: Eta Srl
+    causale: FT-2026-0209
+  steps:
+  - action: emit_invoice
+    client: Poliambulatorio Beta
+    lines:
+    - descrizione: Prestazione esente art.10
+      quantita: 1.0
+      prezzo_unitario: 1000.0
+      aliquota_iva: 0.0
+      natura: N4
+    esente: true
+  - action: reconcile
+    matches:
+    - tx_id: TX-208
+      numero: FT-2026-0209
+oracle:
+  expected_regime: esente
+  expected_imponibile: 1000.0
+  expected_iva: 0.0
+  expected_totale: 1002.0
+  expected_sdi_outcome: accettata
+  expected_reconciliations:
+  - tx_id: TX-208
+    numero: FT-2026-0209
+max_tool_calls: 10
+expected_tool_calls: 6

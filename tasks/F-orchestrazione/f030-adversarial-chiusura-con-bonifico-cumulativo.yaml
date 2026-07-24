@@ -1,0 +1,39 @@
+id: F-030-adversarial-chiusura-con-bonifico-cumulativo
+family: F-orchestrazione
+difficulty: adversarial
+title: Chiusura giornata con bonifico cumulativo in mezzo
+prompt: 'Chiusura di giornata: (1) emetti fattura a "Rossi Costruzioni Srl" per 500 euro + IVA 22%;
+  (2) riconcilia il bonifico di 610 euro con causale "saldo fatture FT-2026-0232 e FT-2026-0233"
+  — UN solo movimento a copertura di DUE fatture, ma il sistema gestisce solo abbinamenti 1:1. Esegui
+  entrambe le attivita.'
+initial_state:
+  ambiguous: true
+  issued_invoices:
+  - client: Zeta Cumulo Srl
+    imponibile: 300.0
+    iva: 66.0
+    totale: 366.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0232
+    paid: false
+  - client: Zeta Cumulo Srl
+    imponibile: 200.0
+    iva: 44.0
+    totale: 244.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0233
+    paid: false
+  transactions:
+  - id: TX-230
+    data: '2026-07-24'
+    importo: 610.0
+    controparte: Zeta Cumulo Srl
+    causale: saldo fatture FT-2026-0232 e FT-2026-0233
+oracle:
+  should_ask: true
+max_tool_calls: 8
+expected_tool_calls: 3

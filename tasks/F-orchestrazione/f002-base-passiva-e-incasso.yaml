@@ -1,0 +1,56 @@
+id: F-002-base-passiva-e-incasso
+family: F-orchestrazione
+difficulty: base
+title: Registra una fattura passiva e riconcilia un incasso
+prompt: 'Due attivita: (1) via PEC e arrivata la fattura n. 2026/720 di "Alfa Forniture Srl" (400
+  euro + IVA 22%): registrala nel registro acquisti; (2) in banca c''e un incasso di 244 euro con
+  causale "FT-2026-0202": riconcilialo con la fattura aperta di "Gialli Srl".'
+initial_state:
+  issued_invoices:
+  - client: Gialli Srl
+    imponibile: 200.0
+    iva: 44.0
+    totale: 244.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0202
+    paid: false
+  pec_inbox:
+  - id: PEC-201
+    sender: alfa@pec.it
+    subject: Fattura 2026/720
+    body: In allegato.
+    invoice:
+      fornitore: Alfa Forniture Srl
+      piva: '55500011121'
+      numero: 2026/720
+      imponibile: 400.0
+      iva: 88.0
+      totale: 488.0
+  transactions:
+  - id: TX-202
+    data: '2026-07-24'
+    importo: 244.0
+    controparte: Gialli Srl
+    causale: FT-2026-0202
+  steps:
+  - action: register_purchase
+    pec_id: PEC-201
+  - action: reconcile
+    matches:
+    - tx_id: TX-202
+      numero: FT-2026-0202
+oracle:
+  expected_purchase:
+    fornitore: Alfa Forniture Srl
+    piva: '55500011121'
+    numero: 2026/720
+    imponibile: 400.0
+    iva: 88.0
+    totale: 488.0
+  expected_reconciliations:
+  - tx_id: TX-202
+    numero: FT-2026-0202
+max_tool_calls: 10
+expected_tool_calls: 6

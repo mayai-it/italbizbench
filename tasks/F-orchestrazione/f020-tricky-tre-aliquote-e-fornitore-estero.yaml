@@ -1,0 +1,53 @@
+id: F-020-tricky-tre-aliquote-e-fornitore-estero
+family: F-orchestrazione
+difficulty: tricky
+title: Emissione a tre aliquote e passiva di fornitore estero
+prompt: 'Due attivita: (1) emetti fattura a "Rossi Costruzioni Srl" con tre righe: 200 euro al 4%,
+  300 euro al 10% e 150 euro al 22%; (2) registra la passiva n. CH-2026-77 di "Lambda Trading AG"
+  (fornitore svizzero, P.IVA CHE123456789, 1800 euro senza IVA esposta).'
+initial_state:
+  pec_inbox:
+  - id: PEC-210
+    sender: lambda@pec-gateway.ch
+    subject: Invoice CH-2026-77
+    body: Invoice attached.
+    invoice:
+      fornitore: Lambda Trading AG
+      piva: CHE123456789
+      numero: CH-2026-77
+      imponibile: 1800.0
+      iva: 0.0
+      totale: 1800.0
+  steps:
+  - action: emit_invoice
+    client: Rossi Costruzioni Srl
+    lines:
+    - descrizione: Prima necessita
+      quantita: 1.0
+      prezzo_unitario: 200.0
+      aliquota_iva: 4.0
+    - descrizione: Alimentari
+      quantita: 1.0
+      prezzo_unitario: 300.0
+      aliquota_iva: 10.0
+    - descrizione: Bevande
+      quantita: 1.0
+      prezzo_unitario: 150.0
+      aliquota_iva: 22.0
+  - action: register_purchase
+    pec_id: PEC-210
+oracle:
+  expected_regime: ordinario
+  expected_imponibile: 650.0
+  expected_iva: 71.0
+  expected_totale: 721.0
+  expected_sdi_outcome: accettata
+  expected_purchase:
+    fornitore: Lambda Trading AG
+    piva: CHE123456789
+    numero: CH-2026-77
+    imponibile: 1800.0
+    iva: 0.0
+    totale: 1800.0
+max_tool_calls: 10
+expected_tool_calls: 6

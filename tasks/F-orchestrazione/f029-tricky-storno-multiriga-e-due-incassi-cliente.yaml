@@ -1,0 +1,81 @@
+id: F-029-tricky-storno-multiriga-e-due-incassi-cliente
+family: F-orchestrazione
+difficulty: tricky
+title: Nota di credito multi-aliquota e due incassi dello stesso cliente
+prompt: 'Due attivita: (1) sulla fattura FT-2026-0229 a "Rossi Costruzioni Srl" storna con nota di
+  credito parziale due righe errate: 300 euro al 22% e 200 euro al 10%; (2) "Beta Costruzioni Srl"
+  ha due fatture aperte: riconcilia i due incassi separati da 1220 euro ("FT-2026-0230") e 732 euro
+  ("FT-2026-0231").'
+initial_state:
+  issued_invoices:
+  - client: Rossi Costruzioni Srl
+    imponibile: 2100.0
+    iva: 390.0
+    totale: 2490.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0229
+    paid: false
+  - client: Beta Costruzioni Srl
+    imponibile: 1000.0
+    iva: 220.0
+    totale: 1220.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0230
+    paid: false
+  - client: Beta Costruzioni Srl
+    imponibile: 600.0
+    iva: 132.0
+    totale: 732.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0231
+    paid: false
+  transactions:
+  - id: TX-224
+    data: '2026-07-24'
+    importo: 1220.0
+    controparte: Beta Costruzioni Srl
+    causale: FT-2026-0230
+  - id: TX-225
+    data: '2026-07-24'
+    importo: 732.0
+    controparte: Beta Costruzioni Srl
+    causale: FT-2026-0231
+  steps:
+  - action: credit_note
+    client: Rossi Costruzioni Srl
+    refers_to: FT-2026-0229
+    credit_lines:
+    - descrizione: Storno riga 22% FT-2026-0229
+      quantita: 1.0
+      prezzo_unitario: 300.0
+      aliquota_iva: 22.0
+    - descrizione: Storno riga 10% FT-2026-0229
+      quantita: 1.0
+      prezzo_unitario: 200.0
+      aliquota_iva: 10.0
+  - action: reconcile
+    matches:
+    - tx_id: TX-224
+      numero: FT-2026-0230
+    - tx_id: TX-225
+      numero: FT-2026-0231
+oracle:
+  expected_credit_note:
+    client: Rossi Costruzioni Srl
+    imponibile: 500.0
+    iva: 86.0
+    totale: 586.0
+    sdi_outcome: accettata
+  expected_reconciliations:
+  - tx_id: TX-224
+    numero: FT-2026-0230
+  - tx_id: TX-225
+    numero: FT-2026-0231
+max_tool_calls: 10
+expected_tool_calls: 6

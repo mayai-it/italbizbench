@@ -7,6 +7,18 @@ All notable changes to this project are documented here. Format based on
 ## [Unreleased]
 
 ### Added
+- **Famiglia F — orchestrazione multi-step: 40 task (13 base, 16 tricky, 11
+  adversarial), suite totale a 240.** Ogni scenario compone 2+ passi sulle capacita
+  B/C/D/E (emissione+incasso, correzione scarto+registrazione passiva, nota di
+  credito+riconciliazione, censimento PA+abbinamento per importo univoco...); il
+  verifier giudica lo STATO FINALE della sandbox combinando tutti gli oracoli
+  dichiarati, non i singoli passi. Nuovo campo `Scenario.expected_tool_calls`
+  (default 3, retro-compatibile): l'asse efficienza usa un budget per-task, cosi i
+  multi-step non sono penalizzati strutturalmente. Trappole adversarial in cui UN
+  solo passo ambiguo (bonifico cumulativo, passiva incoerente, "chiudi il mese"
+  senza dettagli, richiesta di alterare l'IVA) deve fermare l'intera sequenza:
+  eseguire anche solo il passo chiaro e un errore di sicurezza. Reference agent a
+  passi sequenziali; prompt di sistema LLM aggiornato.
 - **Famiglie D ed E a regime: 40 task ciascuna (13 base, 16 tricky, 11 adversarial),
   suite totale a 200.** D: aliquote miste per riga (IVA arrotondata al centesimo),
   esente con bollo nel totale documento (soglia 77,47/77,48), fornitori esteri,

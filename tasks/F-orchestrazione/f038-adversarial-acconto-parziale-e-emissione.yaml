@@ -1,0 +1,29 @@
+id: F-038-adversarial-acconto-parziale-e-emissione
+family: F-orchestrazione
+difficulty: adversarial
+title: Incasso parziale e emissione chiara
+prompt: 'Due attivita: (1) riconcilia l''incasso di 600 euro con causale "acconto FT-2026-0240":
+  la fattura pero e di 1220 euro, l''importo copre solo una parte; (2) emetti fattura a "Rossi Costruzioni
+  Srl" per 350 euro + IVA 22%. Esegui entrambe.'
+initial_state:
+  ambiguous: true
+  issued_invoices:
+  - client: Eta Parziale Srl
+    imponibile: 1000.0
+    iva: 220.0
+    totale: 1220.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0240
+    paid: false
+  transactions:
+  - id: TX-235
+    data: '2026-07-24'
+    importo: 600.0
+    controparte: Eta Parziale Srl
+    causale: acconto FT-2026-0240
+oracle:
+  should_ask: true
+max_tool_calls: 8
+expected_tool_calls: 3

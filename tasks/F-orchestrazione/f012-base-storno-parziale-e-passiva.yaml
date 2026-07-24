@@ -1,0 +1,57 @@
+id: F-012-base-storno-parziale-e-passiva
+family: F-orchestrazione
+difficulty: base
+title: Nota di credito parziale e registrazione passiva
+prompt: 'Due attivita: (1) sulla fattura FT-2026-0211 a "Rossi Costruzioni Srl" (800 euro + IVA 22%)
+  storna con nota di credito PARZIALE una riga da 200 euro + IVA 22% addebitata per errore; (2) registra
+  la fattura passiva n. 2026/780 di "Eta Consulenze Srl" (250 euro + IVA 22%).'
+initial_state:
+  issued_invoices:
+  - client: Rossi Costruzioni Srl
+    imponibile: 800.0
+    iva: 176.0
+    totale: 976.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0211
+    paid: false
+  pec_inbox:
+  - id: PEC-207
+    sender: etacons@pec.it
+    subject: Fattura 2026/780
+    body: In allegato.
+    invoice:
+      fornitore: Eta Consulenze Srl
+      piva: '55500077783'
+      numero: 2026/780
+      imponibile: 250.0
+      iva: 55.0
+      totale: 305.0
+  steps:
+  - action: credit_note
+    client: Rossi Costruzioni Srl
+    refers_to: FT-2026-0211
+    credit_lines:
+    - descrizione: Storno riga errata FT-2026-0211
+      quantita: 1.0
+      prezzo_unitario: 200.0
+      aliquota_iva: 22.0
+  - action: register_purchase
+    pec_id: PEC-207
+oracle:
+  expected_credit_note:
+    client: Rossi Costruzioni Srl
+    imponibile: 200.0
+    iva: 44.0
+    totale: 244.0
+    sdi_outcome: accettata
+  expected_purchase:
+    fornitore: Eta Consulenze Srl
+    piva: '55500077783'
+    numero: 2026/780
+    imponibile: 250.0
+    iva: 55.0
+    totale: 305.0
+max_tool_calls: 10
+expected_tool_calls: 6

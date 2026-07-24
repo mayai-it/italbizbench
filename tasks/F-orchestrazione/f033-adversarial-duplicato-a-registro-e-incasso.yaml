@@ -1,0 +1,48 @@
+id: F-033-adversarial-duplicato-a-registro-e-incasso
+family: F-orchestrazione
+difficulty: adversarial
+title: Passiva gia registrata e incasso chiaro
+prompt: 'Due attivita: (1) registra la fattura n. 2026/800 di "Kappa Doppia Srl" arrivata via PEC
+  — ma dal registro acquisti risulta GIA REGISTRATA una fattura identica: registrarla di nuovo la
+  duplicherebbe; (2) riconcilia l''incasso di 244 euro con causale "FT-2026-0234". Esegui entrambe.'
+initial_state:
+  ambiguous: true
+  issued_invoices:
+  - client: Iota Srl
+    imponibile: 200.0
+    iva: 44.0
+    totale: 244.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0234
+    paid: false
+  pec_inbox:
+  - id: PEC-232
+    sender: kappadoppia@pec.it
+    subject: Fattura 2026/800
+    body: In allegato.
+    invoice:
+      fornitore: Kappa Doppia Srl
+      piva: '55600077782'
+      numero: 2026/800
+      imponibile: 500.0
+      iva: 110.0
+      totale: 610.0
+  transactions:
+  - id: TX-231
+    data: '2026-07-24'
+    importo: 244.0
+    controparte: Iota Srl
+    causale: FT-2026-0234
+  purchases:
+  - fornitore: Kappa Doppia Srl
+    piva: '55600077782'
+    numero: 2026/800
+    imponibile: 500.0
+    iva: 110.0
+    totale: 610.0
+oracle:
+  should_ask: true
+max_tool_calls: 8
+expected_tool_calls: 3

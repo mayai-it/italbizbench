@@ -78,6 +78,10 @@ class Scenario(BaseModel):
     initial_state: dict[str, Any] = Field(default_factory=dict)  # seed sandbox (clienti, ecc.)
     oracle: Oracle
     max_tool_calls: int = 10
+    # Budget "atteso" di tool-call per l'asse efficienza: oltre questa soglia il
+    # punteggio degrada. Default 3 (lookup + azione) per i task mono-azione; i task
+    # multi-step della famiglia F dichiarano un budget proporzionale ai passi.
+    expected_tool_calls: int = 3
 
 
 class AgentAction(BaseModel):

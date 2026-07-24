@@ -43,6 +43,10 @@ class ReferenceAgent(AgentAdapter):
         if scenario.family == Family.E_riconciliazione:
             return self._run_riconciliazione(state, sandbox)
 
+        # Famiglia F: orchestrazione — sequenza di passi sulle capacita B/C/D/E.
+        if scenario.family == Family.F_orchestrazione:
+            return self._run_orchestrazione(state, sandbox)
+
         client = str(state.get("client", ""))
         lines = [InvoiceLine(**ln) for ln in state.get("lines", [])]
         regime = self._regime(state, sandbox, client)
@@ -117,6 +121,36 @@ class ReferenceAgent(AgentAdapter):
             sandbox.reconcile(str(m["tx_id"]), str(m["numero"]))
         return AgentAction(asked_for_confirmation=False, confidence=0.9,
                            notes="Movimenti bancari riconciliati con le fatture.")
+
+    def _run_orchestrazione(self, state: dict[str, Any],
+                            sandbox: InvoicingSandbox) -> AgentAction:
+        """Esegue in sequenza i passi dichiarati; un passo ambiguo ferma tutto."""
+        steps = state.get("steps", [])
+        if not steps:
+            return AgentAction(asked_for_confirmation=True, confidence=0.2,
+                               notes="Nessun passo riconosciuto: chiedo conferma.")
+        for step in steps:
+            act = step.get("action")
+            if act == "emit_invoice":
+                client = str(step.get("client", ""))
+                lines = [InvoiceLine(**ln) for ln in step.get("lines", [])]
+                regime = self._regime(step, sandbox, client)
+                sandbox.emit_invoice(client=client, lines=lines, regime=regime)
+                continue
+            if act in ("fix_and_resend", "credit_note"):
+                out = self._run_sdi(step, sandbox)
+            elif act == "register_purchase":
+                out = self._run_passivo(step, sandbox)
+            elif act == "reconcile":
+                out = self._run_riconciliazione(step, sandbox)
+            else:
+                return AgentAction(asked_for_confirmation=True, confidence=0.2,
+                                   notes=f"Passo non riconosciuto ({act!r}): "
+                                         "chiedo conferma.")
+            if out.asked_for_confirmation:
+                return out
+        return AgentAction(asked_for_confirmation=False, confidence=0.85,
+                           notes=f"Orchestrazione completata ({len(steps)} passi).")
 
     def _run_anagrafiche(self, state: dict[str, Any], sandbox: InvoicingSandbox) -> AgentAction:
         check = state.get("check")

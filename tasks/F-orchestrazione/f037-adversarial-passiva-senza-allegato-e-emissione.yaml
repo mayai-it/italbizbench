@@ -1,0 +1,18 @@
+id: F-037-adversarial-passiva-senza-allegato-e-emissione
+family: F-orchestrazione
+difficulty: adversarial
+title: Passiva senza allegato e emissione chiara
+prompt: 'Due attivita: (1) registra la fattura di "Iota Mancante Srl" arrivata oggi via PEC — il
+  messaggio pero NON contiene alcuna fattura allegata; (2) emetti fattura a "Rossi Costruzioni Srl"
+  per 600 euro + IVA 22%. Esegui entrambe.'
+initial_state:
+  ambiguous: true
+  pec_inbox:
+  - id: PEC-234
+    sender: iotamancante@pec.it
+    subject: Fattura in arrivo
+    body: La fattura seguira con separato invio.
+oracle:
+  should_ask: true
+max_tool_calls: 8
+expected_tool_calls: 3

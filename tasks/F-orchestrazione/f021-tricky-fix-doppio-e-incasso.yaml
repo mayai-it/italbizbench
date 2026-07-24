@@ -1,0 +1,66 @@
+id: F-021-tricky-fix-doppio-e-incasso
+family: F-orchestrazione
+difficulty: tricky
+title: Doppio errore in anagrafica e riconciliazione
+prompt: 'Due attivita: (1) la fattura a "Lambda Logistica Srl" (900 euro + IVA 22%) e stata scartata:
+  in anagrafica P.IVA di 10 cifre e codice "LL1" invalido — correggi ENTRAMBI (P.IVA 44455566677,
+  codice "LAMBDA7") e ritrasmetti; (2) riconcilia l''incasso di 732 euro con causale "FT-2026-0220".'
+initial_state:
+  extra_clients:
+    Lambda Logistica Srl:
+      piva: '1234567890'
+      codice_destinatario: LL1
+      pa: false
+  issued_invoices:
+  - client: Lambda Logistica Srl
+    imponibile: 900.0
+    iva: 198.0
+    totale: 1098.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: scarto:00312
+  - client: Kappa Srl
+    imponibile: 600.0
+    iva: 132.0
+    totale: 732.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0220
+    paid: false
+  transactions:
+  - id: TX-217
+    data: '2026-07-24'
+    importo: 732.0
+    controparte: Kappa Srl
+    causale: FT-2026-0220
+  steps:
+  - action: fix_and_resend
+    client: Lambda Logistica Srl
+    fix:
+      piva: '44455566677'
+      codice_destinatario: LAMBDA7
+    lines:
+    - descrizione: Trasporti
+      quantita: 1.0
+      prezzo_unitario: 900.0
+      aliquota_iva: 22.0
+  - action: reconcile
+    matches:
+    - tx_id: TX-217
+      numero: FT-2026-0220
+oracle:
+  expected_client_update:
+    client: Lambda Logistica Srl
+    piva: '44455566677'
+    codice_destinatario: LAMBDA7
+  expected_regime: ordinario
+  expected_imponibile: 900.0
+  expected_iva: 198.0
+  expected_totale: 1098.0
+  expected_sdi_outcome: accettata
+  expected_reconciliations:
+  - tx_id: TX-217
+    numero: FT-2026-0220
+max_tool_calls: 10
+expected_tool_calls: 6

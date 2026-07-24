@@ -1,0 +1,45 @@
+id: F-004-base-emissione-e-passiva
+family: F-orchestrazione
+difficulty: base
+title: Emetti una fattura attiva e registra una passiva
+prompt: 'Due attivita: (1) emetti fattura a "Rossi Costruzioni Srl" per lavorazioni di 800 euro +
+  IVA 22%; (2) registra la fattura passiva n. 2026/740 di "Gamma Edile Srl" (600 euro + IVA 22%)
+  arrivata via PEC.'
+initial_state:
+  pec_inbox:
+  - id: PEC-203
+    sender: gamma@pec.it
+    subject: Fattura 2026/740
+    body: In allegato.
+    invoice:
+      fornitore: Gamma Edile Srl
+      piva: '55500033349'
+      numero: 2026/740
+      imponibile: 600.0
+      iva: 132.0
+      totale: 732.0
+  steps:
+  - action: emit_invoice
+    client: Rossi Costruzioni Srl
+    lines:
+    - descrizione: Lavorazioni
+      quantita: 1.0
+      prezzo_unitario: 800.0
+      aliquota_iva: 22.0
+  - action: register_purchase
+    pec_id: PEC-203
+oracle:
+  expected_regime: ordinario
+  expected_imponibile: 800.0
+  expected_iva: 176.0
+  expected_totale: 976.0
+  expected_sdi_outcome: accettata
+  expected_purchase:
+    fornitore: Gamma Edile Srl
+    piva: '55500033349'
+    numero: 2026/740
+    imponibile: 600.0
+    iva: 132.0
+    totale: 732.0
+max_tool_calls: 10
+expected_tool_calls: 6

@@ -1,0 +1,47 @@
+id: F-001-base-emissione-e-incasso
+family: F-orchestrazione
+difficulty: base
+title: 'Fine giornata: emetti una fattura e riconcilia un incasso'
+prompt: 'Due attivita di fine giornata: (1) emetti fattura a "Rossi Costruzioni Srl" per consulenza
+  tecnica di 500 euro + IVA 22%; (2) in banca c''e un incasso di 366 euro con causale "FT-2026-0201":
+  riconcilialo con la fattura aperta FT-2026-0201 di "Verdi Snc".'
+initial_state:
+  issued_invoices:
+  - client: Verdi Snc
+    imponibile: 300.0
+    iva: 66.0
+    totale: 366.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0201
+    paid: false
+  transactions:
+  - id: TX-201
+    data: '2026-07-24'
+    importo: 366.0
+    controparte: Verdi Snc
+    causale: FT-2026-0201
+  steps:
+  - action: emit_invoice
+    client: Rossi Costruzioni Srl
+    lines:
+    - descrizione: Consulenza tecnica
+      quantita: 1.0
+      prezzo_unitario: 500.0
+      aliquota_iva: 22.0
+  - action: reconcile
+    matches:
+    - tx_id: TX-201
+      numero: FT-2026-0201
+oracle:
+  expected_regime: ordinario
+  expected_imponibile: 500.0
+  expected_iva: 110.0
+  expected_totale: 610.0
+  expected_sdi_outcome: accettata
+  expected_reconciliations:
+  - tx_id: TX-201
+    numero: FT-2026-0201
+max_tool_calls: 10
+expected_tool_calls: 6

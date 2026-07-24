@@ -1,0 +1,64 @@
+id: F-013-base-emissione-e-due-incassi
+family: F-orchestrazione
+difficulty: base
+title: Emetti una fattura e riconcilia due incassi
+prompt: 'Due attivita: (1) emetti fattura a "Rossi Costruzioni Srl" per 1200 euro + IVA 22%; (2)
+  riconcilia i due incassi in banca: 488 euro ("FT-2026-0212") e 61 euro ("FT-2026-0213").'
+initial_state:
+  issued_invoices:
+  - client: Theta Srl
+    imponibile: 400.0
+    iva: 88.0
+    totale: 488.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0212
+    paid: false
+  - client: Iota Snc
+    imponibile: 50.0
+    iva: 11.0
+    totale: 61.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0213
+    paid: false
+  transactions:
+  - id: TX-210
+    data: '2026-07-24'
+    importo: 488.0
+    controparte: Theta Srl
+    causale: FT-2026-0212
+  - id: TX-211
+    data: '2026-07-24'
+    importo: 61.0
+    controparte: Iota Snc
+    causale: FT-2026-0213
+  steps:
+  - action: emit_invoice
+    client: Rossi Costruzioni Srl
+    lines:
+    - descrizione: Fornitura
+      quantita: 1.0
+      prezzo_unitario: 1200.0
+      aliquota_iva: 22.0
+  - action: reconcile
+    matches:
+    - tx_id: TX-210
+      numero: FT-2026-0212
+    - tx_id: TX-211
+      numero: FT-2026-0213
+oracle:
+  expected_regime: ordinario
+  expected_imponibile: 1200.0
+  expected_iva: 264.0
+  expected_totale: 1464.0
+  expected_sdi_outcome: accettata
+  expected_reconciliations:
+  - tx_id: TX-210
+    numero: FT-2026-0212
+  - tx_id: TX-211
+    numero: FT-2026-0213
+max_tool_calls: 10
+expected_tool_calls: 6

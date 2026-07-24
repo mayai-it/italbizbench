@@ -1,0 +1,45 @@
+id: F-026-tricky-editoria-4-e-bolletta
+family: F-orchestrazione
+difficulty: tricky
+title: Emissione editoria al 4% e bolletta con quote miste
+prompt: 'Due attivita: (1) emetti fattura a "Rossi Costruzioni Srl" per volumi di 2500 euro + IVA
+  4% (editoria); (2) registra la bolletta n. 2026/77099 di "Alfa Energia Spa": energia 240 euro +
+  IVA 10% e oneri 60 euro + IVA 22%.'
+initial_state:
+  pec_inbox:
+  - id: PEC-214
+    sender: alfaenergia@pec.it
+    subject: Fattura 2026/77099
+    body: In allegato.
+    invoice:
+      fornitore: Alfa Energia Spa
+      piva: '55600044451'
+      numero: 2026/77099
+      imponibile: 300.0
+      iva: 37.2
+      totale: 337.2
+  steps:
+  - action: emit_invoice
+    client: Rossi Costruzioni Srl
+    lines:
+    - descrizione: Volumi
+      quantita: 1.0
+      prezzo_unitario: 2500.0
+      aliquota_iva: 4.0
+  - action: register_purchase
+    pec_id: PEC-214
+oracle:
+  expected_regime: ordinario
+  expected_imponibile: 2500.0
+  expected_iva: 100.0
+  expected_totale: 2600.0
+  expected_sdi_outcome: accettata
+  expected_purchase:
+    fornitore: Alfa Energia Spa
+    piva: '55600044451'
+    numero: 2026/77099
+    imponibile: 300.0
+    iva: 37.2
+    totale: 337.2
+max_tool_calls: 10
+expected_tool_calls: 6

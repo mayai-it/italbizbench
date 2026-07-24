@@ -1,0 +1,59 @@
+id: F-017-tricky-passiva-esente-bollo-e-incasso-reverse
+family: F-orchestrazione
+difficulty: tricky
+title: Passiva esente con bollo e incasso di fattura reverse charge
+prompt: 'Due attivita: (1) registra la passiva n. 2026/81 dello "Studio Omicron": 500 euro ESENTE
+  art.10 con 2 euro di bollo addebitato — il totale include il bollo; (2) riconcilia l''incasso di
+  3000 euro con causale "FT-2026-0216": la fattura e in reverse charge, l''incasso del solo imponibile
+  e corretto.'
+initial_state:
+  issued_invoices:
+  - client: Epsilon Edile Srl
+    imponibile: 3000.0
+    iva: 0.0
+    totale: 3000.0
+    regime: reverse_charge
+    bollo: 0.0
+    sdi_outcome: accettata
+    numero: FT-2026-0216
+    paid: false
+  pec_inbox:
+  - id: PEC-209
+    sender: omicron@pec.it
+    subject: Fattura 2026/81
+    body: In allegato.
+    invoice:
+      fornitore: Studio Omicron
+      piva: '55600011120'
+      numero: 2026/81
+      imponibile: 500.0
+      iva: 0.0
+      totale: 502.0
+      natura: N4
+      bollo: 2.0
+  transactions:
+  - id: TX-214
+    data: '2026-07-24'
+    importo: 3000.0
+    controparte: Epsilon Edile Srl
+    causale: FT-2026-0216
+  steps:
+  - action: register_purchase
+    pec_id: PEC-209
+  - action: reconcile
+    matches:
+    - tx_id: TX-214
+      numero: FT-2026-0216
+oracle:
+  expected_purchase:
+    fornitore: Studio Omicron
+    piva: '55600011120'
+    numero: 2026/81
+    imponibile: 500.0
+    iva: 0.0
+    totale: 502.0
+  expected_reconciliations:
+  - tx_id: TX-214
+    numero: FT-2026-0216
+max_tool_calls: 10
+expected_tool_calls: 6

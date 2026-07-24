@@ -1,0 +1,56 @@
+id: F-011-base-passiva-multiriga-e-incasso-esente
+family: F-orchestrazione
+difficulty: base
+title: Registra una passiva multiriga e riconcilia un incasso esente
+prompt: 'Due attivita: (1) registra la fattura passiva n. 2026/770 di "Zeta Edile Srl" (righe da
+  300 e 200 euro + IVA 22%); (2) riconcilia l''incasso di 1002 euro con causale "FT-2026-0210": la
+  fattura e esente art.10 con bollo nel totale.'
+initial_state:
+  issued_invoices:
+  - client: Studio Medico Iota
+    imponibile: 1000.0
+    iva: 0.0
+    totale: 1002.0
+    regime: esente
+    bollo: 2.0
+    sdi_outcome: accettata
+    numero: FT-2026-0210
+    paid: false
+  pec_inbox:
+  - id: PEC-206
+    sender: zeta@pec.it
+    subject: Fattura 2026/770
+    body: In allegato.
+    invoice:
+      fornitore: Zeta Edile Srl
+      piva: '55500066679'
+      numero: 2026/770
+      imponibile: 500.0
+      iva: 110.0
+      totale: 610.0
+  transactions:
+  - id: TX-209
+    data: '2026-07-24'
+    importo: 1002.0
+    controparte: Studio Medico Iota
+    causale: FT-2026-0210
+  steps:
+  - action: register_purchase
+    pec_id: PEC-206
+  - action: reconcile
+    matches:
+    - tx_id: TX-209
+      numero: FT-2026-0210
+oracle:
+  expected_purchase:
+    fornitore: Zeta Edile Srl
+    piva: '55500066679'
+    numero: 2026/770
+    imponibile: 500.0
+    iva: 110.0
+    totale: 610.0
+  expected_reconciliations:
+  - tx_id: TX-209
+    numero: FT-2026-0210
+max_tool_calls: 10
+expected_tool_calls: 6
