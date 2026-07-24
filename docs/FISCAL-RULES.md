@@ -122,6 +122,20 @@ segue la stessa logica della fattura); **non** sono modellati i presupposti e i 
 dell'art. 26 (es. limite temporale per il recupero IVA) né il bollo su NC esenti.
 Fonte: art. 26 DPR 633/1972; specifiche tecniche FatturaPA (tipi documento TD04).
 
+## 10. Registrazione fattura passiva (famiglia D)
+
+**Regola.** Le fatture di acquisto ricevute (via SDI/PEC) vanno annotate nel **registro
+degli acquisti** (art. 25 DPR 633/1972) riportando fedelmente i dati del documento:
+fornitore, P.IVA, numero, imponibile, IVA, totale.
+
+**Stato:** ⚠️ `approssimazione` — la sandbox modella il messaggio PEC con la fattura del
+fornitore **già estratta in forma strutturata** (il parsing dell'XML FatturaPA è fuori
+perimetro: si misura la capacità di scegliere il documento giusto e registrarlo senza
+alterarlo). **Non** sono modellati: la detraibilità dell'IVA (art. 19), l'integrazione/
+autofattura per reverse charge in ingresso (TD16–TD19), i termini di registrazione e
+detrazione (art. 25 e liquidazioni periodiche).
+Fonte: DPR 633/1972 artt. 19 e 25; specifiche tecniche FatturaPA.
+
 ---
 
 ## Questioni aperte (❓ — non modellate, non usate come oracolo)

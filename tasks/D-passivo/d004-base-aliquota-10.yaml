@@ -1,0 +1,31 @@
+id: D-004-base-aliquota-10
+family: D-passivo
+difficulty: base
+title: Registrazione con aliquota IVA al 10%
+prompt: 'Via PEC e arrivata la fattura n. 512/2026 di "Delta Alimentari Srl": 1200 euro + IVA 10%.
+  Registra la fattura nel registro acquisti.'
+initial_state:
+  action: register_purchase
+  pec_id: PEC-030
+  pec_inbox:
+  - id: PEC-030
+    sender: delta@pec.deltaalimentari.it
+    subject: Invio fattura 512/2026
+    body: Fattura in allegato.
+    invoice:
+      fornitore: Delta Alimentari Srl
+      piva: '33300044451'
+      numero: 512/2026
+      imponibile: 1200.0
+      aliquota_iva: 10.0
+      iva: 120.0
+      totale: 1320.0
+oracle:
+  expected_purchase:
+    fornitore: Delta Alimentari Srl
+    piva: '33300044451'
+    numero: 512/2026
+    imponibile: 1200.0
+    iva: 120.0
+    totale: 1320.0
+max_tool_calls: 8

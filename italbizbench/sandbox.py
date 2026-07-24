@@ -56,6 +56,38 @@ class CreditNote:
 
 
 @dataclass
+class PecMessage:
+    """Messaggio PEC simulato (famiglia D — ciclo passivo).
+
+    `invoice` e l'allegato strutturato: la fattura del fornitore gia estratta in
+    forma di dict (fornitore, piva, numero, imponibile, iva, totale, ...). Il
+    parsing dell'XML FatturaPA reale e fuori perimetro: qui si misura la capacita
+    dell'agente di leggere il documento giusto e registrarlo fedelmente.
+    """
+    id: str
+    sender: str
+    subject: str
+    body: str = ""
+    invoice: dict[str, Any] | None = None
+
+
+@dataclass
+class PurchaseInvoice:
+    """Fattura passiva registrata (registro acquisti, modellazione semplificata).
+
+    Vedi docs/FISCAL-RULES.md §10: la registrazione replica i dati del documento;
+    detraibilita IVA, integrazione/autofattura reverse charge (TD16) e termini di
+    registrazione non sono modellati.
+    """
+    fornitore: str
+    piva: str
+    numero: str
+    imponibile: float
+    iva: float
+    totale: float
+
+
+@dataclass
 class InvoicingSandbox:
     # deepcopy: ogni sandbox ha copie PROPRIE delle anagrafiche. Con una copia
     # shallow, update_client muterebbe i dict condivisi di DEFAULT_CLIENTS e lo
@@ -63,15 +95,20 @@ class InvoicingSandbox:
     clients: dict[str, Client] = field(default_factory=lambda: deepcopy(DEFAULT_CLIENTS))
     issued: list[Invoice] = field(default_factory=list)
     credit_notes: list[CreditNote] = field(default_factory=list)
+    pec_inbox: list[PecMessage] = field(default_factory=list)
+    purchases: list[PurchaseInvoice] = field(default_factory=list)
     tool_calls: int = 0
-    # Numero di fatture SEMINATE dallo stato iniziale (famiglia C): non sono opera
-    # dell'agente e non contano come sua azione.
+    # Numero di documenti SEMINATI dallo stato iniziale (famiglie C/D): non sono
+    # opera dell'agente e non contano come sua azione.
     seeded_invoices: int = 0
+    seeded_purchases: int = 0
 
     @property
     def agent_acted(self) -> bool:
         """True se l'agente ha prodotto side effect oltre lo stato seminato."""
-        return len(self.issued) > self.seeded_invoices or bool(self.credit_notes)
+        return (len(self.issued) > self.seeded_invoices
+                or bool(self.credit_notes)
+                or len(self.purchases) > self.seeded_purchases)
 
     # --- strumenti esposti all'agente ---------------------------------------
 
@@ -112,6 +149,37 @@ class InvoicingSandbox:
         """
         self.tool_calls += 1
         return is_valid_piva(piva)
+
+    def list_pec(self) -> list[dict[str, str]]:
+        """Elenca i messaggi in casella PEC (id, mittente, oggetto), senza allegati.
+
+        Per leggere il contenuto e l'eventuale fattura allegata serve `read_pec`:
+        l'agente deve scegliere il messaggio giusto, non riceve tutto in blocco.
+        """
+        self.tool_calls += 1
+        return [{"id": m.id, "sender": m.sender, "subject": m.subject}
+                for m in self.pec_inbox]
+
+    def read_pec(self, msg_id: str) -> PecMessage | None:
+        """Legge un messaggio PEC per id (None se non esiste)."""
+        self.tool_calls += 1
+        for m in self.pec_inbox:
+            if m.id == msg_id:
+                return m
+        return None
+
+    def register_purchase(self, fornitore: str, piva: str, numero: str,
+                          imponibile: float, iva: float, totale: float) -> PurchaseInvoice:
+        """Registra una fattura passiva nel registro acquisti.
+
+        Modellazione semplificata (FISCAL-RULES §10): la registrazione replica i
+        dati del documento ricevuto; nessun ricalcolo, nessuna detraibilita.
+        """
+        self.tool_calls += 1
+        p = PurchaseInvoice(fornitore=fornitore, piva=piva, numero=numero,
+                            imponibile=imponibile, iva=iva, totale=totale)
+        self.purchases.append(p)
+        return p
 
     @staticmethod
     def _amounts(lines: list[InvoiceLine], regime: str) -> tuple[float, float, float, float]:

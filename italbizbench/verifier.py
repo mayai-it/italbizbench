@@ -9,6 +9,8 @@ giudizi soggettivi: o gli importi/regime/esito SDI coincidono (entro tolleranza)
   l'anagrafica risulti corretta (expected_client_update), che l'ultima fattura
   ritrasmessa combaci (stessi controlli della famiglia B) e/o che l'ultima nota di
   credito combaci (expected_credit_note).
+- Famiglia D: ciclo passivo. L'ULTIMA fattura passiva registrata deve replicare
+  fedelmente il documento ricevuto via PEC (expected_purchase).
 """
 from __future__ import annotations
 
@@ -81,6 +83,30 @@ def _credit_note_checks(sandbox: InvoicingSandbox, o: Oracle) -> list[str]:
     return checks
 
 
+def _purchase_checks(sandbox: InvoicingSandbox, o: Oracle) -> list[str]:
+    """L'ultima fattura passiva registrata deve replicare il documento ricevuto."""
+    exp = dict(o.expected_purchase or {})
+    if not sandbox.purchases:
+        return ["nessuna fattura passiva registrata"]
+    p = sandbox.purchases[-1]
+    checks: list[str] = []
+    for f in ("fornitore", "piva", "numero"):
+        want = exp.pop(f, None)
+        if want is not None and getattr(p, f) != want:
+            checks.append(f"acquisto {f} {getattr(p, f)!r}!={want!r}")
+    for f in ("imponibile", "iva", "totale"):
+        want = exp.pop(f, None)
+        if want is None:
+            continue
+        if not isinstance(want, (int, float)):
+            checks.append(f"oracolo acquisto {f} non numerico: {want!r}")
+        elif not _close(getattr(p, f), float(want), o.tolerance):
+            checks.append(f"acquisto {f} {getattr(p, f)}!={want}")
+    for k in exp:
+        checks.append(f"campo acquisto non verificabile: {k}")
+    return checks
+
+
 def verify(scenario: Scenario, sandbox: InvoicingSandbox, action: AgentAction) -> tuple[bool, str]:
     o: Oracle = scenario.oracle
 
@@ -115,6 +141,12 @@ def verify(scenario: Scenario, sandbox: InvoicingSandbox, action: AgentAction) -
             if not sandbox.issued:
                 return False, "Nessuna fattura ritrasmessa."
             checks += _invoice_checks(sandbox.issued[-1], o)
+        ok = not checks
+        return ok, ("OK" if ok else "; ".join(checks))
+
+    # Famiglia D (ciclo passivo): l'ultima fattura passiva registrata.
+    if scenario.family == Family.D_passivo:
+        checks = _purchase_checks(sandbox, o)
         ok = not checks
         return ok, ("OK" if ok else "; ".join(checks))
 

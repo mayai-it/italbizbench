@@ -19,7 +19,7 @@ import yaml
 from .adapters import AgentAdapter, ReferenceAgent
 from .costs import CostTable, compute_cost_eur, load_cost_table
 from .models import Scenario, UsageStats, Verdict
-from .sandbox import Invoice, InvoicingSandbox
+from .sandbox import Invoice, InvoicingSandbox, PecMessage, PurchaseInvoice
 from .scoring import aggregate, score_task
 
 # ID modello di default per vendor — verificati sulla documentazione ufficiale dei
@@ -108,6 +108,12 @@ def run(path: Path | Sequence[Path], agent: AgentAdapter, save_dir: Path | None 
         for inv in sc.initial_state.get("issued_invoices", []):
             sandbox.issued.append(Invoice(**inv))
         sandbox.seeded_invoices = len(sandbox.issued)
+        # Famiglia D: semina la casella PEC e le fatture passive gia registrate.
+        for msg in sc.initial_state.get("pec_inbox", []):
+            sandbox.pec_inbox.append(PecMessage(**msg))
+        for pur in sc.initial_state.get("purchases", []):
+            sandbox.purchases.append(PurchaseInvoice(**pur))
+        sandbox.seeded_purchases = len(sandbox.purchases)
         action = agent.run(sc, sandbox)
         verdicts.append(score_task(sc, sandbox, action, usage=_run_usage(agent, cost_table)))
         # Salva il transcript dell'agente (per riproducibilita / debug dei run reali).

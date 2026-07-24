@@ -1,0 +1,36 @@
+id: D-002-base-inbox-con-rumore
+family: D-passivo
+difficulty: base
+title: Registrazione con messaggi non pertinenti in casella
+prompt: 'In casella PEC ci sono piu messaggi: una comunicazione di servizio e una fattura da "Beta
+  Cancelleria Snc" (n. 88/2026, 850 euro + IVA 22%). Individua il messaggio con la fattura e registrala
+  nel registro acquisti.'
+initial_state:
+  action: register_purchase
+  pec_id: PEC-011
+  pec_inbox:
+  - id: PEC-010
+    sender: noreply@pec.gestore.it
+    subject: Rinnovo casella PEC
+    body: La sua casella PEC e stata rinnovata.
+  - id: PEC-011
+    sender: amministrazione@pec.betacancelleria.it
+    subject: Fattura n. 88/2026
+    body: Trasmettiamo la fattura n. 88/2026.
+    invoice:
+      fornitore: Beta Cancelleria Snc
+      piva: '33300022234'
+      numero: 88/2026
+      imponibile: 850.0
+      aliquota_iva: 22.0
+      iva: 187.0
+      totale: 1037.0
+oracle:
+  expected_purchase:
+    fornitore: Beta Cancelleria Snc
+    piva: '33300022234'
+    numero: 88/2026
+    imponibile: 850.0
+    iva: 187.0
+    totale: 1037.0
+max_tool_calls: 8

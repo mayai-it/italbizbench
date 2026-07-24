@@ -1,0 +1,37 @@
+id: D-003-base-fattura-multiriga
+family: D-passivo
+difficulty: base
+title: Registrazione di una fattura fornitore multiriga
+prompt: 'Via PEC e arrivata la fattura n. 2026-0032 di "Gamma Edile Srl": due righe (300 e 200 euro)
+  + IVA 22% sul totale. Registra la fattura nel registro acquisti con imponibile, IVA e totale del
+  documento.'
+initial_state:
+  action: register_purchase
+  pec_id: PEC-020
+  pec_inbox:
+  - id: PEC-020
+    sender: gammaedile@pec.it
+    subject: Fattura 2026-0032
+    body: In allegato la fattura n. 2026-0032.
+    invoice:
+      fornitore: Gamma Edile Srl
+      piva: '33300033348'
+      numero: 2026-0032
+      imponibile: 500.0
+      aliquota_iva: 22.0
+      iva: 110.0
+      totale: 610.0
+      righe:
+      - descrizione: Sabbia
+        importo: 300.0
+      - descrizione: Cemento
+        importo: 200.0
+oracle:
+  expected_purchase:
+    fornitore: Gamma Edile Srl
+    piva: '33300033348'
+    numero: 2026-0032
+    imponibile: 500.0
+    iva: 110.0
+    totale: 610.0
+max_tool_calls: 8

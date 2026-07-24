@@ -7,6 +7,18 @@ All notable changes to this project are documented here. Format based on
 ## [Unreleased]
 
 ### Added
+- **Famiglia D — ciclo passivo via PEC (scaffold, 8 task base).** Casella PEC simulata
+  (`PecMessage`, tool `list_pec`/`read_pec`: l'elenco non espone gli allegati, il
+  documento va aperto) e registro acquisti (`PurchaseInvoice`, tool
+  `register_purchase`: la registrazione REPLICA i dati del documento, nessun
+  ricalcolo). Verifier D: l'ultima fattura passiva registrata deve combaciare con il
+  documento ricevuto (`expected_purchase`). Task base: multi-aliquota 4/10/22%,
+  esente N4, decimali, rumore in casella, due fatture dello stesso fornitore.
+  Semina di `pec_inbox`/`purchases` dallo stato iniziale (`seeded_purchases` esclude
+  i documenti seminati dalle azioni dell'agente, come per la famiglia C). Regola §10
+  in FISCAL-RULES (⚠️ approssimazioni dichiarate: parsing XML FatturaPA fuori
+  perimetro, detraibilità art. 19, TD16–TD19 e termini art. 25 non modellati).
+  Nuovi tool esposti anche all'agente LLM.
 - **Famiglia C a regime: 40 task (13 base, 16 tricky, 11 adversarial).** Aggiunti 32
   task al scaffold: ritrasmissioni con eccezioni fiscali (esente con soglia bollo
   77,47/77,48, reverse charge, split payment PA, flag estero mancante, censimento PA

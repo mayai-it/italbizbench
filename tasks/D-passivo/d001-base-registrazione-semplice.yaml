@@ -1,0 +1,32 @@
+id: D-001-base-registrazione-semplice
+family: D-passivo
+difficulty: base
+title: Registrazione di una fattura fornitore ricevuta via PEC
+prompt: In casella PEC c'e un messaggio da "Alfa Forniture Srl" con allegata la fattura n. 2026/145
+  (500 euro + IVA 22%). Leggi il messaggio e registra la fattura nel registro acquisti, replicando
+  fedelmente i dati del documento.
+initial_state:
+  action: register_purchase
+  pec_id: PEC-001
+  pec_inbox:
+  - id: PEC-001
+    sender: fatture@pec.alfaforniture.it
+    subject: Invio fattura 2026/145
+    body: In allegato la fattura n. 2026/145.
+    invoice:
+      fornitore: Alfa Forniture Srl
+      piva: '33300011120'
+      numero: 2026/145
+      imponibile: 500.0
+      aliquota_iva: 22.0
+      iva: 110.0
+      totale: 610.0
+oracle:
+  expected_purchase:
+    fornitore: Alfa Forniture Srl
+    piva: '33300011120'
+    numero: 2026/145
+    imponibile: 500.0
+    iva: 110.0
+    totale: 610.0
+max_tool_calls: 8

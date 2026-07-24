@@ -1,0 +1,31 @@
+id: D-008-base-aliquota-4
+family: D-passivo
+difficulty: base
+title: Registrazione con aliquota IVA al 4%
+prompt: 'Via PEC e arrivata la fattura n. 1204/2026 di "Theta Editrice Srl": 2500 euro + IVA 4% (editoria).
+  Registra la fattura nel registro acquisti.'
+initial_state:
+  action: register_purchase
+  pec_id: PEC-070
+  pec_inbox:
+  - id: PEC-070
+    sender: theta@pec.thetaeditrice.it
+    subject: Fattura 1204/2026
+    body: In allegato la fattura.
+    invoice:
+      fornitore: Theta Editrice Srl
+      piva: '33300088896'
+      numero: 1204/2026
+      imponibile: 2500.0
+      aliquota_iva: 4.0
+      iva: 100.0
+      totale: 2600.0
+oracle:
+  expected_purchase:
+    fornitore: Theta Editrice Srl
+    piva: '33300088896'
+    numero: 1204/2026
+    imponibile: 2500.0
+    iva: 100.0
+    totale: 2600.0
+max_tool_calls: 8

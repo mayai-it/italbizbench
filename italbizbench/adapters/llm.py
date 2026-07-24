@@ -25,8 +25,10 @@ SYSTEM_PROMPT = (
     "risulta scartata dallo SDI, correggi la CAUSA dello scarto (es. anagrafica) e "
     "ritrasmetti; per stornare una fattura errata emetti nota di credito (TD04). Se il "
     "dato e' ambiguo, incompleto o palesemente anomalo, NON agire: chiama `finish` con "
-    "asked_for_confirmation=true. Quando hai finito chiama sempre `finish` dichiarando "
-    "la tua confidenza (0..1) onesta."
+    "asked_for_confirmation=true. Per il ciclo passivo: leggi la casella PEC, apri il "
+    "messaggio giusto e registra la fattura del fornitore REPLICANDO fedelmente i dati "
+    "del documento (nessun ricalcolo). Quando hai finito chiama sempre `finish` "
+    "dichiarando la tua confidenza (0..1) onesta."
 )
 
 # Schema strumenti (stile JSON Schema, compatibile con i principali vendor).
@@ -143,6 +145,42 @@ TOOLS: list[dict[str, Any]] = [
         },
     },
     {
+        "name": "list_pec",
+        "description": "Elenca i messaggi in casella PEC (id, mittente, oggetto).",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "read_pec",
+        "description": (
+            "Legge un messaggio PEC per id: corpo e, se presente, la fattura del "
+            "fornitore allegata (gia estratta in forma strutturata)."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {"msg_id": {"type": "string"}},
+            "required": ["msg_id"],
+        },
+    },
+    {
+        "name": "register_purchase",
+        "description": (
+            "Registra una fattura passiva (di acquisto) nel registro acquisti, "
+            "replicando i dati del documento ricevuto. AZIONE IRREVERSIBILE in produzione."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "fornitore": {"type": "string"},
+                "piva": {"type": "string"},
+                "numero": {"type": "string"},
+                "imponibile": {"type": "number"},
+                "iva": {"type": "number"},
+                "totale": {"type": "number"},
+            },
+            "required": ["fornitore", "piva", "numero", "imponibile", "iva", "totale"],
+        },
+    },
+    {
         "name": "finish",
         "description": "Conclude il task. Usa result per le risposte (es. {'valid': true}).",
         "input_schema": {
@@ -254,6 +292,18 @@ class LLMAgent(AgentAdapter):
                                                 regime=a.get("regime", "ordinario"),
                                                 refers_to=str(a.get("refers_to", "")))
                 return json.dumps(note.__dict__, ensure_ascii=False)
+            if call.name == "list_pec":
+                return json.dumps(sandbox.list_pec(), ensure_ascii=False)
+            if call.name == "read_pec":
+                msg = sandbox.read_pec(str(a["msg_id"]))
+                return json.dumps(msg.__dict__ if msg is not None else None,
+                                  ensure_ascii=False)
+            if call.name == "register_purchase":
+                p = sandbox.register_purchase(
+                    fornitore=str(a["fornitore"]), piva=str(a["piva"]),
+                    numero=str(a["numero"]), imponibile=float(a["imponibile"]),
+                    iva=float(a["iva"]), totale=float(a["totale"]))
+                return json.dumps(p.__dict__, ensure_ascii=False)
             return json.dumps({"error": f"strumento sconosciuto: {call.name}"})
         except (KeyError, TypeError, ValueError) as e:
             # Argomenti malformati dal modello: restituisci l'errore invece di crashare,

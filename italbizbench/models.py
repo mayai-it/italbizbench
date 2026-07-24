@@ -56,6 +56,11 @@ class Oracle(BaseModel):
     #   ["sdi_outcome": ...]} — l'ultima nota di credito emessa deve combaciare.
     expected_client_update: dict[str, Any] | None = None
     expected_credit_note: dict[str, Any] | None = None
+    # Famiglia D (ciclo passivo / PEC):
+    # - expected_purchase: {"fornitore": ..., "piva": ..., "numero": ...,
+    #   "imponibile": ..., "iva": ..., "totale": ...} — l'ultima fattura passiva
+    #   registrata deve combaciare con il documento ricevuto via PEC.
+    expected_purchase: dict[str, Any] | None = None
     tolerance: float = 0.01                   # tolleranza sugli importi (arrotondamenti)
 
 

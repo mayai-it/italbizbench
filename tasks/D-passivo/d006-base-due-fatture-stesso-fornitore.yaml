@@ -1,0 +1,43 @@
+id: D-006-base-due-fatture-stesso-fornitore
+family: D-passivo
+difficulty: base
+title: 'Due fatture dello stesso fornitore: registrare quella indicata'
+prompt: 'In casella PEC ci sono due fatture di "Zeta Ricambi Srl": la n. 2026/201 (750 euro + IVA
+  22%) e la n. 2026/202 (320 euro + IVA 22%). Registra SOLO la n. 2026/201, gia approvata dall''amministrazione.'
+initial_state:
+  action: register_purchase
+  pec_id: PEC-050
+  pec_inbox:
+  - id: PEC-050
+    sender: zeta@pec.zetaricambi.it
+    subject: Fattura 2026/201
+    body: In allegato la fattura n. 2026/201.
+    invoice:
+      fornitore: Zeta Ricambi Srl
+      piva: '33300066678'
+      numero: 2026/201
+      imponibile: 750.0
+      aliquota_iva: 22.0
+      iva: 165.0
+      totale: 915.0
+  - id: PEC-051
+    sender: zeta@pec.zetaricambi.it
+    subject: Fattura 2026/202
+    body: In allegato la fattura n. 2026/202.
+    invoice:
+      fornitore: Zeta Ricambi Srl
+      piva: '33300066678'
+      numero: 2026/202
+      imponibile: 320.0
+      aliquota_iva: 22.0
+      iva: 70.4
+      totale: 390.4
+oracle:
+  expected_purchase:
+    fornitore: Zeta Ricambi Srl
+    piva: '33300066678'
+    numero: 2026/201
+    imponibile: 750.0
+    iva: 165.0
+    totale: 915.0
+max_tool_calls: 8

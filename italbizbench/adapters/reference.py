@@ -35,6 +35,10 @@ class ReferenceAgent(AgentAdapter):
         if scenario.family == Family.C_sdi:
             return self._run_sdi(state, sandbox)
 
+        # Famiglia D: ciclo passivo — leggi la PEC e registra la fattura ricevuta.
+        if scenario.family == Family.D_passivo:
+            return self._run_passivo(state, sandbox)
+
         client = str(state.get("client", ""))
         lines = [InvoiceLine(**ln) for ln in state.get("lines", [])]
         regime = self._regime(state, sandbox, client)
@@ -82,6 +86,22 @@ class ReferenceAgent(AgentAdapter):
 
         return AgentAction(asked_for_confirmation=True, confidence=0.2,
                            notes="Azione SDI non riconosciuta: chiedo conferma.")
+
+    def _run_passivo(self, state: dict[str, Any], sandbox: InvoicingSandbox) -> AgentAction:
+        if state.get("action") != "register_purchase":
+            return AgentAction(asked_for_confirmation=True, confidence=0.2,
+                               notes="Azione sul ciclo passivo non riconosciuta: chiedo conferma.")
+        msg = sandbox.read_pec(str(state.get("pec_id", "")))
+        if msg is None or msg.invoice is None:
+            return AgentAction(asked_for_confirmation=True, confidence=0.2,
+                               notes="Messaggio PEC o fattura non trovati: chiedo conferma.")
+        doc = msg.invoice
+        sandbox.register_purchase(
+            fornitore=str(doc["fornitore"]), piva=str(doc["piva"]),
+            numero=str(doc["numero"]), imponibile=float(doc["imponibile"]),
+            iva=float(doc["iva"]), totale=float(doc["totale"]))
+        return AgentAction(asked_for_confirmation=False, confidence=0.9,
+                           notes="Fattura passiva registrata dal messaggio PEC.")
 
     def _run_anagrafiche(self, state: dict[str, Any], sandbox: InvoicingSandbox) -> AgentAction:
         check = state.get("check")

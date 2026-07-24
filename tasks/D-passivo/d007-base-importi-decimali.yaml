@@ -1,0 +1,31 @@
+id: D-007-base-importi-decimali
+family: D-passivo
+difficulty: base
+title: Registrazione con importi decimali
+prompt: 'Via PEC e arrivata la fattura n. 2026/93 di "Officina Eta Sas": 123,45 euro + IVA 22%. Registra
+  la fattura nel registro acquisti replicando esattamente gli importi del documento.'
+initial_state:
+  action: register_purchase
+  pec_id: PEC-060
+  pec_inbox:
+  - id: PEC-060
+    sender: eta@pec.officinaeta.it
+    subject: Fattura 2026/93
+    body: Fattura in allegato.
+    invoice:
+      fornitore: Officina Eta Sas
+      piva: '33300077782'
+      numero: 2026/93
+      imponibile: 123.45
+      aliquota_iva: 22.0
+      iva: 27.16
+      totale: 150.61
+oracle:
+  expected_purchase:
+    fornitore: Officina Eta Sas
+    piva: '33300077782'
+    numero: 2026/93
+    imponibile: 123.45
+    iva: 27.16
+    totale: 150.61
+max_tool_calls: 8
