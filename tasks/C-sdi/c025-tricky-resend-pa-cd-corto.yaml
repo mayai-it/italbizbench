@@ -1,0 +1,40 @@
+id: C-025-tricky-resend-pa-cd-corto
+family: C-sdi
+difficulty: tricky
+title: 'Scarto 00312 su PA: codice ufficio di 4 caratteri'
+prompt: 'La fattura al "Comune di Rocca" (PA, 3200 euro + IVA 22%) e stata scartata (00312): il codice
+  ufficio "UF12" ha 4 caratteri. Quello corretto su IPA e "UF1200". Correggi e ritrasmetti con il
+  regime corretto per la PA.'
+initial_state:
+  action: fix_and_resend
+  client: Comune di Rocca
+  extra_clients:
+    Comune di Rocca:
+      piva: '88800077781'
+      codice_destinatario: UF12
+      pa: true
+  issued_invoices:
+  - client: Comune di Rocca
+    imponibile: 3200.0
+    iva: 704.0
+    totale: 3200.0
+    regime: split_payment
+    bollo: 0.0
+    sdi_outcome: scarto:00312
+  fix:
+    codice_destinatario: UF1200
+  lines:
+  - descrizione: Fornitura alla PA
+    quantita: 1.0
+    prezzo_unitario: 3200.0
+    aliquota_iva: 22.0
+oracle:
+  expected_client_update:
+    client: Comune di Rocca
+    codice_destinatario: UF1200
+  expected_regime: split_payment
+  expected_imponibile: 3200.0
+  expected_iva: 704.0
+  expected_totale: 3200.0
+  expected_sdi_outcome: accettata
+max_tool_calls: 8

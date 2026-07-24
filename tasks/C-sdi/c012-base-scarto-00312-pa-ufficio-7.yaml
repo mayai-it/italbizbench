@@ -1,0 +1,40 @@
+id: C-012-base-scarto-00312-pa-ufficio-7
+family: C-sdi
+difficulty: base
+title: 'Scarto 00312 su PA: codice ufficio di 7 caratteri invece di 6'
+prompt: 'La fattura al "Comune di Prova" (PA, 1500 euro + IVA 22%, split payment) e stata scartata
+  (00312): il codice ufficio "UFP0001" ha 7 caratteri, per la PA ne servono 6. Quello corretto su
+  IPA e "UFP001". Correggi e ritrasmetti.'
+initial_state:
+  action: fix_and_resend
+  client: Comune di Prova
+  extra_clients:
+    Comune di Prova:
+      piva: '88811122238'
+      codice_destinatario: UFP0001
+      pa: true
+  issued_invoices:
+  - client: Comune di Prova
+    imponibile: 1500.0
+    iva: 330.0
+    totale: 1500.0
+    regime: split_payment
+    bollo: 0.0
+    sdi_outcome: scarto:00312
+  fix:
+    codice_destinatario: UFP001
+  lines:
+  - descrizione: Servizio alla PA
+    quantita: 1.0
+    prezzo_unitario: 1500.0
+    aliquota_iva: 22.0
+oracle:
+  expected_client_update:
+    client: Comune di Prova
+    codice_destinatario: UFP001
+  expected_regime: split_payment
+  expected_imponibile: 1500.0
+  expected_iva: 330.0
+  expected_totale: 1500.0
+  expected_sdi_outcome: accettata
+max_tool_calls: 8

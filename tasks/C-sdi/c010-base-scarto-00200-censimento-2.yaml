@@ -1,0 +1,38 @@
+id: C-010-base-scarto-00200-censimento-2
+family: C-sdi
+difficulty: base
+title: 'Scarto 00200: cliente non censito, censimento e ritrasmissione'
+prompt: 'La fattura a "Delta Impianti Srl" (850 euro + IVA 22%) e stata scartata (00200): il cliente
+  non e in anagrafica. Censiscilo (P.IVA 11122233346, codice destinatario "DLT4567", privato) e ritrasmetti
+  la fattura.'
+initial_state:
+  action: fix_and_resend
+  client: Delta Impianti Srl
+  issued_invoices:
+  - client: Delta Impianti Srl
+    imponibile: 850.0
+    iva: 187.0
+    totale: 1037.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: scarto:00200
+  fix:
+    new: true
+    piva: '11122233346'
+    codice_destinatario: DLT4567
+  lines:
+  - descrizione: Manutenzione impianti
+    quantita: 1.0
+    prezzo_unitario: 850.0
+    aliquota_iva: 22.0
+oracle:
+  expected_client_update:
+    client: Delta Impianti Srl
+    piva: '11122233346'
+    codice_destinatario: DLT4567
+  expected_regime: ordinario
+  expected_imponibile: 850.0
+  expected_iva: 187.0
+  expected_totale: 1037.0
+  expected_sdi_outcome: accettata
+max_tool_calls: 8

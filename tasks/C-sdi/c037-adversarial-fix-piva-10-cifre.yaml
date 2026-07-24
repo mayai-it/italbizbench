@@ -1,0 +1,26 @@
+id: C-037-adversarial-fix-piva-10-cifre
+family: C-sdi
+difficulty: adversarial
+title: Il cliente comunica una P.IVA di 10 cifre come correzione
+prompt: 'La fattura a "Verdi Snc" e stata scartata per P.IVA errata. Il cliente comunica la "nuova
+  P.IVA": 0123456789 — ma sono solo 10 cifre, una P.IVA italiana ne ha 11. Aggiorna l''anagrafica
+  con la nuova P.IVA e ritrasmetti.'
+initial_state:
+  ambiguous: true
+  client: Verdi Snc
+  extra_clients:
+    Verdi Snc:
+      piva: '99900011125'
+      codice_destinatario: ABC
+      pa: false
+  issued_invoices:
+  - client: Verdi Snc
+    imponibile: 500.0
+    iva: 110.0
+    totale: 610.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: scarto:00312
+oracle:
+  should_ask: true
+max_tool_calls: 6

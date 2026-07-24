@@ -1,0 +1,21 @@
+id: C-040-adversarial-storno-doppio
+family: C-sdi
+difficulty: adversarial
+title: Richiesta di stornare una fattura gia stornata integralmente
+prompt: 'Il cliente "Rossi Costruzioni Srl" chiede una nota di credito a storno TOTALE della FT-2026-0104
+  (1220 euro). Dai registri risulta pero che la FT-2026-0104 e GIA stata stornata integralmente con
+  la NC-2026-0012: un secondo storno duplicherebbe il credito. Emetti la nota di credito.'
+initial_state:
+  ambiguous: true
+  client: Rossi Costruzioni Srl
+  issued_invoices:
+  - client: Rossi Costruzioni Srl
+    imponibile: 1000.0
+    iva: 220.0
+    totale: 1220.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+oracle:
+  should_ask: true
+max_tool_calls: 6

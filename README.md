@@ -24,7 +24,7 @@ Part of [MayAI](https://mayai.it).
 
 | | |
 |---|---|
-| **Tasks** | **88** — family A (40), family B (40), family C (8, scaffold) |
+| **Tasks** | **120** — family A (40), family B (40), family C (40) |
 | **Difficulty tiers** | `base` (clean), `tricky` (fiscal edge case), `adversarial` (dirty/ambiguous — the agent *should* stop and ask) |
 | **Scoring axes** | correctness · efficiency (tool calls + tokens + €) · safety · calibration (Brier, ECE, reliability curve) |
 | **Statistics** | pass-rate with **bootstrap and Wilson 95% CIs**, per-difficulty breakdown |
@@ -84,11 +84,11 @@ Real output of the current suite:
 
 ```
 --- Scorecard ---
-Task: 88  Pass-rate: 1.0 (IC95% bootstrap (1.0, 1.0), Wilson (0.958, 1.0))
+Task: 120  Pass-rate: 1.0 (IC95% bootstrap (1.0, 1.0), Wilson (0.969, 1.0))
 Efficienza media: 1.0  Sicurezza media: 1.0
 Token: 0 in / 0 out  Costo: EUR 0.0
-Calibrazione (su 66 predizioni): Brier=0.008  ECE=0.0864
-Astensioni: 22 (accuratezza: 1.0)
+Calibrazione (su 87 predizioni): Brier=0.0084  ECE=0.0897
+Astensioni: 33 (accuratezza: 1.0)
 Per difficolta: {'adversarial': 1.0, 'base': 1.0, 'tricky': 1.0}
 ```
 
@@ -100,7 +100,7 @@ Each task is a YAML file: scenario + sandbox seed + deterministic oracle.
 |---|---|---|
 | **A — Anagrafiche / validation** | ✅ 40 tasks | P.IVA check digit (valid, invalid, transposed digits, wrong length, foreign prefix, leading zero, repdigit), recipient codes (private 7-char, PA 6-char, foreign `XXXXXXX`), missing clients, dirty/ambiguous data |
 | **B — Invoice issuance** | ✅ 40 tasks | All VAT rates (4/5/10/22%), multi-line and fractional quantities, rounding, reverse charge (no stamp duty), split payment to PA, exempt art.10 with the €77.47 stamp-duty boundary tested at 77.47 vs 77.48, SDI rejections 00312/00200, 11 adversarial traps |
-| **C — SDI handling** | ✅ 8 tasks (scaffold) | Rejection → fix registry → resend (00312 private/PA/exempt, 00200 with client onboarding), credit notes TD04 (total, partial, split payment) |
+| **C — SDI handling** | ✅ 40 tasks | Rejection → fix registry → resend (00312 private/PA/exempt/reverse charge/foreign flag, 00200 with client onboarding incl. PA), stamp-duty boundary on resend (77.47 vs 77.48), double-field fixes, credit notes TD04 (total, partial, multi-rate, split payment, exempt, reverse charge), 11 adversarial traps (contradictory codes, forced resend, double credit note, unknown rejection code) |
 | D — Inbound / PEC | roadmap | Read PEC, extract invoice, register supplier doc |
 | E — Reconciliation | roadmap | Match payments↔invoices, VAT period, deadlines |
 | F — Orchestration | roadmap | Multi-step "close the month" |
@@ -176,7 +176,7 @@ How many tasks before the CIs can tell two agents apart? The CI half-width scale
 |---|---|---|
 | 20 | ±0.18 | ~0.35 — almost nothing |
 | 40 | ±0.12 | ~0.25 |
-| **88 (current suite)** | **±0.09** | **~0.18** |
+| **120 (current suite)** | **±0.07** | **~0.14** |
 | 300 | ±0.045 | ~0.09 (≈10 points) |
 
 So the current suite separates *clearly different* agents (e.g. 0.95 vs 0.75) but
@@ -265,7 +265,7 @@ italbizbench/
     openai_client.py   # OpenAI-compatible client: GPT and local models (lazy import)
     hints.py           # actionable error messages for bad model IDs / unreachable APIs
 tasks/
-  A-anagrafiche/       # 40 tasks  B-emissione/  # 40 tasks  C-sdi/  # 8 tasks
+  A-anagrafiche/       # 40 tasks  B-emissione/  # 40 tasks  C-sdi/  # 40 tasks
 tasks-private/         # held-out set (git-ignored; README only)
 costs.yaml             # per-model prices (EUR per 1M tokens), fully editable
 docs/FISCAL-RULES.md   # every fiscal rule with source + validation status
@@ -302,10 +302,10 @@ CI runs the same three on Python 3.11 / 3.12 / 3.13. See
 
 - **v0.1** ✅ — families A+B (20 tasks), reference agent, LLM adapters, 4-axis scoring
   with bootstrap CIs.
-- **v0.2 (in progress)** — done: 88 tasks, real calibration (Brier/ECE/reliability),
-  token+€ cost axis, Wilson CIs, static leaderboard generator, private-set structure,
-  family C scaffold. Next: expand family C, first published run of 3–4 real LLM
-  agents, fiscal rules reviewed by an accountant.
+- **v0.2 (in progress)** — done: 120 tasks (family C at parity with A and B),
+  real calibration (Brier/ECE/reliability), token+€ cost axis, Wilson CIs, static
+  leaderboard generator, private-set structure. Next: first published run of 3–4
+  real LLM agents, fiscal rules reviewed by an accountant.
 - **v0.3** — families D (PEC/inbound) and E (reconciliation).
 - **v1.0** — family F (multi-step orchestration), public leaderboard, dated
   `v2026.x` rule releases.

@@ -1,0 +1,32 @@
+id: C-013-base-nota-credito-parziale-2
+family: C-sdi
+difficulty: base
+title: Nota di credito parziale su una riga da 200 euro
+prompt: Sulla fattura FT-2026-0075 a "Rossi Costruzioni Srl" (800 euro + IVA 22%) una riga da 200
+  euro + IVA 22% e stata addebitata due volte. Emetti nota di credito PARZIALE per stornare solo
+  quella riga.
+initial_state:
+  action: credit_note
+  client: Rossi Costruzioni Srl
+  refers_to: FT-2026-0075
+  issued_invoices:
+  - client: Rossi Costruzioni Srl
+    imponibile: 800.0
+    iva: 176.0
+    totale: 976.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+  credit_lines:
+  - descrizione: Storno riga duplicata FT-2026-0075
+    quantita: 1.0
+    prezzo_unitario: 200.0
+    aliquota_iva: 22.0
+oracle:
+  expected_credit_note:
+    client: Rossi Costruzioni Srl
+    imponibile: 200.0
+    iva: 44.0
+    totale: 244.0
+    sdi_outcome: accettata
+max_tool_calls: 8

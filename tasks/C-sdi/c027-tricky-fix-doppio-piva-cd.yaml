@@ -1,0 +1,42 @@
+id: C-027-tricky-fix-doppio-piva-cd
+family: C-sdi
+difficulty: tricky
+title: 'Scarto con doppio errore: P.IVA incompleta e codice destinatario errato'
+prompt: 'La fattura a "Lambda Logistica Srl" (900 euro + IVA 22%) e stata scartata: in anagrafica
+  la P.IVA "1234567890" ha solo 10 cifre e il codice destinatario "LL1" e invalido. Il cliente comunica
+  P.IVA corretta 44455566677 e codice "LAMBDA7". Correggi ENTRAMBI i campi e ritrasmetti.'
+initial_state:
+  action: fix_and_resend
+  client: Lambda Logistica Srl
+  extra_clients:
+    Lambda Logistica Srl:
+      piva: '1234567890'
+      codice_destinatario: LL1
+      pa: false
+  issued_invoices:
+  - client: Lambda Logistica Srl
+    imponibile: 900.0
+    iva: 198.0
+    totale: 1098.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: scarto:00312
+  fix:
+    piva: '44455566677'
+    codice_destinatario: LAMBDA7
+  lines:
+  - descrizione: Trasporti
+    quantita: 1.0
+    prezzo_unitario: 900.0
+    aliquota_iva: 22.0
+oracle:
+  expected_client_update:
+    client: Lambda Logistica Srl
+    piva: '44455566677'
+    codice_destinatario: LAMBDA7
+  expected_regime: ordinario
+  expected_imponibile: 900.0
+  expected_iva: 198.0
+  expected_totale: 1098.0
+  expected_sdi_outcome: accettata
+max_tool_calls: 8

@@ -1,0 +1,42 @@
+id: C-015-tricky-resend-esente-soglia-esatta
+family: C-sdi
+difficulty: tricky
+title: 'Ritrasmissione esente a 77,47 euro esatti: bollo NON dovuto'
+prompt: 'La fattura ESENTE art.10 da 77,47 euro al "Poliambulatorio Delta" e stata scartata (00312):
+  codice destinatario "PD1" non valido. Quello corretto e "POLDEL7". Correggi, ritrasmetti e valuta
+  il bollo: e dovuto solo SOPRA 77,47 euro.'
+initial_state:
+  action: fix_and_resend
+  client: Poliambulatorio Delta
+  extra_clients:
+    Poliambulatorio Delta:
+      piva: '66600033345'
+      codice_destinatario: PD1
+      pa: false
+  issued_invoices:
+  - client: Poliambulatorio Delta
+    imponibile: 77.47
+    iva: 0.0
+    totale: 77.47
+    regime: esente
+    bollo: 0.0
+    sdi_outcome: scarto:00312
+  fix:
+    codice_destinatario: POLDEL7
+  lines:
+  - descrizione: Prestazione esente art.10
+    quantita: 1.0
+    prezzo_unitario: 77.47
+    aliquota_iva: 0.0
+    natura: N4
+  esente: true
+oracle:
+  expected_client_update:
+    client: Poliambulatorio Delta
+    codice_destinatario: POLDEL7
+  expected_regime: esente
+  expected_imponibile: 77.47
+  expected_iva: 0.0
+  expected_totale: 77.47
+  expected_sdi_outcome: accettata
+max_tool_calls: 8

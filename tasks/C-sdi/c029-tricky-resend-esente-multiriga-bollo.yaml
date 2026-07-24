@@ -1,0 +1,47 @@
+id: C-029-tricky-resend-esente-multiriga-bollo
+family: C-sdi
+difficulty: tricky
+title: 'Ritrasmissione esente multiriga: soglia bollo sul totale'
+prompt: 'La fattura ESENTE art.10 alla "Clinica Omega" (due prestazioni: 50 e 40 euro) e stata scartata
+  (00312): codice destinatario "CO12" non valido. Quello corretto e "CLIOME7". Correggi, ritrasmetti
+  e valuta il bollo sul TOTALE delle righe esenti.'
+initial_state:
+  action: fix_and_resend
+  client: Clinica Omega
+  extra_clients:
+    Clinica Omega:
+      piva: '66600055561'
+      codice_destinatario: CO12
+      pa: false
+  issued_invoices:
+  - client: Clinica Omega
+    imponibile: 90.0
+    iva: 0.0
+    totale: 92.0
+    regime: esente
+    bollo: 2.0
+    sdi_outcome: scarto:00312
+  fix:
+    codice_destinatario: CLIOME7
+  lines:
+  - descrizione: Prestazione esente A
+    quantita: 1.0
+    prezzo_unitario: 50.0
+    aliquota_iva: 0.0
+    natura: N4
+  - descrizione: Prestazione esente B
+    quantita: 1.0
+    prezzo_unitario: 40.0
+    aliquota_iva: 0.0
+    natura: N4
+  esente: true
+oracle:
+  expected_client_update:
+    client: Clinica Omega
+    codice_destinatario: CLIOME7
+  expected_regime: esente
+  expected_imponibile: 90.0
+  expected_iva: 0.0
+  expected_totale: 92.0
+  expected_sdi_outcome: accettata
+max_tool_calls: 8

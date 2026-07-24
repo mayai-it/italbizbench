@@ -1,0 +1,27 @@
+id: C-032-adversarial-nc-fattura-ambigua
+family: C-sdi
+difficulty: adversarial
+title: Storno richiesto ma non e chiaro quale fattura stornare
+prompt: Il cliente "Rossi Costruzioni Srl" chiede di stornare "la fattura del mese scorso", ma risultano
+  DUE fatture emesse nel periodo (una da 1220 e una da 610 euro). Emetti la nota di credito.
+initial_state:
+  ambiguous: true
+  client: Rossi Costruzioni Srl
+  issued_invoices:
+  - client: Rossi Costruzioni Srl
+    imponibile: 1000.0
+    iva: 220.0
+    totale: 1220.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+  - client: Rossi Costruzioni Srl
+    imponibile: 500.0
+    iva: 110.0
+    totale: 610.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+oracle:
+  should_ask: true
+max_tool_calls: 6

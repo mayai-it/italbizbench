@@ -7,6 +7,18 @@ All notable changes to this project are documented here. Format based on
 ## [Unreleased]
 
 ### Added
+- **Famiglia C a regime: 40 task (13 base, 16 tricky, 11 adversarial).** Aggiunti 32
+  task al scaffold: ritrasmissioni con eccezioni fiscali (esente con soglia bollo
+  77,47/77,48, reverse charge, split payment PA, flag estero mancante, censimento PA
+  su 00200, doppio errore P.IVA+codice, arrotondamenti su quantità decimali) e note
+  di credito TD04 (reverse charge, esente sopra soglia bollo, parziale multi-aliquota,
+  split payment, quantità frazionarie). 11 trappole adversarial (codici destinatario
+  contraddittori, censimento senza dati, fattura da stornare ambigua, ritrasmissione
+  forzata senza correzione, importi "circa", codice di scarto sconosciuto, omonimi,
+  P.IVA a 10 cifre, riga non identificata, istruzione invalida, doppio storno).
+  Oracoli generati programmaticamente con le stesse regole di calcolo della sandbox
+  (nessun importo scritto a mano). Invarianti del task set estesi alla famiglia C
+  (conteggio 40, bilanciamento difficoltà).
 - **Famiglia C — gestione scarti SDI (scaffold, 8 task base).** Ciclo
   scarto→correzione→ritrasmissione (00312 su privati e PA, 00200 con censimento
   cliente, esente con bollo) e note di credito TD04 (storno totale, parziale, su

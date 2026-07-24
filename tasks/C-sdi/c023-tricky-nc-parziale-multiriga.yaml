@@ -1,0 +1,36 @@
+id: C-023-tricky-nc-parziale-multiriga
+family: C-sdi
+difficulty: tricky
+title: Nota di credito parziale su due righe con aliquote diverse
+prompt: 'Sulla fattura FT-2026-0088 a "Rossi Costruzioni Srl" vanno stornate due righe addebitate
+  per errore: 300 euro al 22% e 200 euro al 10%. Emetti nota di credito PARZIALE per le sole due
+  righe.'
+initial_state:
+  action: credit_note
+  client: Rossi Costruzioni Srl
+  refers_to: FT-2026-0088
+  issued_invoices:
+  - client: Rossi Costruzioni Srl
+    imponibile: 2100.0
+    iva: 390.0
+    totale: 2490.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+  credit_lines:
+  - descrizione: Storno riga 22% FT-2026-0088
+    quantita: 1.0
+    prezzo_unitario: 300.0
+    aliquota_iva: 22.0
+  - descrizione: Storno riga 10% FT-2026-0088
+    quantita: 1.0
+    prezzo_unitario: 200.0
+    aliquota_iva: 10.0
+oracle:
+  expected_credit_note:
+    client: Rossi Costruzioni Srl
+    imponibile: 500.0
+    iva: 86.0
+    totale: 586.0
+    sdi_outcome: accettata
+max_tool_calls: 8

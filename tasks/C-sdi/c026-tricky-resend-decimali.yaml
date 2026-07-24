@@ -1,0 +1,40 @@
+id: C-026-tricky-resend-decimali
+family: C-sdi
+difficulty: tricky
+title: Ritrasmissione con quantita decimale e arrotondamenti
+prompt: 'La fattura a "Officina Kappa" e stata scartata (00312): codice destinatario "OK123" di 5
+  caratteri. Quello corretto e "OFFKAP7". Correggi e ritrasmetti la fattura: 2,5 ore a 19,99 euro/ora
+  + IVA 22%. Attenzione agli arrotondamenti.'
+initial_state:
+  action: fix_and_resend
+  client: Officina Kappa
+  extra_clients:
+    Officina Kappa:
+      piva: '55500022235'
+      codice_destinatario: OK123
+      pa: false
+  issued_invoices:
+  - client: Officina Kappa
+    imponibile: 49.97
+    iva: 10.99
+    totale: 60.96
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: scarto:00312
+  fix:
+    codice_destinatario: OFFKAP7
+  lines:
+  - descrizione: Manodopera (ore)
+    quantita: 2.5
+    prezzo_unitario: 19.99
+    aliquota_iva: 22.0
+oracle:
+  expected_client_update:
+    client: Officina Kappa
+    codice_destinatario: OFFKAP7
+  expected_regime: ordinario
+  expected_imponibile: 49.97
+  expected_iva: 10.99
+  expected_totale: 60.96
+  expected_sdi_outcome: accettata
+max_tool_calls: 8

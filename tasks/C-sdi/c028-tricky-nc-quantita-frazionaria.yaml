@@ -1,0 +1,31 @@
+id: C-028-tricky-nc-quantita-frazionaria
+family: C-sdi
+difficulty: tricky
+title: Nota di credito parziale con quantita frazionaria
+prompt: Sulla fattura FT-2026-0095 a "Rossi Costruzioni Srl" vanno stornate 3,5 ore di manodopera
+  a 80 euro/ora + IVA 22% non prestate. Emetti nota di credito PARZIALE per le sole ore non lavorate.
+initial_state:
+  action: credit_note
+  client: Rossi Costruzioni Srl
+  refers_to: FT-2026-0095
+  issued_invoices:
+  - client: Rossi Costruzioni Srl
+    imponibile: 3200.0
+    iva: 704.0
+    totale: 3904.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+  credit_lines:
+  - descrizione: Storno ore non prestate FT-2026-0095
+    quantita: 3.5
+    prezzo_unitario: 80.0
+    aliquota_iva: 22.0
+oracle:
+  expected_credit_note:
+    client: Rossi Costruzioni Srl
+    imponibile: 280.0
+    iva: 61.6
+    totale: 341.6
+    sdi_outcome: accettata
+max_tool_calls: 8

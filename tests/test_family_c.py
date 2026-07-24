@@ -123,7 +123,7 @@ def test_seeded_invoice_does_not_count_as_acting():
 
 def test_reference_passes_family_c():
     verdicts, scorecard = run(TASKS / "C-sdi", ReferenceAgent())
-    assert scorecard["n_tasks"] == 8
+    assert scorecard["n_tasks"] == 40
     assert scorecard["pass_rate"] == 1.0
 
 

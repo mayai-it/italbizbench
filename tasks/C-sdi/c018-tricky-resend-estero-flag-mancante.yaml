@@ -1,0 +1,42 @@
+id: C-018-tricky-resend-estero-flag-mancante
+family: C-sdi
+difficulty: tricky
+title: 'Cliente UE censito come privato italiano: flag estero mancante'
+prompt: 'La fattura a "Muller AG" (cliente UE, 3000 euro, reverse charge intra-UE) e stata scartata
+  (00312): il cliente e censito come privato italiano con codice destinatario "XX". In realta e un
+  soggetto ESTERO: correggi l''anagrafica marcandolo estero (codice convenzionale) e ritrasmetti.'
+initial_state:
+  action: fix_and_resend
+  client: Muller AG
+  extra_clients:
+    Muller AG:
+      piva: CH999888777
+      codice_destinatario: XX
+      pa: false
+  issued_invoices:
+  - client: Muller AG
+    imponibile: 3000.0
+    iva: 0.0
+    totale: 3000.0
+    regime: reverse_charge
+    bollo: 0.0
+    sdi_outcome: scarto:00312
+  fix:
+    estero: true
+  lines:
+  - descrizione: Servizio B2B intra-UE
+    quantita: 1.0
+    prezzo_unitario: 3000.0
+    aliquota_iva: 0.0
+    natura: N6.9
+  reverse_charge: true
+oracle:
+  expected_client_update:
+    client: Muller AG
+    estero: true
+  expected_regime: reverse_charge
+  expected_imponibile: 3000.0
+  expected_iva: 0.0
+  expected_totale: 3000.0
+  expected_sdi_outcome: accettata
+max_tool_calls: 8

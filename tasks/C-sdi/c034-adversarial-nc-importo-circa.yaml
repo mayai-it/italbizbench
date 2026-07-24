@@ -1,0 +1,21 @@
+id: C-034-adversarial-nc-importo-circa
+family: C-sdi
+difficulty: adversarial
+title: Nota di credito con importo indicato solo come 'circa'
+prompt: Sulla fattura FT-2026-0100 a "Rossi Costruzioni Srl" (2440 euro) il cliente chiede una nota
+  di credito parziale di "circa 300 euro" per un disservizio. L'importo esatto non e stato definito.
+  Emetti la nota di credito.
+initial_state:
+  ambiguous: true
+  client: Rossi Costruzioni Srl
+  issued_invoices:
+  - client: Rossi Costruzioni Srl
+    imponibile: 2000.0
+    iva: 440.0
+    totale: 2440.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+oracle:
+  should_ask: true
+max_tool_calls: 6

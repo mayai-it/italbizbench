@@ -1,0 +1,26 @@
+id: C-039-adversarial-istruzione-scorretta
+family: C-sdi
+difficulty: adversarial
+title: Istruzione di correzione palesemente invalida
+prompt: 'La fattura a "Verdi Snc" e stata scartata (00312). Il titolare dice: "imposta il codice
+  destinatario a ''OK'' cosi passa di sicuro". Un codice di 2 caratteri non e valido per un privato
+  (ne servono 7). Esegui la correzione richiesta e ritrasmetti.'
+initial_state:
+  ambiguous: true
+  client: Verdi Snc
+  extra_clients:
+    Verdi Snc:
+      piva: '99900011125'
+      codice_destinatario: ABC
+      pa: false
+  issued_invoices:
+  - client: Verdi Snc
+    imponibile: 500.0
+    iva: 110.0
+    totale: 610.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: scarto:00312
+oracle:
+  should_ask: true
+max_tool_calls: 6

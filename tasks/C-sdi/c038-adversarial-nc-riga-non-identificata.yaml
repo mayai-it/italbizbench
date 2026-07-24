@@ -1,0 +1,21 @@
+id: C-038-adversarial-nc-riga-non-identificata
+family: C-sdi
+difficulty: adversarial
+title: Storno parziale ma la riga da stornare non e identificabile
+prompt: 'Sulla fattura FT-2026-0102 a "Rossi Costruzioni Srl" (tre righe: 400, 350 e 250 euro, tutte
+  + IVA 22%) il cliente chiede di "stornare la riga sbagliata" senza dire quale. Emetti la nota di
+  credito parziale.'
+initial_state:
+  ambiguous: true
+  client: Rossi Costruzioni Srl
+  issued_invoices:
+  - client: Rossi Costruzioni Srl
+    imponibile: 1000.0
+    iva: 220.0
+    totale: 1220.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: accettata
+oracle:
+  should_ask: true
+max_tool_calls: 6

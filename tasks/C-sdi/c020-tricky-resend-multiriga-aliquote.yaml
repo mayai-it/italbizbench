@@ -1,0 +1,48 @@
+id: C-020-tricky-resend-multiriga-aliquote
+family: C-sdi
+difficulty: tricky
+title: Ritrasmissione multiriga con tre aliquote IVA
+prompt: 'La fattura a "Emporio Iota Srl" e stata scartata (00312): codice destinatario "EMP12345"
+  di 8 caratteri. Quello corretto e "EMPIO77". Correggi e ritrasmetti la fattura con le stesse righe:
+  500 euro al 22%, 300 euro al 10%, 200 euro al 4%.'
+initial_state:
+  action: fix_and_resend
+  client: Emporio Iota Srl
+  extra_clients:
+    Emporio Iota Srl:
+      piva: '55500011121'
+      codice_destinatario: EMP12345
+      pa: false
+  issued_invoices:
+  - client: Emporio Iota Srl
+    imponibile: 1000.0
+    iva: 148.0
+    totale: 1148.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: scarto:00312
+  fix:
+    codice_destinatario: EMPIO77
+  lines:
+  - descrizione: Articoli aliquota ordinaria
+    quantita: 1.0
+    prezzo_unitario: 500.0
+    aliquota_iva: 22.0
+  - descrizione: Generi alimentari
+    quantita: 1.0
+    prezzo_unitario: 300.0
+    aliquota_iva: 10.0
+  - descrizione: Prima necessita
+    quantita: 1.0
+    prezzo_unitario: 200.0
+    aliquota_iva: 4.0
+oracle:
+  expected_client_update:
+    client: Emporio Iota Srl
+    codice_destinatario: EMPIO77
+  expected_regime: ordinario
+  expected_imponibile: 1000.0
+  expected_iva: 148.0
+  expected_totale: 1148.0
+  expected_sdi_outcome: accettata
+max_tool_calls: 8

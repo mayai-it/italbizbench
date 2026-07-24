@@ -1,0 +1,39 @@
+id: C-022-tricky-nc-esente-bollo
+family: C-sdi
+difficulty: tricky
+title: Nota di credito su fattura esente sopra soglia bollo
+prompt: 'La fattura FT-2026-0085 ESENTE art.10 da 1000 euro al "Poliambulatorio Beta" va stornata
+  integralmente: prestazione mai eseguita. Emetti la nota di credito con il regime esente (il documento
+  segue le stesse regole della fattura stornata).'
+initial_state:
+  action: credit_note
+  client: Poliambulatorio Beta
+  refers_to: FT-2026-0085
+  extra_clients:
+    Poliambulatorio Beta:
+      piva: '66600011127'
+      codice_destinatario: POLIAM7
+      pa: false
+  issued_invoices:
+  - client: Poliambulatorio Beta
+    imponibile: 1000.0
+    iva: 0.0
+    totale: 1002.0
+    regime: esente
+    bollo: 2.0
+    sdi_outcome: accettata
+  credit_lines:
+  - descrizione: Storno totale FT-2026-0085
+    quantita: 1.0
+    prezzo_unitario: 1000.0
+    aliquota_iva: 0.0
+    natura: N4
+  esente: true
+oracle:
+  expected_credit_note:
+    client: Poliambulatorio Beta
+    imponibile: 1000.0
+    iva: 0.0
+    totale: 1002.0
+    sdi_outcome: accettata
+max_tool_calls: 8

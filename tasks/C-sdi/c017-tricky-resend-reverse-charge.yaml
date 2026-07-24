@@ -1,0 +1,42 @@
+id: C-017-tricky-resend-reverse-charge
+family: C-sdi
+difficulty: tricky
+title: 'Ritrasmissione in reverse charge: IVA non esposta, niente bollo'
+prompt: 'La fattura a "Subappalti Theta Srl" per subappalto edile di 5000 euro in REVERSE CHARGE
+  e stata scartata (00312): codice destinatario "ST12" non valido. Quello corretto e "SUBTH07". Correggi
+  e ritrasmetti mantenendo il regime corretto.'
+initial_state:
+  action: fix_and_resend
+  client: Subappalti Theta Srl
+  extra_clients:
+    Subappalti Theta Srl:
+      piva: '77700011123'
+      codice_destinatario: ST12
+      pa: false
+  issued_invoices:
+  - client: Subappalti Theta Srl
+    imponibile: 5000.0
+    iva: 0.0
+    totale: 5000.0
+    regime: reverse_charge
+    bollo: 0.0
+    sdi_outcome: scarto:00312
+  fix:
+    codice_destinatario: SUBTH07
+  lines:
+  - descrizione: Subappalto opere edili
+    quantita: 1.0
+    prezzo_unitario: 5000.0
+    aliquota_iva: 0.0
+    natura: N6
+  reverse_charge: true
+oracle:
+  expected_client_update:
+    client: Subappalti Theta Srl
+    codice_destinatario: SUBTH07
+  expected_regime: reverse_charge
+  expected_imponibile: 5000.0
+  expected_iva: 0.0
+  expected_totale: 5000.0
+  expected_sdi_outcome: accettata
+max_tool_calls: 8

@@ -1,0 +1,40 @@
+id: C-019-tricky-censimento-pa-00200
+family: C-sdi
+difficulty: tricky
+title: 'Scarto 00200 su PA: censimento con split payment'
+prompt: 'La fattura al "Comune di Collina" (2400 euro + IVA 22%) e stata scartata (00200): l''ente
+  non e in anagrafica. Censiscilo come PA (P.IVA 88800055563, codice ufficio "CLL010") e ritrasmetti
+  con il regime corretto per la PA.'
+initial_state:
+  action: fix_and_resend
+  client: Comune di Collina
+  issued_invoices:
+  - client: Comune di Collina
+    imponibile: 2400.0
+    iva: 528.0
+    totale: 2400.0
+    regime: split_payment
+    bollo: 0.0
+    sdi_outcome: scarto:00200
+  fix:
+    new: true
+    piva: '88800055563'
+    codice_destinatario: CLL010
+    pa: true
+  lines:
+  - descrizione: Servizio alla PA
+    quantita: 1.0
+    prezzo_unitario: 2400.0
+    aliquota_iva: 22.0
+oracle:
+  expected_client_update:
+    client: Comune di Collina
+    piva: '88800055563'
+    codice_destinatario: CLL010
+    pa: true
+  expected_regime: split_payment
+  expected_imponibile: 2400.0
+  expected_iva: 528.0
+  expected_totale: 2400.0
+  expected_sdi_outcome: accettata
+max_tool_calls: 8

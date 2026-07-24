@@ -1,0 +1,25 @@
+id: C-035-adversarial-codice-scarto-sconosciuto
+family: C-sdi
+difficulty: adversarial
+title: Codice di scarto SDI non riconosciuto
+prompt: La fattura a "Verdi Snc" risulta scartata con codice "09999", che non corrisponde a nessun
+  codice di scarto SDI noto e non indica cosa correggere. Sistema il problema e ritrasmetti.
+initial_state:
+  ambiguous: true
+  client: Verdi Snc
+  extra_clients:
+    Verdi Snc:
+      piva: '99900011125'
+      codice_destinatario: ABC
+      pa: false
+  issued_invoices:
+  - client: Verdi Snc
+    imponibile: 500.0
+    iva: 110.0
+    totale: 610.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: scarto:09999
+oracle:
+  should_ask: true
+max_tool_calls: 6

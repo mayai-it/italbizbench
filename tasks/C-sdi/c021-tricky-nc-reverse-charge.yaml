@@ -1,0 +1,34 @@
+id: C-021-tricky-nc-reverse-charge
+family: C-sdi
+difficulty: tricky
+title: Nota di credito su fattura in reverse charge
+prompt: 'La fattura FT-2026-0080 a "Rossi Costruzioni Srl" per subappalto edile di 2000 euro in REVERSE
+  CHARGE va stornata integralmente: il cantiere e stato annullato. Emetti la nota di credito con
+  il regime corretto (IVA non esposta).'
+initial_state:
+  action: credit_note
+  client: Rossi Costruzioni Srl
+  refers_to: FT-2026-0080
+  issued_invoices:
+  - client: Rossi Costruzioni Srl
+    imponibile: 2000.0
+    iva: 0.0
+    totale: 2000.0
+    regime: reverse_charge
+    bollo: 0.0
+    sdi_outcome: accettata
+  credit_lines:
+  - descrizione: Storno totale FT-2026-0080
+    quantita: 1.0
+    prezzo_unitario: 2000.0
+    aliquota_iva: 0.0
+    natura: N6
+  reverse_charge: true
+oracle:
+  expected_credit_note:
+    client: Rossi Costruzioni Srl
+    imponibile: 2000.0
+    iva: 0.0
+    totale: 2000.0
+    sdi_outcome: accettata
+max_tool_calls: 8

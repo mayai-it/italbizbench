@@ -1,0 +1,42 @@
+id: C-014-tricky-resend-esente-sotto-soglia
+family: C-sdi
+difficulty: tricky
+title: 'Ritrasmissione fattura esente sotto soglia: niente bollo'
+prompt: 'La fattura ESENTE art.10 da 70 euro allo "Studio Medico Gamma" e stata scartata (00312):
+  codice destinatario "SMG" non valido. Quello corretto e "SMG0007". Correggi, ritrasmetti e valuta
+  se l''imposta di bollo e dovuta.'
+initial_state:
+  action: fix_and_resend
+  client: Studio Medico Gamma
+  extra_clients:
+    Studio Medico Gamma:
+      piva: '66600022231'
+      codice_destinatario: SMG
+      pa: false
+  issued_invoices:
+  - client: Studio Medico Gamma
+    imponibile: 70.0
+    iva: 0.0
+    totale: 70.0
+    regime: esente
+    bollo: 0.0
+    sdi_outcome: scarto:00312
+  fix:
+    codice_destinatario: SMG0007
+  lines:
+  - descrizione: Prestazione sanitaria esente art.10
+    quantita: 1.0
+    prezzo_unitario: 70.0
+    aliquota_iva: 0.0
+    natura: N4
+  esente: true
+oracle:
+  expected_client_update:
+    client: Studio Medico Gamma
+    codice_destinatario: SMG0007
+  expected_regime: esente
+  expected_imponibile: 70.0
+  expected_iva: 0.0
+  expected_totale: 70.0
+  expected_sdi_outcome: accettata
+max_tool_calls: 8

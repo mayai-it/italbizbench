@@ -1,0 +1,40 @@
+id: C-009-base-scarto-00312-cd-6-privato
+family: C-sdi
+difficulty: base
+title: 'Scarto 00312: codice destinatario di 6 caratteri per un privato'
+prompt: 'La fattura a "Gialli Srl" (1200 euro + IVA 22%) e stata scartata (00312): il codice destinatario
+  "GIALLI" ha 6 caratteri ma per i privati ne servono 7. Quello corretto e "GIALLI7". Correggi l''anagrafica
+  e ritrasmetti.'
+initial_state:
+  action: fix_and_resend
+  client: Gialli Srl
+  extra_clients:
+    Gialli Srl:
+      piva: '99900033343'
+      codice_destinatario: GIALLI
+      pa: false
+  issued_invoices:
+  - client: Gialli Srl
+    imponibile: 1200.0
+    iva: 264.0
+    totale: 1464.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: scarto:00312
+  fix:
+    codice_destinatario: GIALLI7
+  lines:
+  - descrizione: Consulenza tecnica
+    quantita: 1.0
+    prezzo_unitario: 1200.0
+    aliquota_iva: 22.0
+oracle:
+  expected_client_update:
+    client: Gialli Srl
+    codice_destinatario: GIALLI7
+  expected_regime: ordinario
+  expected_imponibile: 1200.0
+  expected_iva: 264.0
+  expected_totale: 1464.0
+  expected_sdi_outcome: accettata
+max_tool_calls: 8

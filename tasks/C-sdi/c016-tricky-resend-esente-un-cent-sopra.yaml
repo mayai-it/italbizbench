@@ -1,0 +1,42 @@
+id: C-016-tricky-resend-esente-un-cent-sopra
+family: C-sdi
+difficulty: tricky
+title: 'Ritrasmissione esente a 77,48 euro: bollo dovuto per un centesimo'
+prompt: 'La fattura ESENTE art.10 da 77,48 euro al "Centro Salute Eta" e stata scartata (00312):
+  codice destinatario "CSE" non valido. Quello corretto e "CSETA07". Correggi, ritrasmetti e applica
+  l''imposta di bollo dove dovuta.'
+initial_state:
+  action: fix_and_resend
+  client: Centro Salute Eta
+  extra_clients:
+    Centro Salute Eta:
+      piva: '66600044458'
+      codice_destinatario: CSE
+      pa: false
+  issued_invoices:
+  - client: Centro Salute Eta
+    imponibile: 77.48
+    iva: 0.0
+    totale: 79.48
+    regime: esente
+    bollo: 2.0
+    sdi_outcome: scarto:00312
+  fix:
+    codice_destinatario: CSETA07
+  lines:
+  - descrizione: Prestazione esente art.10
+    quantita: 1.0
+    prezzo_unitario: 77.48
+    aliquota_iva: 0.0
+    natura: N4
+  esente: true
+oracle:
+  expected_client_update:
+    client: Centro Salute Eta
+    codice_destinatario: CSETA07
+  expected_regime: esente
+  expected_imponibile: 77.48
+  expected_iva: 0.0
+  expected_totale: 79.48
+  expected_sdi_outcome: accettata
+max_tool_calls: 8

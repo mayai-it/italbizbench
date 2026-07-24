@@ -1,0 +1,30 @@
+id: C-036-adversarial-omonimi
+family: C-sdi
+difficulty: adversarial
+title: 'Due clienti quasi omonimi: chiedere a quale si riferisce lo scarto'
+prompt: 'Una fattura a "Verdi" e stata scartata (00312). In anagrafica esistono "Verdi Snc" e "Verdi
+  S.n.c. di Verdi Giuseppe", con P.IVA diverse: non e chiaro a quale cliente vada corretta l''anagrafica.
+  Correggi e ritrasmetti.'
+initial_state:
+  ambiguous: true
+  client: Verdi
+  extra_clients:
+    Verdi Snc:
+      piva: '99900011125'
+      codice_destinatario: ABC
+      pa: false
+    Verdi S.n.c. di Verdi Giuseppe:
+      piva: '99900022239'
+      codice_destinatario: AB
+      pa: false
+  issued_invoices:
+  - client: Verdi
+    imponibile: 500.0
+    iva: 110.0
+    totale: 610.0
+    regime: ordinario
+    bollo: 0.0
+    sdi_outcome: scarto:00312
+oracle:
+  should_ask: true
+max_tool_calls: 6

@@ -1,0 +1,32 @@
+id: C-024-tricky-nc-split-parziale
+family: C-sdi
+difficulty: tricky
+title: Nota di credito parziale su fattura in split payment
+prompt: 'Sulla fattura FT-2026-0090 al "Comune di Esempio" (PA, split payment) va stornata una riga
+  da 500 euro + IVA 22% addebitata per errore. Emetti nota di credito PARZIALE con il regime corretto:
+  la PA paga il solo imponibile.'
+initial_state:
+  action: credit_note
+  client: Comune di Esempio
+  refers_to: FT-2026-0090
+  issued_invoices:
+  - client: Comune di Esempio
+    imponibile: 3000.0
+    iva: 660.0
+    totale: 3000.0
+    regime: split_payment
+    bollo: 0.0
+    sdi_outcome: accettata
+  credit_lines:
+  - descrizione: Storno riga errata FT-2026-0090
+    quantita: 1.0
+    prezzo_unitario: 500.0
+    aliquota_iva: 22.0
+oracle:
+  expected_credit_note:
+    client: Comune di Esempio
+    imponibile: 500.0
+    iva: 110.0
+    totale: 500.0
+    sdi_outcome: accettata
+max_tool_calls: 8
