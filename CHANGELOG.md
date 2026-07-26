@@ -7,6 +7,20 @@ All notable changes to this project are documented here. Format based on
 ## [Unreleased]
 
 ### Added
+- **pass^k su trial ripetuti (`--trials k`).** Un task "passa^k" solo se passano
+  tutti i k trial (stile tau-bench): misura l'affidabilità, motivata dalla varianza
+  osservata tra run reali identici. In scorecard: `trials`, `n_scenarios`,
+  `pass_hat_k` con IC di Wilson.
+- **Benchmark card e canary anti-contaminazione.** `BENCHMARK-CARD.md` (scopo,
+  costruzione, protocollo di astensione, policy anti-gaming, come riportare i
+  risultati, limiti noti) e canary GUID in ogni file di task, con test
+  d'invarianza. Primo run LLM reale documentato: sonnet-5, due iterazioni di
+  harness-fixing (0.75 → 0.975 sulla famiglia A; 0.782 → 0.919 sulle stesse 124
+  task della suite piena), quattro difetti d'ambiente trovati dall'agente.
+- **Resilienza dei run reali:** progress in tempo reale, retry con backoff,
+  report parziale su interruzione, `--resume` (rigioca i transcript offline,
+  esegue solo i mancanti) e `--replay-only` (estrae il report parziale senza
+  chiamate API).
 - **Famiglia F — orchestrazione multi-step: 40 task (13 base, 16 tricky, 11
   adversarial), suite totale a 240.** Ogni scenario compone 2+ passi sulle capacita
   B/C/D/E (emissione+incasso, correzione scarto+registrazione passiva, nota di

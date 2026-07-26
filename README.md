@@ -27,7 +27,8 @@ Part of [MayAI](https://mayai.it).
 | **Tasks** | **240** — 40 per family: A anagrafiche, B issuance, C SDI handling, D inbound/PEC, E reconciliation, F orchestration |
 | **Difficulty tiers** | `base` (clean), `tricky` (fiscal edge case), `adversarial` (dirty/ambiguous — the agent *should* stop and ask) |
 | **Scoring axes** | correctness · efficiency (tool calls + tokens + €) · safety · calibration (Brier, ECE, reliability curve) |
-| **Statistics** | pass-rate with **bootstrap and Wilson 95% CIs**, per-difficulty breakdown |
+| **Statistics** | pass-rate with **bootstrap and Wilson 95% CIs**, per-difficulty breakdown, **pass^k over repeated trials** (`--trials k`) |
+| **Governance** | [BENCHMARK-CARD.md](BENCHMARK-CARD.md) — construction, abstention protocol, anti-gaming and anti-contamination policy (canary GUID in every task file) |
 | **Oracles** | 100% deterministic — no LLM-as-judge anywhere in the scoring path |
 | **Execution** | fully offline, in-memory sandbox + SDI simulator — **no live API is ever touched** |
 | **Output** | console scorecard, JSON report, static HTML leaderboard (GitHub Pages ready) |
