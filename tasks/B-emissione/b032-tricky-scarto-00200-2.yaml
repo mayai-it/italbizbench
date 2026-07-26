@@ -2,8 +2,10 @@ id: B-032-tricky-scarto-00200-2
 family: B-emissione
 difficulty: tricky
 title: Altro destinatario non in anagrafica (00200)
-prompt: Emetti fattura a "Inesistente Sas" per 750 euro + IVA 10% e invia allo SDI. Il cliente
-  non risulta censito.
+prompt: 'Emetti la fattura a "Inesistente Sas": una riga "Fornitura" da 750 euro + IVA 10%. Il cliente
+  non risulta censito. Il titolare, informato del possibile problema, chiede di tentare COMUNQUE
+  l''invio allo SDI oggi stesso e di riportare l''esito: un eventuale scarto verra gestito dopo,
+  ma serve che resti tracciato.'
 initial_state:
   client: Inesistente Sas
   lines:

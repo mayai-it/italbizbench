@@ -88,6 +88,11 @@ class AnthropicLLMClient:
                 "Anthropic", self.model, "ITALBIZBENCH_MODEL_ANTHROPIC", e)) from e
         except anthropic.APIConnectionError as e:
             raise RuntimeError(endpoint_unreachable_hint("Anthropic", None, e)) from e
+        except anthropic.APIStatusError as e:
+            # Errori HTTP non transitori (credito esaurito, richiesta invalida...):
+            # normalizzati a RuntimeError cosi il runner salva il report PARZIALE
+            # invece di perdere i verdetti gia raccolti.
+            raise RuntimeError(f"API Anthropic: errore {e.status_code}: {e.message}") from e
         calls: list[ToolCall] = []
         text = ""
         for block in resp.content:

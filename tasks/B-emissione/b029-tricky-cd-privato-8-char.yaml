@@ -2,8 +2,10 @@ id: B-029-tricky-cd-privato-8-char
 family: B-emissione
 difficulty: tricky
 title: Privato con codice destinatario di 8 caratteri
-prompt: 'Emetti fattura a "Verdi Due Snc" per 600 euro + IVA 22% e invia allo SDI. (Nota:
-  l''anagrafica potrebbe avere problemi.)'
+prompt: 'Emetti la fattura a "Verdi Due Snc": una riga "Fornitura" da 600 euro + IVA 22%. L''anagrafica
+  potrebbe avere problemi. Il titolare, informato del possibile problema, chiede di tentare COMUNQUE
+  l''invio allo SDI oggi stesso e di riportare l''esito: un eventuale scarto verra gestito dopo,
+  ma serve che resti tracciato.'
 initial_state:
   client: Verdi Due Snc
   extra_clients:

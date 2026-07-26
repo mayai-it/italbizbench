@@ -91,7 +91,8 @@ def _run_usage(agent: AgentAdapter, cost_table: CostTable) -> UsageStats:
 
 def run(path: Path | Sequence[Path], agent: AgentAdapter, save_dir: Path | None = None,
         cost_table: CostTable | None = None,
-        progress: bool = False, resume: bool = False) -> tuple[list[Verdict], dict[str, Any]]:
+        progress: bool = False, resume: bool = False,
+        replay_only: bool = False) -> tuple[list[Verdict], dict[str, Any]]:
     paths: list[Path] = [path] if isinstance(path, Path) else list(path)
     if cost_table is None:
         cost_table = load_cost_table()
@@ -101,7 +102,12 @@ def run(path: Path | Sequence[Path], agent: AgentAdapter, save_dir: Path | None 
     scenarios = load_all_scenarios(paths)
     try:
         _run_scenarios(scenarios, agent, verdicts, save_dir, cost_table, progress,
-                       resume=resume)
+                       resume=resume, replay_only=replay_only)
+        if replay_only and len(verdicts) < len(scenarios):
+            partial = aggregate(verdicts)
+            partial["partial"] = True
+            partial["n_tasks_expected"] = len(scenarios)
+            return verdicts, partial
     except (RuntimeError, KeyboardInterrupt) as e:
         # Un errore API (credito esaurito, rete) o un Ctrl+C a meta run non
         # devono buttare via i verdetti gia raccolti: si aggrega il parziale.
@@ -132,7 +138,7 @@ def _replay_agent(transcript_path: Path) -> AgentAdapter:
 def _run_scenarios(scenarios: list[Scenario], agent: AgentAdapter,
                    verdicts: list[Verdict], save_dir: Path | None,
                    cost_table: CostTable, progress: bool,
-                   resume: bool = False) -> None:
+                   resume: bool = False, replay_only: bool = False) -> None:
     for i, sc in enumerate(scenarios, start=1):
         # La sandbox parte da copie profonde: niente stato condiviso tra task
         # (update_client muta l'anagrafica) ne mutazioni degli Scenario caricati.
@@ -155,6 +161,8 @@ def _run_scenarios(scenarios: list[Scenario], agent: AgentAdapter,
             sandbox.transactions.append(BankTransaction(**tx))
         # --resume: se il transcript del task esiste gia, lo si rigioca offline
         # (zero API, zero costo) invece di rieseguire l'agente.
+        # --replay-only: i task SENZA transcript vengono saltati (nessuna chiamata
+        # API): serve a estrarre il report parziale da un run interrotto.
         task_agent = agent
         replayed = False
         if resume and save_dir is not None:
@@ -162,6 +170,8 @@ def _run_scenarios(scenarios: list[Scenario], agent: AgentAdapter,
             if transcript_path.exists():
                 task_agent = _replay_agent(transcript_path)
                 replayed = True
+            elif replay_only:
+                continue
         action = task_agent.run(sc, sandbox)
         v = score_task(sc, sandbox, action, usage=_run_usage(task_agent, cost_table))
         verdicts.append(v)
@@ -223,10 +233,16 @@ def main(argv: list[str] | None = None) -> int:
                    help="riprende un run interrotto: i task con transcript gia "
                         "presente in --save vengono rigiocati offline (senza API "
                         "e senza costi); si eseguono solo i mancanti")
+    p.add_argument("--replay-only", action="store_true",
+                   help="come --resume ma i task senza transcript vengono SALTATI "
+                        "(zero chiamate API): estrae il report parziale da un run "
+                        "interrotto")
     p.add_argument("--json", action="store_true", help="output JSON")
     args = p.parse_args(argv)
+    if args.replay_only:
+        args.resume = True
     if args.resume and args.save is None:
-        p.error("--resume richiede --save (la cartella con i transcript)")
+        p.error("--resume/--replay-only richiedono --save (la cartella con i transcript)")
 
     paths: list[Path] = [args.tasks]
     if args.private_dir is not None:
@@ -237,7 +253,8 @@ def main(argv: list[str] | None = None) -> int:
     agent: AgentAdapter = _build_agent(args)
     verdicts, scorecard = run(paths, agent, save_dir=args.save,
                               cost_table=load_cost_table(args.costs),
-                              progress=not args.json, resume=args.resume)
+                              progress=not args.json, resume=args.resume,
+                              replay_only=args.replay_only)
 
     report = {
         "agent": agent.name,

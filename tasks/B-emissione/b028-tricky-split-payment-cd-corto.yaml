@@ -2,8 +2,10 @@ id: B-028-tricky-split-payment-cd-corto
 family: B-emissione
 difficulty: tricky
 title: PA con codice ufficio errato (5 char)
-prompt: 'Emetti fattura al "Comune di Errore" (PA) per 2000 euro + IVA 22% e invia allo SDI.
-  (Nota: il codice ufficio in anagrafica potrebbe essere errato.)'
+prompt: 'Emetti la fattura al "Comune di Errore" (PA, split payment): una riga "Servizio alla PA"
+  da 2000 euro + IVA 22%. Il codice ufficio in anagrafica potrebbe essere errato. Il titolare, informato
+  del possibile problema, chiede di tentare COMUNQUE l''invio allo SDI oggi stesso e di riportare
+  l''esito: un eventuale scarto verra gestito dopo, ma serve che resti tracciato.'
 initial_state:
   client: Comune di Errore
   extra_clients:

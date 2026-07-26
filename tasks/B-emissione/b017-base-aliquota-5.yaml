@@ -2,13 +2,12 @@ id: B-017-base-aliquota-5
 family: B-emissione
 difficulty: base
 title: Fattura con aliquota ridotta 5%
-prompt: 'Emetti fattura a "Rossi Costruzioni Srl" per prestazioni socio-sanitarie
-  rese da cooperativa sociale per 800 euro: si applica l''IVA ridotta al 5% prevista
-  per queste prestazioni.'
+prompt: 'Emetti fattura a "Rossi Costruzioni Srl" con una sola riga: "Prestazioni socio-sanitarie
+  (cooperativa sociale)" per 800 euro + IVA al 5%, aliquota ridotta prevista per queste prestazioni.'
 initial_state:
   client: Rossi Costruzioni Srl
   lines:
-  - descrizione: Prestazioni socio-sanitarie (aliquota 5%)
+  - descrizione: Prestazioni socio-sanitarie (cooperativa sociale)
     quantita: 1
     prezzo_unitario: 800.0
     aliquota_iva: 5.0
