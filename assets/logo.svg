@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- ItalBizBench — fattura con banda tricolore e spunta dell'oracolo deterministico -->
+  <rect width="512" height="512" rx="96" fill="#0F172A"/>
+  <!-- foglio -->
+  <path d="M156 116 h150 l50 50 v230 a20 20 0 0 1 -20 20 H176 a20 20 0 0 1 -20 -20 V136 a20 20 0 0 1 20 -20 z"
+        fill="#F8FAFC"/>
+  <!-- angolo piegato -->
+  <path d="M306 116 l50 50 h-38 a12 12 0 0 1 -12 -12 z" fill="#CBD5E1"/>
+  <!-- banda tricolore -->
+  <rect x="176" y="142" width="10" height="248" rx="5" fill="#009246"/>
+  <rect x="190" y="142" width="10" height="248" rx="5" fill="#CBD5E1"/>
+  <rect x="204" y="142" width="10" height="248" rx="5" fill="#CE2B37"/>
+  <!-- righe della fattura -->
+  <g fill="#64748B">
+    <rect x="232" y="180" width="96" height="14" rx="7"/>
+    <rect x="232" y="212" width="80" height="14" rx="7"/>
+    <rect x="232" y="244" width="104" height="14" rx="7"/>
+    <rect x="232" y="276" width="64" height="14" rx="7"/>
+  </g>
+  <!-- badge di verifica -->
+  <circle cx="336" cy="356" r="62" fill="#009246"/>
+  <path d="M308 356 l20 20 l38 -42" fill="none" stroke="#F8FAFC" stroke-width="14"
+        stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

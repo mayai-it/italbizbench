@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 160" width="820" height="160">
+  <!-- ItalBizBench — lockup orizzontale, variante per sfondo chiaro -->
+  <g transform="translate(8,8) scale(0.28125)">
+    <rect width="512" height="512" rx="96" fill="#0F172A"/>
+    <path d="M156 116 h150 l50 50 v230 a20 20 0 0 1 -20 20 H176 a20 20 0 0 1 -20 -20 V136 a20 20 0 0 1 20 -20 z"
+          fill="#F8FAFC"/>
+    <path d="M306 116 l50 50 h-38 a12 12 0 0 1 -12 -12 z" fill="#CBD5E1"/>
+    <rect x="176" y="142" width="10" height="248" rx="5" fill="#009246"/>
+    <rect x="190" y="142" width="10" height="248" rx="5" fill="#CBD5E1"/>
+    <rect x="204" y="142" width="10" height="248" rx="5" fill="#CE2B37"/>
+    <g fill="#64748B">
+      <rect x="232" y="180" width="96" height="14" rx="7"/>
+      <rect x="232" y="212" width="80" height="14" rx="7"/>
+      <rect x="232" y="244" width="104" height="14" rx="7"/>
+      <rect x="232" y="276" width="64" height="14" rx="7"/>
+    </g>
+    <circle cx="336" cy="356" r="62" fill="#009246"/>
+    <path d="M308 356 l20 20 l38 -42" fill="none" stroke="#F8FAFC" stroke-width="14"
+          stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="180" y="103" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif"
+        font-size="68" font-weight="800" letter-spacing="-1.5" fill="#0F172A">Ital<tspan fill="#009246">Biz</tspan>Bench</text>
+</svg>

@@ -7,6 +7,13 @@
 
 > 🇮🇹 [Documentazione in italiano](README.it.md) — versione ridotta.
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/logo-wordmark-dark.svg">
+    <img src="assets/logo-wordmark-light.svg" alt="ItalBizBench" width="520">
+  </picture>
+</p>
+
 # ItalBizBench
 
 **A benchmark that measures how well an AI agent actually does the fiscal and
