@@ -55,13 +55,18 @@ def usage_from_response(resp: Any) -> UsageStats | None:
 
 class AnthropicLLMClient:
     def __init__(self, model: str = "claude-sonnet-5", max_tokens: int = 1024,
-                 api_key: str | None = None):
+                 api_key: str | None = None, max_retries: int = 5,
+                 timeout: float = 120.0):
         try:
             import anthropic  # noqa: F401
         except ImportError as e:  # pragma: no cover
             raise RuntimeError("Installa il pacchetto: pip install anthropic") from e
         import anthropic
-        self._client = anthropic.Anthropic(api_key=api_key or os.environ.get("ANTHROPIC_API_KEY"))
+        # Retry con backoff delegati all'SDK: su un run da 240 task un singolo
+        # timeout di rete transitorio NON deve uccidere l'intera valutazione.
+        self._client = anthropic.Anthropic(
+            api_key=api_key or os.environ.get("ANTHROPIC_API_KEY"),
+            max_retries=max_retries, timeout=timeout)
         self.model = model
         self.max_tokens = max_tokens
 
