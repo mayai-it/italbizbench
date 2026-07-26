@@ -90,14 +90,16 @@ def _run_usage(agent: AgentAdapter, cost_table: CostTable) -> UsageStats:
 
 
 def run(path: Path | Sequence[Path], agent: AgentAdapter, save_dir: Path | None = None,
-        cost_table: CostTable | None = None) -> tuple[list[Verdict], dict[str, Any]]:
+        cost_table: CostTable | None = None,
+        progress: bool = False) -> tuple[list[Verdict], dict[str, Any]]:
     paths: list[Path] = [path] if isinstance(path, Path) else list(path)
     if cost_table is None:
         cost_table = load_cost_table()
     verdicts: list[Verdict] = []
     if save_dir is not None:
         save_dir.mkdir(parents=True, exist_ok=True)
-    for sc in load_all_scenarios(paths):
+    scenarios = load_all_scenarios(paths)
+    for i, sc in enumerate(scenarios, start=1):
         # La sandbox parte da copie profonde: niente stato condiviso tra task
         # (update_client muta l'anagrafica) ne mutazioni degli Scenario caricati.
         sandbox = InvoicingSandbox()
@@ -118,7 +120,13 @@ def run(path: Path | Sequence[Path], agent: AgentAdapter, save_dir: Path | None 
         for tx in sc.initial_state.get("transactions", []):
             sandbox.transactions.append(BankTransaction(**tx))
         action = agent.run(sc, sandbox)
-        verdicts.append(score_task(sc, sandbox, action, usage=_run_usage(agent, cost_table)))
+        v = score_task(sc, sandbox, action, usage=_run_usage(agent, cost_table))
+        verdicts.append(v)
+        if progress:
+            # Feedback in tempo reale sui run lunghi (240 task con un LLM reale
+            # richiedono decine di minuti): un verdetto per riga, flush immediato.
+            mark = "PASS" if v.passed else "FAIL"
+            print(f"[{i}/{len(scenarios)}] [{mark}] {sc.id}", flush=True)
         # Salva il transcript dell'agente (per riproducibilita / debug dei run reali).
         transcript = getattr(agent, "last_messages", None)
         if save_dir is not None and transcript is not None:
@@ -178,7 +186,8 @@ def main(argv: list[str] | None = None) -> int:
 
     agent: AgentAdapter = _build_agent(args)
     verdicts, scorecard = run(paths, agent, save_dir=args.save,
-                              cost_table=load_cost_table(args.costs))
+                              cost_table=load_cost_table(args.costs),
+                              progress=not args.json)
 
     report = {
         "agent": agent.name,
