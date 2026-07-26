@@ -9,6 +9,8 @@ build/
 .mypy_cache/
 .ruff_cache/
 results/*.json
+runs/
+leaderboard.html
 .DS_Store
 
 # Test set privato (held-out, anti-gaming): i task NON vanno mai committati.
