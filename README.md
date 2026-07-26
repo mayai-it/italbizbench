@@ -345,17 +345,33 @@ CI runs the same three on Python 3.11 / 3.12 / 3.13. See
 
 - **v0.1** ✅ — families A+B (20 tasks), reference agent, LLM adapters, 4-axis scoring
   with bootstrap CIs.
-- **v0.2 (in progress)** — done: 240 tasks (all six families A–F at 40 tasks with
+- **v0.2 (in progress)** ✅ done: 240 tasks (all six families A–F at 40 tasks with
   the full base/tricky/adversarial mix, including multi-step orchestration), real
   calibration (Brier/ECE/reliability), token+€ cost axis, Wilson CIs, **pass^k over
   repeated trials**, static leaderboard generator, private-set structure,
   benchmark card + contamination canary, resilient runner (resume/replay), and the
-  first real-agent runs with two documented harness iterations. Next: clean
-  official run of 3–4 real LLM agents, fiscal rules reviewed by an accountant.
-- **v0.3** — deterministic simulated user (`ask_user` with scripted answers:
-  clarify-then-act tasks), populated private held-out set, human expert baseline,
-  paired per-task agent comparisons.
-- **v1.0** — public leaderboard, dated `v2026.x` rule releases.
+  first real-agent runs with two documented harness iterations.
+
+**Next, in priority order:**
+
+1. **Clean official run** of 3–4 real LLM agents on the fixed environment
+   (`--trials 3` at least on one family) — the reference v0.2 numbers.
+2. **Deterministic simulated user**: an `ask_user` tool answering from a script in
+   the task YAML — enables *clarify-then-act* tasks (today ambiguity can only be
+   answered by halting) while keeping the scoring path LLM-free.
+3. **Accountant sign-off + human expert baseline**: fiscal rules reviewed by a
+   commercialista, who also solves a task subset as the human reference score.
+   External dependency — starts early, lands when it lands.
+4. **Populated private held-out set** (anti-gaming; required before any public
+   leaderboard carries weight).
+5. **Regulatory watch, human-in-the-loop**: a scheduled watcher hash-diffs the
+   primary sources (Agenzia delle Entrate, fatturapa.gov.it specs, Normattiva)
+   mapped to FISCAL-RULES sections and opens review issues on changes. Oracles
+   NEVER self-update: approved changes ship in the next dated release.
+6. **Paired per-task agent comparisons** (statistical power beyond independent CIs).
+
+- **v1.0** — public leaderboard, dated `v2026.x` rule releases fed by the
+  regulatory watch.
 
 ## License
 
