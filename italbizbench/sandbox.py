@@ -20,10 +20,13 @@ from .piva import is_valid_piva
 Client = dict[str, Any]
 
 
-# Anagrafiche sintetiche (P.IVA fittizie). Mai dati reali.
+# Anagrafiche sintetiche (P.IVA fittizie ma con check digit VALIDO: un agente
+# diligente che le verifica non deve trovare incoerenze). Mai dati reali.
+# Bug reale trovato da un run LLM: con P.IVA seed invalide, l'agente validava
+# l'anagrafica, la trovava rotta e si rifiutava — giustamente — di fatturare.
 DEFAULT_CLIENTS: dict[str, Client] = {
-    "Rossi Costruzioni Srl": {"piva": "01234567890", "codice_destinatario": "ABCDEF1", "pa": False},
-    "Comune di Esempio": {"piva": "09876543210", "codice_destinatario": "UFE000", "pa": True},
+    "Rossi Costruzioni Srl": {"piva": "01234567897", "codice_destinatario": "ABCDEF1", "pa": False},
+    "Comune di Esempio": {"piva": "09876543217", "codice_destinatario": "UFE000", "pa": True},
     "Bianchi GmbH": {"piva": "DE123456789", "codice_destinatario": "XXXXXXX", "estero": True},
 }
 

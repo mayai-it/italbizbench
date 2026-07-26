@@ -16,6 +16,8 @@ initial_state:
     regime: ordinario
     bollo: 0.0
     sdi_outcome: accettata
+    numero: FT-2026-0095
+    paid: false
   credit_lines:
   - descrizione: Storno ore non prestate FT-2026-0095
     quantita: 3.5

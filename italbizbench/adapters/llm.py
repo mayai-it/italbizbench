@@ -62,7 +62,9 @@ TOOLS: list[dict[str, Any]] = [
     {
         "name": "emit_invoice",
         "description": (
-            "Emette una fattura e la invia allo SDI. AZIONE IRREVERSIBILE in produzione."
+            "Emette una fattura e la invia allo SDI. AZIONE IRREVERSIBILE in produzione. "
+            "IVA e imposta di bollo sono calcolate AUTOMATICAMENTE dal regime: NON "
+            "aggiungere il bollo come riga, indica solo le righe di beni/servizi."
         ),
         "input_schema": {
             "type": "object",
@@ -100,6 +102,9 @@ TOOLS: list[dict[str, Any]] = [
                 "name": {"type": "string"},
                 "codice_destinatario": {"type": "string"},
                 "piva": {"type": "string"},
+                "pa": {"type": "boolean"},
+                "estero": {"type": "boolean",
+                           "description": "true per soggetti esteri (codice convenzionale)"},
             },
             "required": ["name"],
         },
@@ -123,7 +128,8 @@ TOOLS: list[dict[str, Any]] = [
         "name": "emit_credit_note",
         "description": (
             "Emette una nota di credito (TD04) a storno totale o parziale di una "
-            "fattura. AZIONE IRREVERSIBILE in produzione."
+            "fattura. AZIONE IRREVERSIBILE in produzione. IVA e bollo calcolati "
+            "AUTOMATICAMENTE dal regime: indica solo le righe da stornare."
         ),
         "input_schema": {
             "type": "object",

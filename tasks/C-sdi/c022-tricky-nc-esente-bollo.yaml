@@ -22,6 +22,8 @@ initial_state:
     regime: esente
     bollo: 2.0
     sdi_outcome: accettata
+    numero: FT-2026-0085
+    paid: false
   credit_lines:
   - descrizione: Storno totale FT-2026-0085
     quantita: 1.0

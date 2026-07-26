@@ -16,6 +16,8 @@ initial_state:
     regime: split_payment
     bollo: 0.0
     sdi_outcome: accettata
+    numero: FT-2026-0060
+    paid: false
   credit_lines:
   - descrizione: Storno totale FT-2026-0060
     quantita: 1

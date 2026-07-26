@@ -17,6 +17,8 @@ initial_state:
     regime: reverse_charge
     bollo: 0.0
     sdi_outcome: accettata
+    numero: FT-2026-0080
+    paid: false
   credit_lines:
   - descrizione: Storno totale FT-2026-0080
     quantita: 1.0

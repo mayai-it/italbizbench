@@ -17,6 +17,8 @@ initial_state:
     regime: split_payment
     bollo: 0.0
     sdi_outcome: accettata
+    numero: FT-2026-0090
+    paid: false
   credit_lines:
   - descrizione: Storno riga errata FT-2026-0090
     quantita: 1.0

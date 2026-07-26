@@ -2,9 +2,8 @@ id: C-005-base-nota-credito-parziale
 family: C-sdi
 difficulty: base
 title: Nota di credito parziale (storno di una riga)
-prompt: Sulla fattura a "Rossi Costruzioni Srl" da 1000 euro + IVA 22% una riga da 300 euro
-  + IVA 22% e stata addebitata per errore. Emetti nota di credito PARZIALE per stornare solo
-  quella riga.
+prompt: Sulla fattura a "Rossi Costruzioni Srl" da 1000 euro + IVA 22% una riga da 300 euro + IVA
+  22% e stata addebitata per errore. Emetti nota di credito PARZIALE per stornare solo quella riga.
 initial_state:
   action: credit_note
   client: Rossi Costruzioni Srl
@@ -17,6 +16,8 @@ initial_state:
     regime: ordinario
     bollo: 0.0
     sdi_outcome: accettata
+    numero: FT-2026-0051
+    paid: false
   credit_lines:
   - descrizione: Storno riga errata FT-2026-0051
     quantita: 1
