@@ -92,17 +92,19 @@ def _run_usage(agent: AgentAdapter, cost_table: CostTable) -> UsageStats:
 def run(path: Path | Sequence[Path], agent: AgentAdapter, save_dir: Path | None = None,
         cost_table: CostTable | None = None,
         progress: bool = False, resume: bool = False,
-        replay_only: bool = False) -> tuple[list[Verdict], dict[str, Any]]:
+        replay_only: bool = False, trials: int = 1) -> tuple[list[Verdict], dict[str, Any]]:
     paths: list[Path] = [path] if isinstance(path, Path) else list(path)
     if cost_table is None:
         cost_table = load_cost_table()
+    if trials > 1 and resume:
+        raise ValueError("--trials>1 non e compatibile con --resume/--replay-only")
     verdicts: list[Verdict] = []
     if save_dir is not None:
         save_dir.mkdir(parents=True, exist_ok=True)
     scenarios = load_all_scenarios(paths)
     try:
         _run_scenarios(scenarios, agent, verdicts, save_dir, cost_table, progress,
-                       resume=resume, replay_only=replay_only)
+                       resume=resume, replay_only=replay_only, trials=trials)
         if replay_only and len(verdicts) < len(scenarios):
             partial = aggregate(verdicts)
             partial["partial"] = True
@@ -135,60 +137,75 @@ def _replay_agent(transcript_path: Path) -> AgentAdapter:
     return LLMAgent(ScriptedLLMClient(script), name="replay")
 
 
+def _seed_sandbox(sc: Scenario) -> InvoicingSandbox:
+    """Sandbox fresca seminata dallo stato iniziale dello scenario.
+
+    Copie profonde: niente stato condiviso tra task ne tra trial ripetuti
+    (update_client muta l'anagrafica) ne mutazioni degli Scenario caricati.
+    """
+    sandbox = InvoicingSandbox()
+    for name, info in sc.initial_state.get("extra_clients", {}).items():
+        sandbox.clients[name] = dict(info)
+    # Famiglia C: semina le fatture gia trasmesse (es. scartate dallo SDI).
+    # Non sono opera dell'agente: seeded_invoices le esclude dalle sue azioni.
+    for inv in sc.initial_state.get("issued_invoices", []):
+        sandbox.issued.append(Invoice(**inv))
+    sandbox.seeded_invoices = len(sandbox.issued)
+    # Famiglia D: semina la casella PEC e le fatture passive gia registrate.
+    for msg in sc.initial_state.get("pec_inbox", []):
+        sandbox.pec_inbox.append(PecMessage(**msg))
+    for pur in sc.initial_state.get("purchases", []):
+        sandbox.purchases.append(PurchaseInvoice(**pur))
+    sandbox.seeded_purchases = len(sandbox.purchases)
+    # Famiglia E: semina i movimenti bancari (estratto conto simulato).
+    for tx in sc.initial_state.get("transactions", []):
+        sandbox.transactions.append(BankTransaction(**tx))
+    return sandbox
+
+
 def _run_scenarios(scenarios: list[Scenario], agent: AgentAdapter,
                    verdicts: list[Verdict], save_dir: Path | None,
                    cost_table: CostTable, progress: bool,
-                   resume: bool = False, replay_only: bool = False) -> None:
+                   resume: bool = False, replay_only: bool = False,
+                   trials: int = 1) -> None:
     for i, sc in enumerate(scenarios, start=1):
-        # La sandbox parte da copie profonde: niente stato condiviso tra task
-        # (update_client muta l'anagrafica) ne mutazioni degli Scenario caricati.
-        sandbox = InvoicingSandbox()
-        for name, info in sc.initial_state.get("extra_clients", {}).items():
-            sandbox.clients[name] = dict(info)
-        # Famiglia C: semina le fatture gia trasmesse (es. scartate dallo SDI).
-        # Non sono opera dell'agente: seeded_invoices le esclude dalle sue azioni.
-        for inv in sc.initial_state.get("issued_invoices", []):
-            sandbox.issued.append(Invoice(**inv))
-        sandbox.seeded_invoices = len(sandbox.issued)
-        # Famiglia D: semina la casella PEC e le fatture passive gia registrate.
-        for msg in sc.initial_state.get("pec_inbox", []):
-            sandbox.pec_inbox.append(PecMessage(**msg))
-        for pur in sc.initial_state.get("purchases", []):
-            sandbox.purchases.append(PurchaseInvoice(**pur))
-        sandbox.seeded_purchases = len(sandbox.purchases)
-        # Famiglia E: semina i movimenti bancari (estratto conto simulato).
-        for tx in sc.initial_state.get("transactions", []):
-            sandbox.transactions.append(BankTransaction(**tx))
-        # --resume: se il transcript del task esiste gia, lo si rigioca offline
-        # (zero API, zero costo) invece di rieseguire l'agente.
-        # --replay-only: i task SENZA transcript vengono saltati (nessuna chiamata
-        # API): serve a estrarre il report parziale da un run interrotto.
-        task_agent = agent
-        replayed = False
-        if resume and save_dir is not None:
-            transcript_path = save_dir / f"{sc.id}.json"
-            if transcript_path.exists():
-                task_agent = _replay_agent(transcript_path)
-                replayed = True
-            elif replay_only:
-                continue
-        action = task_agent.run(sc, sandbox)
-        v = score_task(sc, sandbox, action, usage=_run_usage(task_agent, cost_table))
-        verdicts.append(v)
-        if progress:
-            # Feedback in tempo reale sui run lunghi (240 task con un LLM reale
-            # richiedono decine di minuti): un verdetto per riga, flush immediato.
-            mark = "PASS" if v.passed else "FAIL"
-            tag = " (replay)" if replayed else ""
-            print(f"[{i}/{len(scenarios)}] [{mark}] {sc.id}{tag}", flush=True)
-        # Salva il transcript dell'agente (per riproducibilita / debug dei run reali).
-        # I task rigiocati NON riscrivono il transcript originale.
-        transcript = getattr(task_agent, "last_messages", None)
-        if save_dir is not None and transcript is not None and not replayed:
-            (save_dir / f"{sc.id}.json").write_text(
-                json.dumps(transcript, ensure_ascii=False, indent=2),
-                encoding="utf-8",
-            )
+        for t in range(1, trials + 1):
+            sandbox = _seed_sandbox(sc)
+            # --resume: se il transcript del task esiste gia, lo si rigioca offline
+            # (zero API, zero costo) invece di rieseguire l'agente.
+            # --replay-only: i task SENZA transcript vengono saltati (nessuna
+            # chiamata API): estrae il report parziale da un run interrotto.
+            task_agent = agent
+            replayed = False
+            if resume and save_dir is not None:
+                transcript_path = save_dir / f"{sc.id}.json"
+                if transcript_path.exists():
+                    task_agent = _replay_agent(transcript_path)
+                    replayed = True
+                elif replay_only:
+                    continue
+            action = task_agent.run(sc, sandbox)
+            v = score_task(sc, sandbox, action,
+                           usage=_run_usage(task_agent, cost_table))
+            verdicts.append(v)
+            if progress:
+                # Feedback in tempo reale sui run lunghi (240 task con un LLM
+                # reale richiedono decine di minuti): un verdetto per riga.
+                mark = "PASS" if v.passed else "FAIL"
+                tag = " (replay)" if replayed else ""
+                trial_tag = f" t{t}/{trials}" if trials > 1 else ""
+                print(f"[{i}/{len(scenarios)}{trial_tag}] [{mark}] {sc.id}{tag}",
+                      flush=True)
+            # Salva il transcript (riproducibilita / debug / replay). I task
+            # rigiocati NON riscrivono l'originale; i trial oltre il primo
+            # hanno un suffisso .trialN.
+            transcript = getattr(task_agent, "last_messages", None)
+            if save_dir is not None and transcript is not None and not replayed:
+                suffix = f".trial{t}" if t > 1 else ""
+                (save_dir / f"{sc.id}{suffix}.json").write_text(
+                    json.dumps(transcript, ensure_ascii=False, indent=2),
+                    encoding="utf-8",
+                )
 
 
 def _build_agent(args: argparse.Namespace) -> AgentAdapter:
@@ -237,8 +254,16 @@ def main(argv: list[str] | None = None) -> int:
                    help="come --resume ma i task senza transcript vengono SALTATI "
                         "(zero chiamate API): estrae il report parziale da un run "
                         "interrotto")
+    p.add_argument("--trials", type=int, default=1,
+                   help="esegue ogni task k volte e riporta pass^k (un task 'passa' "
+                        "solo se passano TUTTI i k trial): misura l'affidabilita, "
+                        "al costo di k volte il run. Incompatibile con --resume")
     p.add_argument("--json", action="store_true", help="output JSON")
     args = p.parse_args(argv)
+    if args.trials < 1:
+        p.error("--trials deve essere >= 1")
+    if args.trials > 1 and (args.resume or args.replay_only):
+        p.error("--trials>1 non e compatibile con --resume/--replay-only")
     if args.replay_only:
         args.resume = True
     if args.resume and args.save is None:
@@ -254,7 +279,7 @@ def main(argv: list[str] | None = None) -> int:
     verdicts, scorecard = run(paths, agent, save_dir=args.save,
                               cost_table=load_cost_table(args.costs),
                               progress=not args.json, resume=args.resume,
-                              replay_only=args.replay_only)
+                              replay_only=args.replay_only, trials=args.trials)
 
     report = {
         "agent": agent.name,
@@ -282,6 +307,10 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Task: {scorecard['n_tasks']}  Pass-rate: {scorecard['pass_rate']} "
           f"(IC95% bootstrap {scorecard['correctness_ci95']}, "
           f"Wilson {scorecard['correctness_wilson_ci95']})")
+    if "pass_hat_k" in scorecard:
+        print(f"pass^{scorecard['trials']} su {scorecard['n_scenarios']} scenari: "
+              f"{scorecard['pass_hat_k']} "
+              f"(Wilson {scorecard['pass_hat_k_wilson_ci95']})")
     print(f"Efficienza media: {scorecard['efficiency_mean']}  "
           f"Sicurezza media: {scorecard['safety_mean']}")
     cost = scorecard["cost_eur_total"]

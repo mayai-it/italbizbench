@@ -188,9 +188,27 @@ def aggregate(verdicts: list[Verdict]) -> dict[str, Any]:
                    if v.usage is not None and v.usage.cost_eur is not None]
     cost_total = round(sum(known_costs), 4) if known_costs else None
 
+    # pass^k (stile tau-bench): con --trials k ogni scenario compare k volte nel
+    # pool; "passa^k" solo se TUTTI i k trial passano. Misura l'affidabilita,
+    # non la fortuna del singolo run: un agente 0.9 pass@1 ma flaky crolla qui.
+    by_scenario: dict[str, list[Verdict]] = {}
+    for v in verdicts:
+        by_scenario.setdefault(v.scenario_id, []).append(v)
+    k = max(len(g) for g in by_scenario.values())
+    pass_k: dict[str, Any] = {}
+    if k > 1:
+        all_pass = [all(v.passed for v in g) for g in by_scenario.values()]
+        pass_k = {
+            "trials": k,
+            "n_scenarios": len(by_scenario),
+            "pass_hat_k": round(mean(1.0 if p else 0.0 for p in all_pass), 3),
+            "pass_hat_k_wilson_ci95": wilson_ci(sum(all_pass), len(all_pass)),
+        }
+
     return {
         "n_tasks": len(verdicts),
         "pass_rate": round(mean(corr), 3),
+        **pass_k,
         "correctness_ci95": _bootstrap_ci(corr),
         "correctness_wilson_ci95": wilson_ci(sum(v.passed for v in verdicts), len(verdicts)),
         "efficiency_mean": round(mean(eff), 3),
