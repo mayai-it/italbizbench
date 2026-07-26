@@ -14,7 +14,6 @@
   </picture>
 </p>
 
-# ItalBizBench
 
 **A benchmark that measures how well an AI agent actually does the fiscal and
 administrative work of an Italian SME.**
