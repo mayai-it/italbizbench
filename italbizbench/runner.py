@@ -91,7 +91,7 @@ def _run_usage(agent: AgentAdapter, cost_table: CostTable) -> UsageStats:
 
 def run(path: Path | Sequence[Path], agent: AgentAdapter, save_dir: Path | None = None,
         cost_table: CostTable | None = None,
-        progress: bool = False) -> tuple[list[Verdict], dict[str, Any]]:
+        progress: bool = False, resume: bool = False) -> tuple[list[Verdict], dict[str, Any]]:
     paths: list[Path] = [path] if isinstance(path, Path) else list(path)
     if cost_table is None:
         cost_table = load_cost_table()
@@ -100,7 +100,8 @@ def run(path: Path | Sequence[Path], agent: AgentAdapter, save_dir: Path | None 
         save_dir.mkdir(parents=True, exist_ok=True)
     scenarios = load_all_scenarios(paths)
     try:
-        _run_scenarios(scenarios, agent, verdicts, save_dir, cost_table, progress)
+        _run_scenarios(scenarios, agent, verdicts, save_dir, cost_table, progress,
+                       resume=resume)
     except (RuntimeError, KeyboardInterrupt) as e:
         # Un errore API (credito esaurito, rete) o un Ctrl+C a meta run non
         # devono buttare via i verdetti gia raccolti: si aggrega il parziale.
@@ -114,9 +115,24 @@ def run(path: Path | Sequence[Path], agent: AgentAdapter, save_dir: Path | None 
     return verdicts, aggregate(verdicts)
 
 
+def _replay_agent(transcript_path: Path) -> AgentAdapter:
+    """Agente che RIGIOCA un transcript salvato, senza chiamate API.
+
+    Le tool call registrate vengono rieseguite in ordine sulla sandbox dal loop
+    standard (ScriptedLLMClient): l'esecuzione e deterministica, quindi i verdetti
+    sono identici al run originale. Token e costo del task NON vengono ricontati.
+    """
+    from .adapters.llm import LLMAgent, ScriptedLLMClient, ToolCall
+    msgs = json.loads(transcript_path.read_text(encoding="utf-8"))
+    script = [[ToolCall(**tc) for tc in m["tool_calls"]]
+              for m in msgs if m.get("role") == "assistant" and "tool_calls" in m]
+    return LLMAgent(ScriptedLLMClient(script), name="replay")
+
+
 def _run_scenarios(scenarios: list[Scenario], agent: AgentAdapter,
                    verdicts: list[Verdict], save_dir: Path | None,
-                   cost_table: CostTable, progress: bool) -> None:
+                   cost_table: CostTable, progress: bool,
+                   resume: bool = False) -> None:
     for i, sc in enumerate(scenarios, start=1):
         # La sandbox parte da copie profonde: niente stato condiviso tra task
         # (update_client muta l'anagrafica) ne mutazioni degli Scenario caricati.
@@ -137,17 +153,28 @@ def _run_scenarios(scenarios: list[Scenario], agent: AgentAdapter,
         # Famiglia E: semina i movimenti bancari (estratto conto simulato).
         for tx in sc.initial_state.get("transactions", []):
             sandbox.transactions.append(BankTransaction(**tx))
-        action = agent.run(sc, sandbox)
-        v = score_task(sc, sandbox, action, usage=_run_usage(agent, cost_table))
+        # --resume: se il transcript del task esiste gia, lo si rigioca offline
+        # (zero API, zero costo) invece di rieseguire l'agente.
+        task_agent = agent
+        replayed = False
+        if resume and save_dir is not None:
+            transcript_path = save_dir / f"{sc.id}.json"
+            if transcript_path.exists():
+                task_agent = _replay_agent(transcript_path)
+                replayed = True
+        action = task_agent.run(sc, sandbox)
+        v = score_task(sc, sandbox, action, usage=_run_usage(task_agent, cost_table))
         verdicts.append(v)
         if progress:
             # Feedback in tempo reale sui run lunghi (240 task con un LLM reale
             # richiedono decine di minuti): un verdetto per riga, flush immediato.
             mark = "PASS" if v.passed else "FAIL"
-            print(f"[{i}/{len(scenarios)}] [{mark}] {sc.id}", flush=True)
+            tag = " (replay)" if replayed else ""
+            print(f"[{i}/{len(scenarios)}] [{mark}] {sc.id}{tag}", flush=True)
         # Salva il transcript dell'agente (per riproducibilita / debug dei run reali).
-        transcript = getattr(agent, "last_messages", None)
-        if save_dir is not None and transcript is not None:
+        # I task rigiocati NON riscrivono il transcript originale.
+        transcript = getattr(task_agent, "last_messages", None)
+        if save_dir is not None and transcript is not None and not replayed:
             (save_dir / f"{sc.id}.json").write_text(
                 json.dumps(transcript, ensure_ascii=False, indent=2),
                 encoding="utf-8",
@@ -192,8 +219,14 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--private-dir", type=Path, default=None,
                    help="cartella di task held-out privati da AGGIUNGERE ai task "
                         "pubblici (es. tasks-private/; mai committata)")
+    p.add_argument("--resume", action="store_true",
+                   help="riprende un run interrotto: i task con transcript gia "
+                        "presente in --save vengono rigiocati offline (senza API "
+                        "e senza costi); si eseguono solo i mancanti")
     p.add_argument("--json", action="store_true", help="output JSON")
     args = p.parse_args(argv)
+    if args.resume and args.save is None:
+        p.error("--resume richiede --save (la cartella con i transcript)")
 
     paths: list[Path] = [args.tasks]
     if args.private_dir is not None:
@@ -204,7 +237,7 @@ def main(argv: list[str] | None = None) -> int:
     agent: AgentAdapter = _build_agent(args)
     verdicts, scorecard = run(paths, agent, save_dir=args.save,
                               cost_table=load_cost_table(args.costs),
-                              progress=not args.json)
+                              progress=not args.json, resume=args.resume)
 
     report = {
         "agent": agent.name,

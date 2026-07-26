@@ -42,6 +42,34 @@ def test_partial_report_on_midrun_failure():
     assert scorecard["n_tasks"] == 2
 
 
+def test_resume_replays_transcripts_without_api(tmp_path):
+    # --resume: i task con transcript salvato vengono rigiocati offline con
+    # verdetto identico; l'agente "vero" non viene MAI chiamato per quei task.
+    from italbizbench.adapters.base import AgentAdapter
+    from italbizbench.adapters.llm import LLMAgent, ScriptedLLMClient, ToolCall
+
+    task = TASKS / "B-emissione" / "b001-base-ordinario.yaml"
+    script = [
+        [ToolCall("c1", "emit_invoice", {
+            "client": "Rossi Costruzioni Srl", "regime": "ordinario",
+            "lines": [{"descrizione": "Consulenza", "quantita": 1,
+                       "prezzo_unitario": 1000.0, "aliquota_iva": 22.0}]})],
+        [ToolCall("c2", "finish", {"confidence": 0.9})],
+    ]
+    first, _ = run(task, LLMAgent(ScriptedLLMClient(script)), save_dir=tmp_path)
+    assert first[0].passed
+
+    class MustNotBeCalled(AgentAdapter):
+        name = "boom"
+
+        def run(self, scenario, sandbox):  # type: ignore[override]
+            raise AssertionError("l'agente non va chiamato sui task rigiocati")
+
+    replayed, scorecard = run(task, MustNotBeCalled(), save_dir=tmp_path, resume=True)
+    assert replayed[0].passed == first[0].passed
+    assert scorecard["pass_rate"] == 1.0
+
+
 def test_piva_checksum():
     s = InvoicingSandbox()
     assert s.validate_piva("12345678903") is True   # check digit corretto
