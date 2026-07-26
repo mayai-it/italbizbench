@@ -270,7 +270,13 @@ class LLMAgent(AgentAdapter):
                 self.last_usage.input_tokens += resp.usage.input_tokens
                 self.last_usage.output_tokens += resp.usage.output_tokens
             if not resp.tool_calls:
+                # Turno di solo testo: senza un messaggio user di chiusura la
+                # conversazione terminerebbe con un assistant, che l'API Anthropic
+                # tratta come prefill e RIFIUTA (400). Si sollecita e si prosegue.
                 messages.append({"role": "assistant", "content": resp.text})
+                messages.append({"role": "user", "content": (
+                    "Prosegui usando SOLO gli strumenti forniti; quando hai "
+                    "concluso chiama `finish`.")})
                 continue
             messages.append({
                 "role": "assistant",

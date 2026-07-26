@@ -36,6 +36,26 @@ def test_llm_loop_emits_and_passes():
     assert sandbox.issued and sandbox.issued[-1].iva == 220.0
 
 
+def test_llm_loop_text_turn_ends_with_user_message():
+    # Regressione: un turno di solo testo (nessuna tool call) NON deve lasciare
+    # la conversazione con un assistant in coda — l'API Anthropic lo tratta come
+    # prefill e risponde 400. Il loop deve accodare un sollecito user e proseguire.
+    sc = _scenario("B-emissione/b001-base-ordinario.yaml")
+    script: list[list[ToolCall]] = [
+        [],  # il "modello" divaga in testo puro senza chiamare strumenti
+        [ToolCall("c1", "finish", {"confidence": 0.5})],
+    ]
+    agent = LLMAgent(ScriptedLLMClient(script), name="scripted")
+    action = agent.run(sc, InvoicingSandbox())
+    assert action is not None
+    roles = [m["role"] for m in agent.last_messages]
+    # Dopo il turno di solo testo: prompt utente, testo assistant, sollecito user
+    # (poi il turno di finish aggiunge il suo assistant con le tool call).
+    assert roles[:3] == ["user", "assistant", "user"]
+    for prev, cur in zip(roles, roles[1:], strict=False):
+        assert not (prev == "assistant" and cur == "assistant")
+
+
 def test_llm_loop_abstains_on_adversarial():
     sc = _scenario("B-emissione/b005-adversarial-ambiguo.yaml")
     script = [[ToolCall("c1", "finish",
