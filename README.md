@@ -208,7 +208,21 @@ python -m italbizbench.runner tasks --agent local --model qwen2.5 \
 
 # Save per-task transcripts + the JSON report (leaderboard input)
 python -m italbizbench.runner tasks --agent anthropic --json --save runs/claude
+
+# Reliability over repeated trials: pass^k (a task passes only if ALL k trials pass)
+python -m italbizbench.runner tasks --agent anthropic --trials 3 --save runs/claude
+
+# Resume an interrupted run: saved transcripts are replayed OFFLINE (zero API cost,
+# identical verdicts — tool execution is deterministic), only missing tasks hit the API
+python -m italbizbench.runner tasks --agent anthropic --save runs/claude --resume
+
+# Extract a partial report from a dead run without any API call
+python -m italbizbench.runner tasks --agent reference --save runs/claude --replay-only
 ```
+
+Long runs are resilient by design: live per-task progress, retry with backoff on
+transient network errors, and a report marked `partial: true` (never silently
+incomplete) if the run dies mid-way — API credit running out included.
 
 All LLM agents share one tool-use loop; only the client differs. To plug in another
 vendor, implement the `LLMClient` protocol — a single
@@ -222,6 +236,32 @@ and can be overridden per run with `--model`, or persistently with
 `ITALBIZBENCH_MODEL_LOCAL`. If the API rejects a model ID, or the endpoint is
 unreachable, the run fails immediately with an actionable message — never a silent
 fallback to a stale default.
+
+## First real-agent runs (July 2026): the harness is part of the measurement
+
+The first full runs with a real agent (`claude-sonnet-5`) produced two findings
+worth more than the score itself:
+
+1. **The abstention protocol must be explicit.** With an implicit contract the
+   model *behaved* safely on 11/11 adversarial traps (refused to fabricate data,
+   refused explicit falsification requests) but packed its explanations into
+   `result`, which the anti-hedging rule counts as answering: adversarial
+   pass-rate 0.18. Declaring the contract in the system prompt ("abstention =
+   empty result + notes") moved it to 0.91 and ECE from 0.23 to 0.011 — same
+   model, same tasks. Benchmarks that don't pin down the harness measure prompt
+   ambiguity, not agent safety. The protocol is now part of
+   [BENCHMARK-CARD.md](BENCHMARK-CARD.md).
+2. **A diligent agent audits the environment.** The model validated seed
+   P.IVAs before invoicing, found some with invalid check digits (a real bug in
+   our synthetic registry), and rightly refused to act. Four environment defects
+   were found and fixed this way; on the same 124 tasks the score went 0.782 →
+   0.919 across two harness iterations. Deterministic oracles make this
+   debugging loop possible — every FAIL is fully explainable from the transcript.
+
+What remains after cleanup is genuine signal: single-task abstention is strong
+(family A adversarial 10/11) but **compositional safety is weaker** — in
+multi-step scenarios the model tends to execute the clear step even when the
+other one is ambiguous, instead of halting the whole batch.
 
 ## Static leaderboard (GitHub Pages ready)
 
@@ -291,7 +331,7 @@ an oracle*. Until a commercialista signs off, published numbers must be labelled
 make dev      # pip install -e ".[dev]"
 make lint     # ruff
 make types    # mypy --strict (zero ignores)
-make test     # pytest (93 tests, all offline — no network anywhere in the test suite)
+make test     # pytest (101 tests, all offline — no network anywhere in the test suite)
 make check    # all three; must be green before every commit
 ```
 
@@ -307,10 +347,14 @@ CI runs the same three on Python 3.11 / 3.12 / 3.13. See
   with bootstrap CIs.
 - **v0.2 (in progress)** — done: 240 tasks (all six families A–F at 40 tasks with
   the full base/tricky/adversarial mix, including multi-step orchestration), real
-  calibration (Brier/ECE/reliability), token+€ cost axis, Wilson CIs, static
-  leaderboard generator, private-set structure. Next: first published run of 3–4
-  real LLM agents, fiscal rules reviewed by an accountant.
-- **v0.3** — populated private held-out set; paired per-task agent comparisons.
+  calibration (Brier/ECE/reliability), token+€ cost axis, Wilson CIs, **pass^k over
+  repeated trials**, static leaderboard generator, private-set structure,
+  benchmark card + contamination canary, resilient runner (resume/replay), and the
+  first real-agent runs with two documented harness iterations. Next: clean
+  official run of 3–4 real LLM agents, fiscal rules reviewed by an accountant.
+- **v0.3** — deterministic simulated user (`ask_user` with scripted answers:
+  clarify-then-act tasks), populated private held-out set, human expert baseline,
+  paired per-task agent comparisons.
 - **v1.0** — public leaderboard, dated `v2026.x` rule releases.
 
 ## License

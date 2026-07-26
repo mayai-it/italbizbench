@@ -32,7 +32,11 @@ Il punteggio è un profilo su **4 assi**:
    astensioni sono misurate a parte (`abstention_accuracy`), così "non fare mai nulla"
    non risulta perfettamente calibrato.
 
-Il pass-rate esce con **due intervalli di confidenza al 95%** (bootstrap e Wilson).
+Il pass-rate esce con **due intervalli di confidenza al 95%** (bootstrap e Wilson),
+e con `--trials k` anche come **pass^k** su trial ripetuti (un task "passa" solo se
+passano tutti i k tentativi: misura l'affidabilità, non la fortuna del singolo run).
+Governance in `BENCHMARK-CARD.md`: protocollo di astensione, policy anti-gaming e
+canary anti-contaminazione in ogni file di task.
 Con 240 task si distinguono agenti con gap ≳ 0.10; per ~10 punti servono ~300 task —
 è scritto nel README perché nessuno legga 2 punti di differenza come un segnale.
 
