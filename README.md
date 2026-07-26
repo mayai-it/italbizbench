@@ -354,8 +354,12 @@ CI runs the same three on Python 3.11 / 3.12 / 3.13. See
 
 **Next, in priority order:**
 
-1. **Clean official run** of 3–4 real LLM agents on the fixed environment
-   (`--trials 3` at least on one family) — the reference v0.2 numbers.
+1. **Clean official run + free-agent gauntlet** on the fixed environment: 3–4
+   frontier agents (`--trials 3` at least on one family) plus ~10 free/almost-free
+   agents — local Ollama models (qwen3/qwen2.5/llama3.x/mistral-nemo/hermes3/granite)
+   and free API tiers (Gemini Flash-Lite, Mistral Experiment, Groq) via
+   `examples/run_gauntlet.sh` — one leaderboard whose spread demonstrates the
+   benchmark's discriminative power.
 2. **Deterministic simulated user**: an `ask_user` tool answering from a script in
    the task YAML — enables *clarify-then-act* tasks (today ambiguity can only be
    answered by halting) while keeping the scoring path LLM-free.
