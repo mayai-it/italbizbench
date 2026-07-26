@@ -20,6 +20,28 @@ def test_reference_agent_passes_all():
     assert scorecard["n_predictions"] + scorecard["n_abstentions"] == 240
 
 
+def test_partial_report_on_midrun_failure():
+    # Un errore API a meta run (credito esaurito, rete) non deve buttare via i
+    # verdetti raccolti: scorecard parziale, etichettata come tale.
+    class ExplodingAgent(ReferenceAgent):
+        name = "exploding"
+
+        def __init__(self) -> None:
+            self.calls = 0
+
+        def run(self, scenario, sandbox):  # type: ignore[override]
+            self.calls += 1
+            if self.calls > 2:
+                raise RuntimeError("credito esaurito (simulato)")
+            return super().run(scenario, sandbox)
+
+    verdicts, scorecard = run(TASKS / "A-anagrafiche", ExplodingAgent())
+    assert len(verdicts) == 2
+    assert scorecard["partial"] is True
+    assert scorecard["n_tasks_expected"] == 40
+    assert scorecard["n_tasks"] == 2
+
+
 def test_piva_checksum():
     s = InvoicingSandbox()
     assert s.validate_piva("12345678903") is True   # check digit corretto

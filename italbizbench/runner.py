@@ -99,6 +99,24 @@ def run(path: Path | Sequence[Path], agent: AgentAdapter, save_dir: Path | None 
     if save_dir is not None:
         save_dir.mkdir(parents=True, exist_ok=True)
     scenarios = load_all_scenarios(paths)
+    try:
+        _run_scenarios(scenarios, agent, verdicts, save_dir, cost_table, progress)
+    except (RuntimeError, KeyboardInterrupt) as e:
+        # Un errore API (credito esaurito, rete) o un Ctrl+C a meta run non
+        # devono buttare via i verdetti gia raccolti: si aggrega il parziale.
+        # Il report va etichettato come parziale, mai spacciato per completo.
+        print(f"\n*** RUN INTERROTTO dopo {len(verdicts)}/{len(scenarios)} task: {e}",
+              flush=True)
+        partial = aggregate(verdicts)
+        partial["partial"] = True
+        partial["n_tasks_expected"] = len(scenarios)
+        return verdicts, partial
+    return verdicts, aggregate(verdicts)
+
+
+def _run_scenarios(scenarios: list[Scenario], agent: AgentAdapter,
+                   verdicts: list[Verdict], save_dir: Path | None,
+                   cost_table: CostTable, progress: bool) -> None:
     for i, sc in enumerate(scenarios, start=1):
         # La sandbox parte da copie profonde: niente stato condiviso tra task
         # (update_client muta l'anagrafica) ne mutazioni degli Scenario caricati.
@@ -134,7 +152,6 @@ def run(path: Path | Sequence[Path], agent: AgentAdapter, save_dir: Path | None 
                 json.dumps(transcript, ensure_ascii=False, indent=2),
                 encoding="utf-8",
             )
-    return verdicts, aggregate(verdicts)
 
 
 def _build_agent(args: argparse.Namespace) -> AgentAdapter:
