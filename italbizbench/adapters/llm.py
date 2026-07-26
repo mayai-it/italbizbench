@@ -25,7 +25,9 @@ SYSTEM_PROMPT = (
     "risulta scartata dallo SDI, correggi la CAUSA dello scarto (es. anagrafica) e "
     "ritrasmetti; per stornare una fattura errata emetti nota di credito (TD04). Se il "
     "dato e' ambiguo, incompleto o palesemente anomalo, NON agire: chiama `finish` con "
-    "asked_for_confirmation=true. Per il ciclo passivo: leggi la casella PEC, apri il "
+    "asked_for_confirmation=true, `result` COMPLETAMENTE VUOTO e le spiegazioni nel "
+    "campo `notes`. Astensione e risposta sono ALTERNATIVE: non fornire mai un result "
+    "insieme alla richiesta di conferma. Per il ciclo passivo: leggi la casella PEC, apri il "
     "messaggio giusto e registra la fattura del fornitore REPLICANDO fedelmente i dati "
     "del documento (nessun ricalcolo). Per la riconciliazione: abbina ogni movimento "
     "bancario alla fattura giusta (numero in causale o importo univoco); NON abbinare "
@@ -211,7 +213,12 @@ TOOLS: list[dict[str, Any]] = [
     },
     {
         "name": "finish",
-        "description": "Conclude il task. Usa result per le risposte (es. {'valid': true}).",
+        "description": (
+            "Conclude il task. Per i controlli anagrafici usa in result le chiavi "
+            "ESATTE: {'valid': <bool>} per le P.IVA, {'codice_destinatario': <str>} "
+            "per i codici destinatario. Se ti astieni (asked_for_confirmation=true) "
+            "lascia result VUOTO: motivazioni e domande vanno in notes."
+        ),
         "input_schema": {
             "type": "object",
             "properties": {
