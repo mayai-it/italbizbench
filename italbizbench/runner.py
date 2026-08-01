@@ -18,7 +18,7 @@ import yaml
 
 from .adapters import AgentAdapter, ReferenceAgent
 from .costs import CostTable, compute_cost_eur, load_cost_table
-from .models import Scenario, UsageStats, Verdict
+from .models import AgentAction, Scenario, UsageStats, Verdict
 from .sandbox import BankTransaction, Invoice, InvoicingSandbox, PecMessage, PurchaseInvoice
 from .scoring import aggregate, score_task
 
@@ -43,6 +43,68 @@ def resolve_model(vendor: str, cli_value: str | None,
     """ID modello effettivo: --model > variabile d'ambiente > default del vendor."""
     e: Mapping[str, str] = os.environ if env is None else env
     return cli_value or e.get(MODEL_ENV_VARS[vendor], "") or DEFAULT_MODELS[vendor]
+
+
+RUN_META = "meta.json"
+
+
+def write_run_meta(save_dir: Path, agent_name: str, model: str | None,
+                   trials: int = 1, sources: list[str] | None = None) -> None:
+    """Registra in --save CHI ha prodotto i transcript di questa cartella.
+
+    Senza questo marcatore un `--resume`/`--replay-only` lanciato con un `--agent`
+    diverso attribuirebbe in SILENZIO i risultati all'agente sbagliato: il report
+    porterebbe il nome dell'agente da riga di comando mentre i verdetti vengono
+    dai transcript di un altro. E' esattamente il tipo di corruzione silenziosa
+    che il benchmark non puo permettersi.
+    """
+    meta: dict[str, Any] = {"agent": agent_name, "model": model, "trials": trials}
+    if sources is not None:
+        meta["sources"] = sources
+    (save_dir / RUN_META).write_text(
+        json.dumps(meta, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def read_run_meta(save_dir: Path) -> dict[str, Any] | None:
+    """Provenienza dei transcript in `save_dir`; None se il marcatore non c'e'.
+
+    Un marcatore ILLEGGIBILE non equivale a un marcatore assente: significa che
+    la cartella e stata manomessa o troncata, e trattarlo come "cartella legacy"
+    declasserebbe l'attribuzione in silenzio. Meglio fermarsi.
+    """
+    path = save_dir / RUN_META
+    if not path.exists():
+        return None
+    try:
+        data: Any = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as e:
+        raise ValueError(f"{path}: marcatore di provenienza illeggibile ({e}). "
+                         "Rimuovilo solo se sai a chi appartengono i transcript.") from e
+    if not isinstance(data, dict) or not isinstance(data.get("agent"), str) \
+            or not data["agent"]:
+        raise ValueError(f"{path}: marcatore di provenienza malformato "
+                         "(campo 'agent' assente o non testuale).")
+    return data
+
+
+def has_transcripts(save_dir: Path) -> bool:
+    """True se la cartella contiene almeno un transcript rigiocabile."""
+    if not save_dir.is_dir():
+        return False
+    return any(f.name != RUN_META and not f.name.startswith("report")
+               for f in save_dir.glob("*.json"))
+
+
+def has_run_output(save_dir: Path) -> bool:
+    """True se la cartella contiene misure di un run precedente.
+
+    Non basta guardare i transcript: un agente che non li registra (il reference
+    rule-based) lascia solo il report, che pero e' un risultato a tutti gli
+    effetti e non va sovrascritto da una misura diversa.
+    """
+    if not save_dir.is_dir():
+        return False
+    return has_transcripts(save_dir) or any(save_dir.glob("report*.json"))
 
 
 def load_scenarios(path: Path) -> list[Scenario]:
@@ -102,25 +164,46 @@ def run(path: Path | Sequence[Path], agent: AgentAdapter, save_dir: Path | None 
     if save_dir is not None:
         save_dir.mkdir(parents=True, exist_ok=True)
     scenarios = load_all_scenarios(paths)
+    # Contatore dei task rigiocati da transcript: un report con token a zero e
+    # costo non stimabile deve poter essere spiegato (vedi scorecard["replayed"]).
+    replay_count = [0]
     try:
         _run_scenarios(scenarios, agent, verdicts, save_dir, cost_table, progress,
-                       resume=resume, replay_only=replay_only, trials=trials)
+                       resume=resume, replay_only=replay_only, trials=trials,
+                       replay_count=replay_count)
         if replay_only and len(verdicts) < len(scenarios):
             partial = aggregate(verdicts)
             partial["partial"] = True
             partial["n_tasks_expected"] = len(scenarios)
-            return verdicts, partial
+            return verdicts, _mark_replayed(partial, replay_count[0])
     except (RuntimeError, KeyboardInterrupt) as e:
         # Un errore API (credito esaurito, rete) o un Ctrl+C a meta run non
         # devono buttare via i verdetti gia raccolti: si aggrega il parziale.
         # Il report va etichettato come parziale, mai spacciato per completo.
+        # Su stderr: con --json lo stdout deve restare JSON puro e parsabile.
         print(f"\n*** RUN INTERROTTO dopo {len(verdicts)}/{len(scenarios)} task: {e}",
-              flush=True)
+              file=sys.stderr, flush=True)
         partial = aggregate(verdicts)
         partial["partial"] = True
         partial["n_tasks_expected"] = len(scenarios)
-        return verdicts, partial
-    return verdicts, aggregate(verdicts)
+        return verdicts, _mark_replayed(partial, replay_count[0])
+    return verdicts, _mark_replayed(aggregate(verdicts), replay_count[0])
+
+
+def _mark_replayed(scorecard: dict[str, Any], replayed: int) -> dict[str, Any]:
+    """Annota quanti task vengono da transcript rigiocati (chiave assente se zero).
+
+    I task rigiocati non ricontano token ne costo, quindi in un run misto i due
+    assi coprono solo una parte dei task: i token restano come SOGLIA MINIMA
+    (dichiarata da `tokens_partial`) e il costo torna non stimabile, perche un
+    costo sottostimato e' un numero sbagliato, non un'approssimazione — la stessa
+    regola di costs.yaml, che preferisce `null` a un prezzo inventato.
+    """
+    if replayed:
+        scorecard["replayed"] = replayed
+        scorecard["tokens_partial"] = True
+        scorecard["cost_eur_total"] = None
+    return scorecard
 
 
 def _replay_agent(transcript_path: Path) -> AgentAdapter:
@@ -167,7 +250,7 @@ def _run_scenarios(scenarios: list[Scenario], agent: AgentAdapter,
                    verdicts: list[Verdict], save_dir: Path | None,
                    cost_table: CostTable, progress: bool,
                    resume: bool = False, replay_only: bool = False,
-                   trials: int = 1) -> None:
+                   trials: int = 1, replay_count: list[int] | None = None) -> None:
     for i, sc in enumerate(scenarios, start=1):
         for t in range(1, trials + 1):
             sandbox = _seed_sandbox(sc)
@@ -182,6 +265,8 @@ def _run_scenarios(scenarios: list[Scenario], agent: AgentAdapter,
                 if transcript_path.exists():
                     task_agent = _replay_agent(transcript_path)
                     replayed = True
+                    if replay_count is not None:
+                        replay_count[0] += 1
                 elif replay_only:
                     continue
             action = task_agent.run(sc, sandbox)
@@ -208,6 +293,35 @@ def _run_scenarios(scenarios: list[Scenario], agent: AgentAdapter,
                 )
 
 
+class ReplayOnlyAgent(AgentAdapter):
+    """Segnaposto per `--replay-only`: porta solo il nome dell'agente originale.
+
+    In questa modalita OGNI task viene rigiocato da transcript e i task senza
+    transcript vengono saltati, quindi nessun client di vendor va costruito:
+    niente SDK installato, niente chiave API, niente rete. Se qualcuno prova
+    davvero a eseguirlo e' un bug dell'harness, e deve fallire forte.
+    """
+
+    def __init__(self, name: str, model: str | None = None) -> None:
+        self.name = name
+        self.model = model
+
+    def run(self, scenario: Scenario, sandbox: InvoicingSandbox) -> AgentAction:
+        raise RuntimeError(
+            f"--replay-only: {scenario.id} non ha transcript e va saltato, non eseguito")
+
+
+def _agent_label(args: argparse.Namespace) -> tuple[str, str | None]:
+    """Nome (e modello) dell'agente SENZA costruirne il client.
+
+    Serve in `--replay-only`, dove il client non va mai istanziato.
+    """
+    if args.agent == "reference":
+        return ReferenceAgent.name, None
+    model = resolve_model(args.agent, args.model)
+    return f"{args.agent}:{model}", model
+
+
 def _build_agent(args: argparse.Namespace) -> AgentAdapter:
     """Costruisce l'agente scelto. Import pigri: i client SDK servono solo se usati."""
     if args.agent == "reference":
@@ -228,11 +342,109 @@ def _build_agent(args: argparse.Namespace) -> AgentAdapter:
                     name=f"local:{model}")
 
 
+def _agent_from_label(label: str, model: Any) -> tuple[str, str | None]:
+    """Inverso di `_agent_label`: da "vendor:modello" a (vendor, modello).
+
+    Serve per adottare l'etichetta registrata nel marcatore quando l'utente non
+    passa `--agent`: la cartella sa gia chi l'ha prodotta, ridigitarlo e' solo
+    un'occasione di sbagliare.
+    """
+    if ":" not in label:
+        return "reference", None
+    vendor, _, model_in_label = label.partition(":")
+    if vendor not in DEFAULT_MODELS:
+        raise ValueError(f"{RUN_META}: vendor '{vendor}' non riconosciuto in "
+                         f"'{label}'")
+    return vendor, (model if isinstance(model, str) and model else model_in_label)
+
+
+def _sources(args: argparse.Namespace) -> list[str]:
+    """Sorgenti di task del run, normalizzate e ordinate (per il marcatore)."""
+    paths = [args.tasks] + ([args.private_dir] if args.private_dir else [])
+    return sorted(str(Path(q)) for q in paths)
+
+
+def _resolve_provenance(args: argparse.Namespace, p: argparse.ArgumentParser,
+                        agent_explicit: bool) -> str:
+    """Stabilisce a chi vanno attribuiti i verdetti, e come lo sappiamo.
+
+    Ritorna l'origine dell'etichetta: `transcript-meta` (letta dal marcatore
+    della cartella) o `dichiarata-da-cli` (asserita da chi lancia il comando).
+    Il controllo scatta ogni volta che la cartella contiene GIA' dei transcript,
+    non solo con `--resume`: anche un run nuovo su una cartella altrui ne
+    riscriverebbe il marcatore, lasciando i transcript di un agente sotto il nome
+    di un altro.
+    """
+    if args.save is None:
+        return "run"
+    meta = read_run_meta(args.save)
+    if not has_run_output(args.save):
+        # Cartella nuova (o con il solo marcatore, senza misure): niente da
+        # attribuire, e nessun risultato altrui da riscrivere.
+        return "run"
+    if meta is None:
+        # Cartella prodotta da una versione precedente dell'harness: nessun
+        # marcatore. L'etichetta va DICHIARATA, non dedotta da un default.
+        if not agent_explicit:
+            p.error(
+                f"{args.save} contiene transcript ma nessun {RUN_META}: non e "
+                "possibile sapere quale agente li ha prodotti. Ripeti indicando "
+                "esplicitamente --agent/--model di chi ha generato quel run."
+            )
+        # Su stderr: con --json lo stdout deve restare JSON puro e parsabile.
+        print(f"*** ATTENZIONE: {args.save} non ha {RUN_META}; la provenienza dei "
+              "transcript e' DICHIARATA da riga di comando, non verificata.",
+              file=sys.stderr, flush=True)
+        return "dichiarata-da-cli"
+
+    # Marcatore presente: se l'agente non e' stato indicato lo si adotta da qui —
+    # ma SOLO quando si sta riprendendo quella cartella. Adottarlo anche per un run
+    # nuovo dirotterebbe un comando senza --agent (che documentiamo come reference
+    # rule-based, gratuito) verso l'API a pagamento del vendore registrato.
+    if not agent_explicit and args.resume:
+        args.agent, model = _agent_from_label(str(meta["agent"]), meta.get("model"))
+        if args.model is None:
+            args.model = model
+    if meta["agent"] != _agent_label(args)[0]:
+        p.error(
+            f"i transcript in {args.save} sono stati prodotti da "
+            f"'{meta['agent']}', ma stai eseguendo con --agent "
+            f"'{_agent_label(args)[0]}': il report attribuirebbe a quest'ultimo i "
+            f"risultati di un altro agente. Ripeti con --agent/--model coerenti "
+            f"con {args.save}/{RUN_META}, oppure usa una cartella nuova."
+        )
+    # Un run a k trial salva anche i transcript .trialN: rigiocarne o estenderne
+    # uno con un k diverso mescolerebbe misure incomparabili nella stessa cartella.
+    meta_trials = meta.get("trials", 1)
+    if isinstance(meta_trials, int) and meta_trials != args.trials:
+        p.error(
+            f"{args.save} contiene un run a {meta_trials} trial, ma stai eseguendo "
+            f"con --trials {args.trials}: i due non sono confrontabili e "
+            "condividerebbero la stessa cartella. Usa una cartella nuova."
+        )
+    # Stessa logica per le sorgenti dei task: un run sui 240 pubblici + il set
+    # privato e un run sui soli pubblici misurano cose diverse, e il secondo
+    # sostituirebbe il primo senza che nulla nel report lo dica.
+    meta_sources = meta.get("sources")
+    if isinstance(meta_sources, list) and sorted(meta_sources) != _sources(args):
+        p.error(
+            f"{args.save} contiene un run sui task {sorted(meta_sources)}, ma stai "
+            f"eseguendo su {_sources(args)}: misure diverse nella stessa cartella. "
+            "Usa una cartella nuova."
+        )
+    return "transcript-meta"
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="ItalBizBench runner")
     p.add_argument("tasks", type=Path, help="cartella o file di task YAML")
+    # default None (non "reference") per distinguere "non specificato" da "scelto
+    # esplicitamente": in --replay-only su una cartella senza meta.json l'etichetta
+    # dell'agente DEVE essere dichiarata, non ereditata da un default.
     p.add_argument("--agent", choices=["reference", "anthropic", "openai", "local"],
-                   default="reference", help="agente da valutare (default: reference rule-based)")
+                   default=None,
+                   help="agente da valutare; se omesso vale l'agente registrato in "
+                        f"--save/{RUN_META}, altrimenti il reference rule-based")
     p.add_argument("--model", default=None,
                    help="ID modello LLM; se omesso vale la variabile d'ambiente "
                         "ITALBIZBENCH_MODEL_<VENDOR> o il default del vendor "
@@ -275,21 +487,64 @@ def main(argv: list[str] | None = None) -> int:
             p.error(f"--private-dir: la cartella {args.private_dir} non esiste")
         paths.append(args.private_dir)
 
-    agent: AgentAdapter = _build_agent(args)
+    # Il default va risolto PRIMA di stabilire la provenienza (che confronta
+    # l'etichetta effettiva col marcatore), ma "esplicito" va ricordato: e' la
+    # differenza tra un agente scelto e un default ereditato.
+    agent_explicit = args.agent is not None
+    if args.agent is None:
+        args.agent = "reference"
+    try:
+        label_source = _resolve_provenance(args, p, agent_explicit)
+    except ValueError as e:  # marcatore illeggibile o malformato
+        p.error(str(e))
+        raise  # p.error non ritorna; serve solo a mypy
+
+    agent: AgentAdapter
+    if args.replay_only:
+        # Nessun task verra eseguito: si evita di costruire il client di vendor
+        # (che richiederebbe SDK e chiave API) per un'operazione 100% offline.
+        label, model = _agent_label(args)
+        agent = ReplayOnlyAgent(label, model)
+    else:
+        agent = _build_agent(args)
+
+    # Il marcatore va scritto PRIMA di eseguire: un run ucciso al primo task non
+    # deve lasciare transcript non attribuibili. Non si scrive un marcatore su una
+    # cartella legacy (una provenienza dichiarata non diventa verificata per il solo
+    # fatto di essere stata ripetuta) ne in `--replay-only`, che non produce nessun
+    # transcript da attribuire.
+    if args.save is not None and label_source != "dichiarata-da-cli" \
+            and not args.replay_only:
+        args.save.mkdir(parents=True, exist_ok=True)
+        write_run_meta(args.save, agent.name, getattr(agent, "model", None),
+                       args.trials, _sources(args))
+
     verdicts, scorecard = run(paths, agent, save_dir=args.save,
                               cost_table=load_cost_table(args.costs),
                               progress=not args.json, resume=args.resume,
                               replay_only=args.replay_only, trials=args.trials)
 
-    report = {
+    if not verdicts:
+        print(f"*** nessun task eseguito: {args.tasks} non ha prodotto verdetti "
+              "(con --replay-only: nessun transcript corrispondente in "
+              f"{args.save}). Nessun report scritto.", file=sys.stderr, flush=True)
+        return 1
+
+    report: dict[str, Any] = {
         "agent": agent.name,
         "scorecard": scorecard,
+        # Un run dal vivo attribuisce per costruzione; su task rigiocati vale
+        # l'origine dell'etichetta (marcatore verificato o dichiarazione a mano).
+        "agent_provenance": label_source if scorecard.get("replayed") else "run",
         "verdicts": [v.model_dump(mode="json") for v in verdicts],
     }
     # Con --save il report JSON viene anche scritto su file: e l'input del
-    # generatore di leaderboard (italbizbench.leaderboard).
+    # generatore di leaderboard (italbizbench.leaderboard). Un replay NON
+    # sovrascrive il report del run dal vivo: quello e l'unico artefatto che
+    # porta token e costo reali, e va conservato.
     if args.save is not None:
-        (args.save / "report.json").write_text(
+        name = "report-replay.json" if args.replay_only else "report.json"
+        (args.save / name).write_text(
             json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
 
     if args.json:

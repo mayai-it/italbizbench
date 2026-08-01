@@ -122,7 +122,40 @@ svg .diag { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 4; }
 svg .pt { fill: var(--accent); fill-opacity: .75; }
 svg .lbl, svg .tick { fill: var(--muted); font-size: 11px; }
 footer { margin-top: 2.5rem; color: var(--muted); font-size: .85rem; }
+.flag { display: inline-block; font-size: .72rem; font-weight: 600; padding: 0 .35rem;
+  border: 1px solid var(--line); border-radius: 4px; color: var(--muted);
+  background: var(--card); vertical-align: 1px; white-space: nowrap; }
 """
+
+
+def _flags(report: dict[str, Any]) -> str:
+    """Etichette di riga per i report che NON sono un run completo e pulito.
+
+    Un report parziale (run interrotto) o rigiocato da transcript non e
+    confrontabile alla pari con un run completo: senza un marcatore visibile
+    finirebbe in classifica indistinguibile dagli altri.
+    """
+    s = report["scorecard"]
+    out: list[str] = []
+    if s.get("partial"):
+        expected = s.get("n_tasks_expected")
+        detail = f" {_fmt(s.get('n_tasks'))}/{_fmt(expected)}" if expected else ""
+        out.append(f'<span class="flag" title="run interrotto: suite incompleta">'
+                   f"parziale{detail}</span>")
+    if s.get("replayed"):
+        prov = str(report.get("agent_provenance", ""))
+        title = ("task rigiocati da transcript salvati: token e costo non ricontati"
+                 + ("; provenienza dichiarata da CLI, non verificata"
+                    if prov == "dichiarata-da-cli" else ""))
+        label = "replay" if prov != "dichiarata-da-cli" else "replay non verificato"
+        out.append(f'<span class="flag" title="{escape(title, quote=True)}">'
+                   f"{label} {_fmt(s.get('replayed'))}</span>")
+    return "".join(out)
+
+
+def _agent_cell(report: dict[str, Any]) -> str:
+    """Nome dell'agente piu le eventuali etichette di riga."""
+    return f'{escape(str(report.get("agent", "?")))} {_flags(report)}'.rstrip()
 
 
 def _difficulties(reports: list[dict[str, Any]]) -> list[str]:
@@ -136,20 +169,43 @@ def _difficulties(reports: list[dict[str, Any]]) -> list[str]:
 
 def build_html(reports: list[dict[str, Any]], title: str = "ItalBizBench — Leaderboard") -> str:
     """Costruisce la pagina HTML. Pura e deterministica: niente orologio, niente rete."""
-    # Ordinamento deterministico: pass-rate decrescente, poi nome agente.
-    ranked = sorted(reports, key=lambda r: (-(r["scorecard"].get("pass_rate") or 0.0),
-                                            str(r.get("agent", ""))))
+    # Se anche un solo report viene da un run a trial ripetuti, la classifica
+    # espone pass^k: e' la metrica di affidabilita: un task "passa" solo se passa
+    # in TUTTI i k trial. Mostrare il solo pass-rate medio la nasconderebbe.
+    has_k = any("pass_hat_k" in r["scorecard"] for r in reports)
+    # ...ma ci si ordina solo se TUTTI i report ce l'hanno: altrimenti un run
+    # completo a trial singolo, che non ha un pass^k, sarebbe ordinato come se
+    # valesse zero e finirebbe dietro a chiunque abbia ripetuto i trial.
+    rank_on_k = has_k and all("pass_hat_k" in r["scorecard"] for r in reports)
+    mixed = has_k and not rank_on_k
+
+    # Ordinamento deterministico: metrica principale decrescente, poi nome agente.
+    def _key(r: dict[str, Any]) -> tuple[float, str]:
+        s = r["scorecard"]
+        main = s.get("pass_hat_k") if rank_on_k else s.get("pass_rate")
+        return (-(main or 0.0), str(r.get("agent", "")))
+
+    ranked = sorted(reports, key=_key)
     diffs = _difficulties(ranked)
 
     rows: list[str] = []
     for i, r in enumerate(ranked, start=1):
         s = r["scorecard"]
         cost = s.get("cost_eur_total")
+        k_cells = ""
+        if has_k:
+            k = s.get("pass_hat_k")
+            trials = s.get("trials")
+            label = f"<strong>{_fmt(k)}</strong>" if k is not None else "—"
+            k_cells = (f"<td>{label}</td>"
+                       f"<td>{_fmt_ci(s.get('pass_hat_k_wilson_ci95'))}</td>"
+                       f"<td>{_fmt(trials) if trials else '1'}</td>")
         rows.append(
             "<tr>"
             f"<td>{i}</td>"
-            f'<th scope="row">{escape(str(r.get("agent", "?")))}</th>'
+            f'<th scope="row">{_agent_cell(r)}</th>'
             f"<td>{_fmt(s.get('n_tasks'))}</td>"
+            f"{k_cells}"
             f"<td><strong>{_fmt(s.get('pass_rate'))}</strong></td>"
             f"<td>{_fmt_ci(s.get('correctness_ci95'))}</td>"
             f"<td>{_fmt_ci(s.get('correctness_wilson_ci95'))}</td>"
@@ -158,7 +214,10 @@ def build_html(reports: list[dict[str, Any]], title: str = "ItalBizBench — Lea
             f"<td>{_fmt(s.get('brier'), 4)}</td>"
             f"<td>{_fmt(s.get('ece'), 4)}</td>"
             f"<td>{_fmt(s.get('abstention_accuracy'))}</td>"
-            f"<td>{_fmt(s.get('tokens_input_total'))} / {_fmt(s.get('tokens_output_total'))}</td>"
+            # Su un run misto i token coprono solo i task eseguiti dal vivo: si
+            # mostrano come soglia minima, non come totale.
+            f"<td>{'≥ ' if s.get('tokens_partial') else ''}"
+            f"{_fmt(s.get('tokens_input_total'))} / {_fmt(s.get('tokens_output_total'))}</td>"
             f"<td>{'—' if cost is None else '€' + _fmt(cost, 4)}</td>"
             "</tr>"
         )
@@ -168,8 +227,7 @@ def build_html(reports: list[dict[str, Any]], title: str = "ItalBizBench — Lea
         s = r["scorecard"]
         by_diff = s.get("by_difficulty") or {}
         cells = "".join(f"<td>{_fmt(by_diff.get(d))}</td>" for d in diffs)
-        diff_rows.append(
-            f'<tr><th scope="row">{escape(str(r.get("agent", "?")))}</th>{cells}</tr>')
+        diff_rows.append(f'<tr><th scope="row">{_agent_cell(r)}</th>{cells}</tr>')
 
     figures = []
     for r in ranked:
@@ -183,6 +241,17 @@ def build_html(reports: list[dict[str, Any]], title: str = "ItalBizBench — Lea
         )
 
     diff_head = "".join(f'<th scope="col">{escape(d)}</th>' for d in diffs)
+    k_head = ('<th scope="col">pass^k</th><th scope="col">IC95% Wilson (pass^k)</th>'
+              '<th scope="col">k</th>') if has_k else ""
+    k_note = ("<p class=\"note\"><strong>pass^k</strong>: un task conta come superato "
+              "solo se l'agente lo supera in TUTTI i k trial ripetuti — misura "
+              "l'affidabilita, non la prestazione migliore. Il pass-rate accanto e' la "
+              "media sui singoli trial.</p>") if has_k else ""
+    if mixed:
+        k_note += ('<p class="note"><strong>Attenzione:</strong> questa tabella mescola '
+                   "run a trial ripetuti e run a trial singolo, che non hanno un "
+                   "pass^k. L'ordinamento e quindi sul pass-rate, e le due categorie "
+                   "non sono confrontabili tra loro: separale in due classifiche.</p>")
     return f"""<!DOCTYPE html>
 <html lang="it">
 <head>
@@ -199,14 +268,20 @@ italiana. Nessun numero e un giudizio soggettivo: ogni task ha un oracolo
 deterministico. Due agenti sono &laquo;diversi&raquo; solo se gli intervalli di
 confidenza non si sovrappongono. Regole fiscali verificate su fonti, non ancora
 asseverate da un commercialista.</p>
+<p class="note">Le righe marcate <span class="flag">parziale</span> vengono da un run
+interrotto (suite incompleta: non confrontabili alla pari) e quelle marcate
+<span class="flag">replay</span> da transcript rigiocati offline, per cui token e
+costo non sono ricontati.</p>
 </header>
 <main>
 <h2>Classifica</h2>
+{k_note}
 <table>
 <caption>Pass-rate con IC al 95% (bootstrap percentile e Wilson), assi di efficienza,
 sicurezza e calibrazione (Brier / ECE, astensioni escluse dal pool), token e costo.</caption>
 <thead><tr>
 <th scope="col">#</th><th scope="col">Agente</th><th scope="col">Task</th>
+{k_head}
 <th scope="col">Pass-rate</th><th scope="col">IC95% bootstrap</th>
 <th scope="col">IC95% Wilson</th><th scope="col">Efficienza</th>
 <th scope="col">Sicurezza</th><th scope="col">Brier</th><th scope="col">ECE</th>

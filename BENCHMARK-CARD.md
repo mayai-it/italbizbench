@@ -80,6 +80,16 @@ esatto, numero di trial, inclusione o meno del set privato, ed eventuali
 modifiche all'harness. Un run interrotto produce un report marcato
 `partial: true`: non è confrontabile con un run completo.
 
+**Attribuzione.** Ogni cartella di run contiene `meta.json` con l'agente che ha
+prodotto i transcript, e il report dichiara quanti task sono stati rigiocati
+offline (`replayed`) e come è stata stabilita la provenienza
+(`agent_provenance`: `run` per un'esecuzione dal vivo, `transcript-meta` se
+verificata sul marcatore, `dichiarata-da-cli` se soltanto asserita da chi ha
+lanciato il replay). Un risultato pubblicato deve venire da un run dal vivo o da
+un replay con provenienza verificata: i task rigiocati non ricontano token né
+costo, quindi gli assi di efficienza e costo di un report rigiocato non sono
+confrontabili. La leaderboard marca visibilmente le righe `parziale` e `replay`.
+
 ## Limiti noti
 
 - Sandbox semplificata: il parsing dell'XML FatturaPA reale, la detraibilità

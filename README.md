@@ -215,20 +215,46 @@ python -m italbizbench.runner tasks --agent local --model qwen2.5 \
 # Save per-task transcripts + the JSON report (leaderboard input)
 python -m italbizbench.runner tasks --agent anthropic --json --save runs/claude
 
-# Reliability over repeated trials: pass^k (a task passes only if ALL k trials pass)
-python -m italbizbench.runner tasks --agent anthropic --trials 3 --save runs/claude
+# Reliability over repeated trials: pass^k (a task passes only if ALL k trials pass).
+# One directory per k: a run at k=3 and a run at k=1 are not comparable and must not
+# share transcripts — the harness refuses if you try.
+python -m italbizbench.runner tasks --agent anthropic --trials 3 \
+    --save runs/claude-trials3
 
 # Resume an interrupted run: saved transcripts are replayed OFFLINE (zero API cost,
-# identical verdicts — tool execution is deterministic), only missing tasks hit the API
-python -m italbizbench.runner tasks --agent anthropic --save runs/claude --resume
+# identical verdicts — tool execution is deterministic), only missing tasks hit the API.
+# --agent may be omitted: the agent recorded in the directory is adopted.
+python -m italbizbench.runner tasks --save runs/claude --resume
 
-# Extract a partial report from a dead run without any API call
-python -m italbizbench.runner tasks --agent reference --save runs/claude --replay-only
+# Extract a partial report from a dead run without any API call (fully offline:
+# no SDK, no API key — the vendor client is never constructed). Writes
+# report-replay.json, leaving the live run's report.json untouched.
+python -m italbizbench.runner tasks --save runs/claude --replay-only
+
+# The whole official run — N frontier agents + pass^k + the free-model gauntlet,
+# with a preflight that checks the environment and estimates the spend
+./examples/run_official.sh
 ```
 
 Long runs are resilient by design: live per-task progress, retry with backoff on
 transient network errors, and a report marked `partial: true` (never silently
 incomplete) if the run dies mid-way — API credit running out included.
+
+**Every result is attributed to the agent that actually produced it.** A run with
+`--save` writes `meta.json` recording who generated the transcripts. Whenever that
+directory already holds transcripts, the harness refuses to proceed if the agent on
+the command line disagrees with the record — instead of publishing one agent's
+verdicts under another's name. Replayed tasks are counted in the scorecard
+(`replayed: n`) and every report states how attribution was established
+(`agent_provenance`: `run`, `transcript-meta`, `dichiarata-da-cli`), so a report with
+zero tokens and no cost is never mistaken for a free live run. The leaderboard marks
+those rows `parziale` / `replay`.
+
+One caveat worth knowing before publishing an efficiency or cost figure: in a *mixed*
+`--resume` (some tasks replayed, some executed live) tokens and € cover only the tasks
+that actually hit the API, so both axes understate the true cost of the run. Only a
+run that completed in one go carries publishable cost numbers — correctness and safety
+are unaffected, being replay-deterministic.
 
 All LLM agents share one tool-use loop; only the client differs. To plug in another
 vendor, implement the `LLMClient` protocol — a single
@@ -282,7 +308,13 @@ python -m italbizbench.leaderboard runs/claude/report.json runs/gpt/report.json 
 One **self-contained HTML page**: ranking with both CIs, the 4 axes, tokens and cost,
 per-difficulty breakdown, and one reliability curve per agent as inline SVG. No
 JavaScript, no external resources, readable in light and dark mode, deterministic
-(same input → same bytes).
+(same input → same bytes). If any report comes from a `--trials k` run the table
+gains a **pass^k** column and ranks on it — reliability, not best-case performance.
+
+Feed it only the runs you intend to publish: `runs/` also keeps older iterations of
+the harness, and a `runs/*/report.json` glob would put superseded numbers in the same
+ranking as current ones. `run_official.sh` and `run_gauntlet.sh` pass the explicit
+list of directories they just produced, for that reason.
 
 ## Private held-out test set
 
@@ -355,17 +387,20 @@ CI runs the same three on Python 3.11 / 3.12 / 3.13. See
   the full base/tricky/adversarial mix, including multi-step orchestration), real
   calibration (Brier/ECE/reliability), token+€ cost axis, Wilson CIs, **pass^k over
   repeated trials**, static leaderboard generator, private-set structure,
-  benchmark card + contamination canary, resilient runner (resume/replay), and the
-  first real-agent runs with two documented harness iterations.
+  benchmark card + contamination canary, resilient runner (resume/replay,
+  transcript provenance), and the first real-agent runs with two documented
+  harness iterations.
 
 **Next, in priority order:**
 
-1. **Clean official run + free-agent gauntlet** on the fixed environment: 3–4
-   frontier agents (`--trials 3` at least on one family) plus ~10 free/almost-free
-   agents — local Ollama models (qwen3/qwen2.5/llama3.x/mistral-nemo/hermes3/granite)
-   and free API tiers (Gemini Flash-Lite, Mistral Experiment, Groq) via
-   `examples/run_gauntlet.sh` — one leaderboard whose spread demonstrates the
-   benchmark's discriminative power.
+1. **Clean official run + free-agent gauntlet** on the fixed environment — driven by
+   `examples/run_official.sh`: 3–4 frontier agents on the full suite, `--trials 3` on
+   one family for pass^k, plus ~10 free/almost-free agents — local Ollama models
+   (qwen3/qwen2.5/llama3.x/mistral-nemo/hermes3/granite) via
+   `examples/run_gauntlet.sh` and free API tiers (Gemini Flash-Lite, Mistral
+   Experiment, Groq) — one leaderboard whose spread demonstrates the benchmark's
+   discriminative power. *No published number yet comes from a clean full run: the
+   only complete 240-task run predates the four environment fixes it uncovered.*
 2. **Deterministic simulated user**: an `ask_user` tool answering from a script in
    the task YAML — enables *clarify-then-act* tasks (today ambiguity can only be
    answered by halting) while keeping the scoring path LLM-free.

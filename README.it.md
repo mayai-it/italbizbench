@@ -59,7 +59,17 @@ python -m italbizbench.runner tasks --agent anthropic --model claude-sonnet-5
 # Report JSON + leaderboard HTML statica (pronta per GitHub Pages)
 python -m italbizbench.runner tasks --json --save runs/reference > /dev/null
 python -m italbizbench.leaderboard runs/reference/report.json -o leaderboard.html
+
+# Run ufficiale completo: N agenti di frontiera + pass^k + gauntlet dei modelli
+# locali, con preflight e stima della spesa
+./examples/run_official.sh
 ```
+
+Ogni run con `--save` registra in `meta.json` **chi** ha prodotto i transcript: se poi
+si rigioca la cartella (`--resume`/`--replay-only`) dichiarando un agente diverso, il
+runner si ferma invece di attribuire a uno i risultati di un altro. I task rigiocati
+sono contati nella scorecard (`replayed`) e la leaderboard marca quelle righe, perché
+un report a zero token non passi per un run reale gratuito.
 
 ## Regole fiscali
 
@@ -73,9 +83,15 @@ TD04) è tracciata in [docs/FISCAL-RULES.md](docs/FISCAL-RULES.md) con fonte e s
 
 ## Roadmap
 
-In corso (v0.2): espansione famiglia C, primo run pubblicato di 3–4 agenti LLM reali,
-revisione delle regole da parte di un commercialista. Poi: D (PEC/ciclo passivo),
-E (riconciliazione), F (orchestrazione multi-step).
+Fatto (v0.2): tutte e sei le famiglie A–F a 40 task, i 4 assi con intervalli di
+confidenza, pass^k, leaderboard statica, benchmark card e canary anti-contaminazione.
+
+In corso, in ordine di priorità: **run ufficiale pulito** di 3–4 agenti di frontiera più
+il gauntlet dei modelli gratuiti (nessun numero pubblicato viene ancora da un run
+completo su ambiente corretto); utente simulato deterministico (`ask_user`) per i task
+*chiedi-poi-agisci*; asseverazione delle regole da parte di un commercialista con
+baseline umana; set privato held-out popolato. Dettaglio nel
+[README in inglese](README.md#roadmap).
 
 ## Licenza
 

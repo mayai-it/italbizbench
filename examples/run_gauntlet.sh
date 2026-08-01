@@ -17,6 +17,7 @@ if [ ${#MODELS[@]} -eq 0 ]; then
     MODELS=(qwen3:8b qwen2.5:7b llama3.1:8b llama3.2:3b mistral-nemo hermes3:8b granite3.3:8b)
 fi
 
+produced=()
 for model in "${MODELS[@]}"; do
     safe_name="${model//[:\/]/-}"
     echo "=== ${model} -> runs/${safe_name}"
@@ -25,9 +26,19 @@ for model in "${MODELS[@]}"; do
         --agent local --model "${model}" \
         --save "runs/${safe_name}" --resume \
         || echo "*** ${model}: run interrotto, report parziale salvato"
+    produced+=("runs/${safe_name}/report.json")
 done
 
-# Leaderboard unica con tutti i report disponibili (anche di run precedenti).
-reports=(runs/*/report.json)
-python3 -m italbizbench.leaderboard "${reports[@]}" -o leaderboard.html
-echo "Leaderboard scritta in leaderboard.html (${#reports[@]} agenti)"
+# Leaderboard dei SOLI modelli di questo gauntlet. Un glob su runs/*/report.json
+# ripescherebbe anche i run vecchi (iterazioni dell'harness, prove a famiglia
+# singola): righe non confrontabili e numeri superati in classifica.
+reports=()
+for rep in ${produced[@]+"${produced[@]}"}; do
+    [ -e "${rep}" ] && reports+=("${rep}")
+done
+if [ ${#reports[@]} -eq 0 ]; then
+    echo "Nessun report prodotto: leaderboard non rigenerata"
+    exit 0
+fi
+python3 -m italbizbench.leaderboard "${reports[@]}" -o leaderboard-gauntlet.html
+echo "Leaderboard scritta in leaderboard-gauntlet.html (${#reports[@]} agenti)"

@@ -108,6 +108,76 @@ def test_build_html_handles_missing_values() -> None:
     assert "None" not in html
 
 
+def test_partial_and_replayed_runs_are_flagged() -> None:
+    """Un run interrotto o rigiocato non deve sembrare un run completo e pulito."""
+    complete = _fake_report("completo", 0.9)
+    partial = _fake_report("interrotto", 0.8)
+    assert isinstance(partial["scorecard"], dict)
+    partial["scorecard"]["partial"] = True
+    partial["scorecard"]["n_tasks_expected"] = 240
+    replayed = _fake_report("rigiocato", 0.7)
+    assert isinstance(replayed["scorecard"], dict)
+    replayed["scorecard"]["replayed"] = 124
+    replayed["agent_provenance"] = "dichiarata-da-cli"
+
+    html = build_html([complete, partial, replayed])
+    _assert_well_formed(html)
+    assert "parziale 80/240" in html
+    assert "replay non verificato 124" in html
+    # La riga pulita non porta marcatori.
+    assert html.count('class="flag"') == 2 + 2 + 2  # 2 in legenda + 2 righe x 2 tabelle
+
+
+def test_pass_hat_k_column_appears_and_drives_the_ranking() -> None:
+    """Su report a trial ripetuti la classifica espone pass^k e ci si ordina:
+    mostrare il solo pass-rate medio nasconderebbe l'affidabilita."""
+    flaky = _fake_report("incostante", 0.9)   # bravo in media...
+    assert isinstance(flaky["scorecard"], dict)
+    flaky["scorecard"].update({"trials": 3, "n_scenarios": 40, "pass_hat_k": 0.5,
+                               "pass_hat_k_wilson_ci95": [0.35, 0.65]})
+    steady = _fake_report("costante", 0.8)    # ...ma meno affidabile di questo
+    assert isinstance(steady["scorecard"], dict)
+    steady["scorecard"].update({"trials": 3, "n_scenarios": 40, "pass_hat_k": 0.75,
+                                "pass_hat_k_wilson_ci95": [0.6, 0.86]})
+
+    html = build_html([flaky, steady])
+    _assert_well_formed(html)
+    assert "pass^k" in html
+    # Ordinati per pass^k, non per pass-rate: 'costante' (0.75) prima di
+    # 'incostante' (0.5) anche se quest'ultimo ha il pass-rate medio piu alto.
+    assert html.index("costante") < html.index("incostante")
+    # Header e righe restano allineati (nessuna colonna orfana).
+    head = html.split("<thead><tr>")[1].split("</tr></thead>")[0]
+    first_row = html.split("<tbody>")[1].split("</tr>")[0]
+    assert head.count('<th scope="col">') == (
+        first_row.count("<td") + first_row.count('<th scope="row">'))
+
+
+def test_pass_hat_k_column_is_absent_without_trials() -> None:
+    html = build_html([_fake_report("singolo-trial", 0.9)])
+    assert "pass^k" not in html
+
+
+def test_mixed_trial_reports_are_not_ranked_on_pass_hat_k() -> None:
+    """Un run a trial singolo non ha un pass^k: ordinarci sopra lo tratterebbe
+    come se valesse zero, spedendo un run completo dietro a chiunque abbia
+    ripetuto i trial."""
+    single = _fake_report("completo-trial-singolo", 0.9)   # nessun pass^k
+    repeated = _fake_report("ripetuto", 0.5)
+    assert isinstance(repeated["scorecard"], dict)
+    repeated["scorecard"].update({"trials": 3, "n_scenarios": 40,
+                                  "pass_hat_k": 0.45,
+                                  "pass_hat_k_wilson_ci95": [0.3, 0.6]})
+
+    html = build_html([repeated, single])
+    _assert_well_formed(html)
+    # Colonna presente (c'e' un report che la ha) ma ordinamento sul pass-rate.
+    assert "pass^k" in html
+    assert html.index("completo-trial-singolo") < html.index("ripetuto")
+    # E la pagina avvisa che le due categorie non sono confrontabili.
+    assert "non sono confrontabili" in html
+
+
 def test_load_report_rejects_malformed(tmp_path: Path) -> None:
     bad = tmp_path / "bad.json"
     bad.write_text(json.dumps({"foo": 1}), encoding="utf-8")
